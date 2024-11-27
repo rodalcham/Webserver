@@ -1,31 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HTTPForm.hpp                                       :+:      :+:    :+:   */
+/*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/26 10:50:20 by rchavez           #+#    #+#             */
-/*   Updated: 2024/11/27 15:06:07 by rchavez          ###   ########.fr       */
+/*   Created: 2024/11/27 15:03:13 by rchavez           #+#    #+#             */
+/*   Updated: 2024/11/27 15:04:38 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
 #include "Webserv.hpp"
+#include "Server.hpp"
 
-class HTTPForm
+int	main()
 {
-protected:
-	
-	string	process;
-	string	headers;
-	string	body;
-	int		status;
-
-public:
-
-	HTTPForm(/* args */);
-	~HTTPForm();
-
-};
+	Server	local;
+	local.run();
+}

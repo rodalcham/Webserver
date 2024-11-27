@@ -6,7 +6,7 @@
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/26 11:35:33 by rchavez           #+#    #+#             */
-/*   Updated: 2024/11/26 11:46:20 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/11/27 15:06:03 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,17 +14,23 @@
 
 #include "Webserv.hpp"
 
-typedef class Server
+class Server
 {
 
 private:
 
-	std::map<long, string> requests;
-	/* data */
+	int								serverSock;
+	sockaddr_in						serverAddr;
+	int								kq;
+	std::map<int, struct kevent>	events;
 
 public:
 
-	Server(/* args */);
+	Server();
 	~Server();
+
+	void	run();
+	void	acceptClient();
+	void	handleClient(int clientSock);
 
 };

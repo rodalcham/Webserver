@@ -3,34 +3,34 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/26 11:35:33 by rchavez           #+#    #+#             */
-/*   Updated: 2024/11/27 15:06:03 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/11/28 12:26:47 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
 #include "Webserv.hpp"
+#include <map>
+#include <sys/event.h>
+#include <netinet/in.h>
 
-class Server
-{
-
+class Server {
 private:
-
-	int								serverSock;
-	sockaddr_in						serverAddr;
-	int								kq;
-	std::map<int, struct kevent>	events;
+    int serverSock;
+    struct sockaddr_in serverAddr;
+    int kq;
+    std::map<int, struct kevent> events;
 
 public:
-
-	Server();
-	~Server();
-
-	void	run();
-	void	acceptClient();
-	void	handleClient(int clientSock);
-
+    Server();
+    ~Server();
+    void run();
+    void acceptClient();
+    void handleClient(int clientSock);
 };
+
+#endif // SERVER_HPP

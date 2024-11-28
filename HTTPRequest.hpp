@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/28 11:37:46 by mbankhar          #+#    #+#             */
-/*   Updated: 2024/11/28 12:31:04 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/11/28 15:40:50 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,29 +18,22 @@
 #include <sstream>
 #include <iostream>
 
+enum class HttpMethod {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+};
+
 class HttpRequest {
 public:
-    std::string method;
+    HttpMethod method;
     std::string uri;
     std::string httpVersion;
     std::map<std::string, std::string> headers;
     std::string body;
-
-void debugPrint() const {
-    std::cout << "Method: " << method << "\n";
-    std::cout << "URI: " << uri << "\n";
-    std::cout << "HTTP Version: " << httpVersion << "\n";
-    std::cout << "Headers:\n";
-
-    // Use explicit types and traditional loop
-    for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
-        std::cout << it->first << ": " << it->second << "\n";
-    }
-
-    std::cout << "Body: " << body << "\n";
-}
-
 };
+
 
 HttpRequest parseHttpRequest(const std::string &request);
 

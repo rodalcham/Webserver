@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <script>
+        let comments = []; // Store comments locally for simplicity
+
+        function postComment() {
+            const commentBox = document.getElementById('commentBox');
+            const commentList = document.getElementById('commentList');
+            const comment = commentBox.value.trim();
+            if (comment) {
+                comments.push(comment);
+                commentBox.value = ''; // Clear input box
+                renderComments();
+            }
+        }
+
+        function deleteComment(index) {
+            comments.splice(index, 1);
+            renderComments();
+        }
+
+        function renderComments() {
+            const commentList = document.getElementById('commentList');
+            commentList.innerHTML = ''; // Clear existing comments
+            comments.forEach((comment, index) => {
+                const commentItem = document.createElement('li');
+                commentItem.innerHTML = `
+                    ${comment}
+                    <button onclick="deleteComment(${index})">Delete</button>
+                `;
+                commentList.appendChild(commentItem);
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Welcome to the Main Page</h1>
+
+    <!-- Picture -->
+    <img src="picture.jpg" alt="Picture" style="max-width: 100%; height: auto;">
+
+    <h2>Comments</h2>
+    <textarea id="commentBox" placeholder="Write your comment here..."></textarea>
+    <br>
+    <button onclick="postComment()">Post Comment</button>
+    <ul id="commentList"></ul>
+
+    <h2>File Upload/Download</h2>
+    <a href="upload.html">Go to Upload/Download Page</a>
+</body>
+</html>

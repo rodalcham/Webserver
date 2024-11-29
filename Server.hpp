@@ -1,36 +1,34 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/26 11:35:33 by rchavez           #+#    #+#             */
-/*   Updated: 2024/11/27 15:06:03 by rchavez          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
-#pragma once
+#include <string>
+#include <map>
+#include <sys/event.h>
+#include <unistd.h>
+#include "HTTPRequest.hpp"
+#define ROOT_DIR "www/" // Adjust the directory path as per your project setup
 
-#include "Webserv.hpp"
 
-class Server
-{
+class Server {
+public:
+    Server();
+    ~Server();
+    void run();
+    void handleGet(int clientSock, HttpRequest& httpRequest);
+    void handlePost(int clientSock, HttpRequest& httpRequest);
+    void handleDelete(int clientSock, HttpRequest& httpRequest);
+    std::string resolvePath(const std::string& uri);
 
 private:
+    int serverSock;
+    int kq;
 
-	int								serverSock;
-	sockaddr_in						serverAddr;
-	int								kq;
-	std::map<int, struct kevent>	events;
+    void acceptClient();
+    void handleClient(int clientSock);
+    void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 
-public:
-
-	Server();
-	~Server();
-
-	void	run();
-	void	acceptClient();
-	void	handleClient(int clientSock);
-
+    std::string readFile(const std::string& filePath); // Function to read static files
+    std::string getMimeType(const std::string& filePath);
 };
+
+#endif // SERVER_HPP

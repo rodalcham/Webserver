@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/28 11:37:46 by mbankhar          #+#    #+#             */
-/*   Updated: 2024/11/29 10:13:12 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/11/29 12:41:37 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,4 +58,6 @@ private:
 // Function to parse an HTTP request string into an HttpRequest object
 HttpRequest parseHttpRequest(const std::string &request);
 
+    std::string parseName(const std::string &body);
+    std::string parseContent(const std::string &body);
 #endif // HTTPREQUEST_HPP

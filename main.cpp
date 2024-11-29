@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/27 15:03:13 by rchavez           #+#    #+#             */
-/*   Updated: 2024/11/28 10:55:32 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/11/29 13:37:54 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,17 +15,18 @@
 #include <csignal>
 #include <iostream>
 #include <atomic>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
 
-// Global flag to control the server's main loop
 std::atomic<bool> keepRunning(true);
 
-// Signal handler to capture SIGINT (Ctrl+C)
 void signalHandler(int signum) {
     std::cout << "\nInterrupt signal (" << signum << ") received.\n";
-    keepRunning = false; // Set the flag to stop the server loop
+    keepRunning = false; // Stop the server loop
 }
 
-// Set up signal handling
 void setupSignalHandler() {
     struct sigaction action;
     action.sa_handler = signalHandler;
@@ -38,12 +39,14 @@ void setupSignalHandler() {
     }
 }
 
-// Main function
 int main() {
     setupSignalHandler(); // Set up the signal handler
     try {
-        Server server; // Create the server instance
-        server.run();  // Start the server loop
+        Server server; // Create server instance
+        while (keepRunning) { // Main loop
+            server.run();
+        }
+        std::cout << "Server shutting down...\n";
     } catch (const std::exception &e) {
         std::cerr << "Server error: " << e.what() << std::endl;
     }

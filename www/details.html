@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Details Page</title>
+</head>
+<body>
+    <h1>Details Page</h1>
+
+    <!-- Button to create a resource (PUT request) -->
+    <h2>Create Resource</h2>
+    <button id="createBtn">Create Resource</button>
+
+    <!-- Button to delete a resource (DELETE request) -->
+    <h2>Delete Resource</h2>
+    <button id="deleteBtn">Delete Resource</button>
+
+    <!-- Go back to the main page -->
+    <br>
+    <a href="/index.html">Back to Main Page</a>
+
+    <script>
+        // Create a resource using PUT
+        document.getElementById('createBtn').addEventListener('click', async () => {
+            const response = await fetch('/resource', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ data: 'New Resource Created' })
+            });
+            const result = await response.text();
+            alert(`Response: ${result}`);
+        });
+
+        // Delete a resource using DELETE
+        document.getElementById('deleteBtn').addEventListener('click', async () => {
+            const response = await fetch('/resource', {
+                method: 'DELETE'
+            });
+            const result = await response.text();
+            alert(`Response: ${result}`);
+        });
+    </script>
+</body>
+</html>

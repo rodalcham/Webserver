@@ -6,11 +6,13 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/28 12:13:49 by mbankhar          #+#    #+#             */
-/*   Updated: 2024/11/29 10:28:23 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/11/29 12:37:24 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HTTPRequest.hpp"
+#include <string>
+#include <sstream>
 
 // Helper function to parse the HTTP method from the request line
 HttpMethod parseHttpMethod(const std::string& methodStr) {
@@ -76,7 +78,6 @@ void HttpRequest::debugPrint() const {
     }
     std::cout << "Body: " << body << "\n\n";
 }
-#include "HTTPRequest.hpp"
 
 // Convert HttpMethod enum to a string
 std::string HttpRequest::methodToString(HttpMethod method) const {
@@ -87,4 +88,27 @@ std::string HttpRequest::methodToString(HttpMethod method) const {
         case HttpMethod::DELETE: return "DELETE";
         default: return "UNKNOWN";
     }
+}
+
+std::string parseName(const std::string &body) {
+    std::istringstream stream(body);
+    std::string name;
+    std::getline(stream, name, '&'); // Extract the first part of the body before '&'
+    size_t equalPos = name.find('=');
+    if (equalPos != std::string::npos) {
+        return name.substr(equalPos + 1); // Extract value after 'name='
+    }
+    return "";
+}
+
+std::string parseContent(const std::string &body) {
+    size_t andPos = body.find('&');
+    if (andPos != std::string::npos) {
+        std::string content = body.substr(andPos + 1); // Extract after '&'
+        size_t equalPos = content.find('=');
+        if (equalPos != std::string::npos) {
+            return content.substr(equalPos + 1); // Extract value after 'content='
+        }
+    }
+    return "";
 }

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   HTTPRequest.hpp                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/28 11:37:46 by mbankhar          #+#    #+#             */
-/*   Updated: 2024/11/29 12:41:37 by mbankhar         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef HTTPREQUEST_HPP
 #define HTTPREQUEST_HPP
 
@@ -31,6 +19,10 @@ enum class HttpMethod {
 // Class to represent an HTTP Request
 class HttpRequest {
 public:
+    HttpRequest();
+
+    ~HttpRequest();
+
     HttpMethod method;                           // HTTP method (e.g., GET, POST)
     std::string uri;                             // Requested URI
     std::string httpVersion;                     // HTTP version (e.g., HTTP/1.1)

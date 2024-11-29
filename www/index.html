@@ -4,22 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
+    <script>
+        let comments = []; // Store comments locally for simplicity
+
+        function postComment() {
+            const commentBox = document.getElementById('commentBox');
+            const commentList = document.getElementById('commentList');
+            const comment = commentBox.value.trim();
+            if (comment) {
+                comments.push(comment);
+                commentBox.value = ''; // Clear input box
+                renderComments();
+            }
+        }
+
+        function deleteComment(index) {
+            comments.splice(index, 1);
+            renderComments();
+        }
+
+        function renderComments() {
+            const commentList = document.getElementById('commentList');
+            commentList.innerHTML = ''; // Clear existing comments
+            comments.forEach((comment, index) => {
+                const commentItem = document.createElement('li');
+                commentItem.innerHTML = `
+                    ${comment}
+                    <button onclick="deleteComment(${index})">Delete</button>
+                `;
+                commentList.appendChild(commentItem);
+            });
+        }
+    </script>
 </head>
 <body>
     <h1>Welcome to the Main Page</h1>
 
-    <!-- Link to the second page (GET request) -->
-    <a href="/details.html">Go to Details Page</a>
+    <!-- Picture -->
+    <img src="picture.jpg" alt="Picture" style="max-width: 100%; height: auto;">
 
-    <h2>Submit Data (POST)</h2>
-    <form action="/submit" method="POST">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
-        <br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
-        <br>
-        <button type="submit">Submit</button>
-    </form>
+    <h2>Comments</h2>
+    <textarea id="commentBox" placeholder="Write your comment here..."></textarea>
+    <br>
+    <button onclick="postComment()">Post Comment</button>
+    <ul id="commentList"></ul>
+
+    <h2>File Upload/Download</h2>
+    <a href="upload.html">Go to Upload/Download Page</a>
 </body>
 </html>

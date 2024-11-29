@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/27 11:16:39 by rchavez           #+#    #+#             */
-/*   Updated: 2024/11/29 13:40:10 by mbankhar         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "Server.hpp"
 #include "HTTPRequest.hpp"
 #include <iostream>
@@ -21,7 +9,7 @@
 #include <netinet/in.h>
 
 #define PORT 8080
-#define ROOT_DIR "www/" // Directory for static files
+// #define ROOT_DIR "www/" 
 
 extern std::atomic<bool> keepRunning;
 
@@ -112,16 +100,18 @@ void Server::handleClient(int clientSock) {
 
     try {
         if (httpRequest.method == HttpMethod::GET) {
-            std::string filePath = ROOT_DIR + httpRequest.uri.substr(1);
-            if (filePath == ROOT_DIR) filePath += "index.html";
-            std::string content = readFile(filePath);
-            sendResponse(clientSock, content, 200, "text/html");
+            handleGet(clientSock, httpRequest);
+        } else if (httpRequest.method == HttpMethod::POST) {
+            handlePost(clientSock, httpRequest);
+        } else if (httpRequest.method == HttpMethod::DELETE) {
+            handleDelete(clientSock, httpRequest);
         } else {
-            sendResponse(clientSock, "Method Not Allowed", 405, "text/plain");
+            sendResponse(clientSock, "501 Not Implemented", 501, "text/plain");
         }
-    } catch (const std::exception &e) {
-        sendResponse(clientSock, "Error: " + std::string(e.what()), 400, "text/plain");
+    } catch (const std::exception& e) {
+        sendResponse(clientSock, "400 Bad Request: " + std::string(e.what()), 400, "text/plain");
     }
+
     close(clientSock);
 }
 void Server::sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType) {
@@ -148,4 +138,27 @@ std::string Server::readFile(const std::string& filePath) {
     std::ostringstream content;
     content << file.rdbuf();
     return content.str();
+}
+#include <stdexcept>
+
+std::string Server::resolvePath(const std::string& uri) {
+    std::string path = ROOT_DIR + uri;
+    if (path.find("..") != std::string::npos) throw std::runtime_error("Invalid path");
+    return path;
+}
+std::string Server::getMimeType(const std::string& filePath) {
+    size_t dotPos = filePath.find_last_of('.');
+    if (dotPos == std::string::npos) return "application/octet-stream";
+
+    std::string extension = filePath.substr(dotPos + 1);
+
+    if (extension == "html" || extension == "htm") return "text/html";
+    if (extension == "css") return "text/css";
+    if (extension == "js") return "application/javascript";
+    if (extension == "jpg" || extension == "jpeg") return "image/jpeg";
+    if (extension == "png") return "image/png";
+    if (extension == "gif") return "image/gif";
+    if (extension == "txt") return "text/plain";
+
+    return "application/octet-stream";  // Default MIME type
 }

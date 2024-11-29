@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/27 11:16:39 by rchavez           #+#    #+#             */
-/*   Updated: 2024/11/29 09:48:55 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/11/29 10:16:02 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,8 @@ void Server::handleClient(int clientSock) {
     std::string request(buffer, bytes);
     HttpRequest httpRequest = parseHttpRequest(request);
 
-
+    // Debug print to show the parsed request
+        httpRequest.debugPrint();
     // Send a basic response (temporary)
     const std::string body = "<html><body><h1>Hello, World!</h1></body></html>";
     const std::string response = "HTTP/1.1 200 OK\r\n"

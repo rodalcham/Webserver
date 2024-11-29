@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/28 12:13:49 by mbankhar          #+#    #+#             */
-/*   Updated: 2024/11/29 09:48:38 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/11/29 10:28:23 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,4 +63,28 @@ HttpRequest parseHttpRequest(const std::string& request) {
     std::getline(requestStream, httpRequest.body, '\0');
 
     return httpRequest;
+}
+// Print the details of the HTTP request
+void HttpRequest::debugPrint() const {
+    std::cout << "Received HTTP Request:\n";
+    std::cout << "Method: " << methodToString(method) << "\n";
+    std::cout << "URI: " << uri << "\n";
+    std::cout << "HTTP Version: " << httpVersion << "\n";
+    std::cout << "Headers:\n";
+    for (const auto& header : headers) {
+        std::cout << "  " << header.first << ": " << header.second << "\n";
+    }
+    std::cout << "Body: " << body << "\n\n";
+}
+#include "HTTPRequest.hpp"
+
+// Convert HttpMethod enum to a string
+std::string HttpRequest::methodToString(HttpMethod method) const {
+    switch (method) {
+        case HttpMethod::GET: return "GET";
+        case HttpMethod::POST: return "POST";
+        case HttpMethod::PUT: return "PUT";
+        case HttpMethod::DELETE: return "DELETE";
+        default: return "UNKNOWN";
+    }
 }

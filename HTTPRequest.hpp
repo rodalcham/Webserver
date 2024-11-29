@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/28 11:37:46 by mbankhar          #+#    #+#             */
-/*   Updated: 2024/11/29 09:47:15 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/11/29 10:13:12 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ public:
     std::map<std::string, std::string> headers;  // Headers as key-value pairs
     std::string body;                            // Request body (e.g., for POST)
 
+    void debugPrint() const;
     // Helper function to get a header value in a case-insensitive manner
     std::string getHeader(const std::string& headerName) const {
         // Normalize header name to lowercase for case-insensitive comparison
@@ -49,6 +50,9 @@ public:
         }
         return ""; // Return empty string if header not found
     }
+private:
+    // Helper function to convert HttpMethod to string
+    std::string methodToString(HttpMethod method) const;
 };
 
 // Function to parse an HTTP request string into an HttpRequest object

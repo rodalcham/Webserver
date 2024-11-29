@@ -38,8 +38,14 @@ void parseHeaders(HttpRequest& httpRequest, std::istringstream& requestStream) {
         if (colonPos != std::string::npos) {
             std::string headerName = line.substr(0, colonPos);
             std::string headerValue = line.substr(colonPos + 1); // Skip ':'
-            // Remove leading whitespace from headerValue
-            headerValue.erase(0, headerValue.find_first_not_of(" \t"));
+
+            // Trim leading and trailing whitespace from headerName
+            headerName.erase(0, headerName.find_first_not_of(" \t\r\n"));
+            headerName.erase(headerName.find_last_not_of(" \t\r\n") + 1);
+
+            // Trim leading and trailing whitespace from headerValue
+            headerValue.erase(0, headerValue.find_first_not_of(" \t\r\n"));
+            headerValue.erase(headerValue.find_last_not_of(" \t\r\n") + 1);
 
             // Normalize header name to lowercase for case-insensitivity
             std::transform(headerName.begin(), headerName.end(), headerName.begin(), ::tolower);
@@ -48,6 +54,7 @@ void parseHeaders(HttpRequest& httpRequest, std::istringstream& requestStream) {
         }
     }
 }
+
 
 HttpRequest parseHttpRequest(const std::string& request) {
     HttpRequest httpRequest;
@@ -87,6 +94,7 @@ HttpRequest parseHttpRequest(const std::string& request) {
 
     return httpRequest;
 }
+
 
 // Print the details of the HTTP request
 void HttpRequest::debugPrint() const {

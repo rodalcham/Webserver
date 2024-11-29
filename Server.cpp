@@ -114,20 +114,40 @@ void Server::handleClient(int clientSock) {
 
     close(clientSock);
 }
-void Server::sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType) {
-    std::string statusLine;
-    if (statusCode == 200) statusLine = "HTTP/1.1 200 OK\r\n";
-    else if (statusCode == 201) statusLine = "HTTP/1.1 201 Created\r\n";
-    else if (statusCode == 400) statusLine = "HTTP/1.1 400 Bad Request\r\n";
-    else if (statusCode == 404) statusLine = "HTTP/1.1 404 Not Found\r\n";
-    else if (statusCode == 501) statusLine = "HTTP/1.1 501 Not Implemented\r\n";
+// void Server::sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType) {
+//     std::string statusLine;
+//     if (statusCode == 200) statusLine = "HTTP/1.1 200 OK\r\n";
+//     else if (statusCode == 201) statusLine = "HTTP/1.1 201 Created\r\n";
+//     else if (statusCode == 400) statusLine = "HTTP/1.1 400 Bad Request\r\n";
+//     else if (statusCode == 404) statusLine = "HTTP/1.1 404 Not Found\r\n";
+//     else if (statusCode == 501) statusLine = "HTTP/1.1 501 Not Implemented\r\n";
 
-    std::string response = statusLine +
-                           "Content-Type: " + contentType + "\r\n" +
-                           "Content-Length: " + std::to_string(body.size()) + "\r\n" +
-                           "\r\n" + body;
+//     std::string response = statusLine +
+//                            "Content-Type: " + contentType + "\r\n" +
+//                            "Content-Length: " + std::to_string(body.size()) + "\r\n" +
+//                            "\r\n" + body;
 
-    write(clientSock, response.c_str(), response.size());
+//     write(clientSock, response.c_str(), response.size());
+// }
+void Server::sendResponse(int clientSock, const std::string& content, int statusCode, const std::string& contentType) {
+    std::ostringstream responseStream;
+    responseStream << "HTTP/1.1 " << statusCode << " OK\r\n";
+    responseStream << "Content-Type: " << contentType << "\r\n";
+    responseStream << "Content-Length: " << content.size() << "\r\n";
+    responseStream << "\r\n";
+    responseStream << content;
+
+    std::string response = responseStream.str();
+
+    size_t totalBytesSent = 0;
+    while (totalBytesSent < response.size()) {
+        ssize_t bytesSent = send(clientSock, response.c_str() + totalBytesSent, response.size() - totalBytesSent, 0);
+        if (bytesSent < 0) {
+            perror("Error sending response");
+            break;
+        }
+        totalBytesSent += bytesSent;
+    }
 }
 
 

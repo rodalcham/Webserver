@@ -1,4 +1,5 @@
 #include "Webserv.hpp" 
+#include "cgi.hpp"
 
 // Constructor
 HttpRequest::HttpRequest()
@@ -86,11 +87,18 @@ HttpRequest parseHttpRequest(const std::string& request) {
     // Parse headers
     parseHeaders(httpRequest, requestStream);
 
+    // Decode chunked encoding if applicable
+    if (httpRequest.headers.find("transfer-encoding") != httpRequest.headers.end() &&
+        httpRequest.headers["transfer-encoding"] == "chunked") {
+        bodyPart = unchunkBody(bodyPart);
+    }
+
     // Set body
     httpRequest.body = bodyPart;
 
     return httpRequest;
 }
+
 
 
 // Print the details of the HTTP request
@@ -116,28 +124,6 @@ std::string HttpRequest::methodToString(HttpMethod method) const {
         default: return "UNKNOWN";
     }
 }
-// std::string parseName(const std::string &body) {
-//     std::istringstream stream(body);
-//     std::string name;
-//     std::getline(stream, name, '&');
-//     size_t equalPos = name.find('=');
-//     if (equalPos != std::string::npos) {
-//         return name.substr(equalPos + 1);
-//     }
-//     return "";
-// }
-
-// std::string parseContent(const std::string &body) {
-//     size_t andPos = body.find('&');
-//     if (andPos != std::string::npos) {
-//         std::string content = body.substr(andPos + 1);
-//         size_t equalPos = content.find('=');
-//         if (equalPos != std::string::npos) {
-//             return content.substr(equalPos + 1);
-//         }
-//     }
-//     return "";
-// }
 
 std::map<std::string, std::string> parseBody(const std::string &body) {
     std::map<std::string, std::string> keyValueMap;

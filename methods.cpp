@@ -1,24 +1,32 @@
 #include "Webserv.hpp" 
 
 void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
+    if (isCGIRequest(httpRequest.uri)) {
+        handleCGI(clientSock, httpRequest);
+        return;
+    }
+
     std::string filePath = resolvePath(httpRequest.uri);
     if (filePath == ROOT_DIR) filePath += "index.html";
 
     // Check if file exists
     std::ifstream file(filePath);
     if (!file.good()) {
-        // sendResponse(clientSock, "404 Not Found", 404, "text/plain");
-    } else {
-        try {
-            std::string content((std::istreambuf_iterator<char>(file)),
-                                std::istreambuf_iterator<char>());
-            std::string contentType = getMimeType(filePath);
-            // sendResponse(clientSock, content, 200, contentType);
-        } catch (const std::exception& e) {
-            // sendResponse(clientSock, "500 Internal Server Error", 500, "text/plain");
-        }
+        // Handle file not found
+        return;
+    }
+
+    try {
+        std::string content((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
+        std::string contentType = getMimeType(filePath);
+        // Process and send content
+    } catch (const std::exception& e) {
+        // Handle errors
+        return;
     }
 }
+
 void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
     try {
         std::string filePath = resolvePath(httpRequest.uri);
@@ -40,6 +48,10 @@ void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
 }
 void Server::handlePost(int clientSock, HttpRequest& httpRequest) {
     // Handle "Expect: 100-continue" header
+    if (isCGIRequest(httpRequest.uri)) {
+        handleCGI(clientSock, httpRequest);
+        return;
+    }
     auto expectHeader = httpRequest.headers.find("expect");
     if (expectHeader != httpRequest.headers.end()) {
         std::string expectValue = expectHeader->second;

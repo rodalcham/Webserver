@@ -17,9 +17,11 @@
 #include "HTTPRequest.hpp"
 #include <fstream>
 #include <iostream>
+#include "cgi.hpp"
+
 
 extern bool keepRunning;
-#define ROOT_DIR "www/"
+#define ROOT_DIR "www"
 
 #define SOCKET_BACKLOG_MAX 5
 #define PORT 8080
@@ -29,7 +31,6 @@ extern bool keepRunning;
 #define YELLOW "\033[33m"
 #define BLUE "\033[34m"
 #define RESET "\033[0m"
-
 
 using std::string;
 using std::cout;

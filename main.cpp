@@ -1,14 +1,14 @@
 #include "Webserv.hpp"
-#include "Server.hpp"
-#include <csignal>
-#include <iostream>
-#include <atomic>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <string>
+// #include "Server.hpp"
+// #include <csignal>
+// #include <iostream>
+// #include <atomic>
+// #include <fstream>
+// #include <sstream>
+// #include <vector>
+// #include <string>
 
-std::atomic<bool> keepRunning(true);
+bool keepRunning = true; // Initialize as needed
 
 void signalHandler(int signum) {
     std::cout << "\nInterrupt signal (" << signum << ") received.\n";

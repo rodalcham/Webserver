@@ -1,12 +1,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <string>
-#include <map>
-#include <sys/event.h>
-#include <unistd.h>
+#include "Webserv.hpp" 
 #include "HTTPRequest.hpp"
-#define ROOT_DIR "www/" // Adjust the directory path as per your project setup
 
 
 class Server {

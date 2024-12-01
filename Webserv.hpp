@@ -1,14 +1,25 @@
 #pragma once
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <sys/event.h>
 #include <unistd.h>
+#include <stdexcept>
 #include <fcntl.h>
-#include <string>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <map>
+#include <algorithm>
+#include <csignal>
 #include <atomic>
+#include <sstream>
+#include <vector>
+#include <string>
+#include "Server.hpp"
+#include "HTTPRequest.hpp"
+#include <fstream>
 #include <iostream>
+
+extern bool keepRunning;
+#define ROOT_DIR "www/" // Adjust the directory path as per your project setup
 
 #define SOCKET_BACKLOG_MAX 5
 #define PORT 8080
@@ -19,7 +30,6 @@
 #define BLUE "\033[34m"
 #define RESET "\033[0m"
 
-extern std::atomic<bool> keepRunning;
 
 using std::string;
 using std::cout;

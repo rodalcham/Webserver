@@ -1,17 +1,6 @@
-#include "Server.hpp"
-#include "HTTPRequest.hpp"
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <stdexcept>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include "Webserv.hpp" 
 
-#define PORT 8080
-// #define ROOT_DIR "www/" 
-
-extern std::atomic<bool> keepRunning;
+// extern std::atomic<bool> keepRunning;
 
 
 Server::Server() {
@@ -114,21 +103,7 @@ void Server::handleClient(int clientSock) {
 
     close(clientSock);
 }
-// void Server::sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType) {
-//     std::string statusLine;
-//     if (statusCode == 200) statusLine = "HTTP/1.1 200 OK\r\n";
-//     else if (statusCode == 201) statusLine = "HTTP/1.1 201 Created\r\n";
-//     else if (statusCode == 400) statusLine = "HTTP/1.1 400 Bad Request\r\n";
-//     else if (statusCode == 404) statusLine = "HTTP/1.1 404 Not Found\r\n";
-//     else if (statusCode == 501) statusLine = "HTTP/1.1 501 Not Implemented\r\n";
 
-//     std::string response = statusLine +
-//                            "Content-Type: " + contentType + "\r\n" +
-//                            "Content-Length: " + std::to_string(body.size()) + "\r\n" +
-//                            "\r\n" + body;
-
-//     write(clientSock, response.c_str(), response.size());
-// }
 void Server::sendResponse(int clientSock, const std::string& content, int statusCode, const std::string& contentType) {
     std::ostringstream responseStream;
     responseStream << "HTTP/1.1 " << statusCode << " OK\r\n";
@@ -159,7 +134,6 @@ std::string Server::readFile(const std::string& filePath) {
     content << file.rdbuf();
     return content.str();
 }
-#include <stdexcept>
 
 std::string Server::resolvePath(const std::string& uri) {
     std::string path = ROOT_DIR + uri;

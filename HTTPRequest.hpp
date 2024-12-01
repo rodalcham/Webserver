@@ -1,11 +1,12 @@
 #ifndef HTTPREQUEST_HPP
 #define HTTPREQUEST_HPP
 
-#include <string>
-#include <map>
-#include <sstream>
-#include <iostream>
-#include <algorithm> // For std::transform
+#include "Webserv.hpp" 
+// #include <string>
+// #include <map>
+// #include <sstream>
+// #include <iostream>
+// #include <algorithm> // For std::transform
 
 // Enum for supported HTTP methods
 enum class HttpMethod {

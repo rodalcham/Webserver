@@ -1,8 +1,4 @@
 #include "Webserv.hpp" 
-// #include "Server.hpp"
-// #include "HTTPRequest.hpp"
-// #include <fstream>
-// #include <iostream>
 
 void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
     std::string filePath = resolvePath(httpRequest.uri);

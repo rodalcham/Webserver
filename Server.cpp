@@ -1,8 +1,5 @@
 #include "Webserv.hpp" 
 
-// extern std::atomic<bool> keepRunning;
-
-
 Server::Server() {
     serverSock = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSock < 0) throw std::runtime_error("Socket creation failed");

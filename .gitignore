@@ -1,6 +1,6 @@
 # macOS system files
 .DS_Store
-
+.gitignore
 # Visual Studio Code settings
 .vscode/
 

@@ -19,7 +19,7 @@
 #include <iostream>
 
 extern bool keepRunning;
-#define ROOT_DIR "www/" // Adjust the directory path as per your project setup
+#define ROOT_DIR "www/"
 
 #define SOCKET_BACKLOG_MAX 5
 #define PORT 8080

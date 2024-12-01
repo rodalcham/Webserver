@@ -1,12 +1,4 @@
 #include "Webserv.hpp"
-// #include "Server.hpp"
-// #include <csignal>
-// #include <iostream>
-// #include <atomic>
-// #include <fstream>
-// #include <sstream>
-// #include <vector>
-// #include <string>
 
 bool keepRunning = true; // Initialize as needed
 

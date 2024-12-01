@@ -21,7 +21,7 @@ private:
 
     void acceptClient();
     void handleClient(int clientSock);
-    void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
+    // void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 
     std::string readFile(const std::string& filePath); // Function to read static files
     std::string getMimeType(const std::string& filePath);

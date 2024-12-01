@@ -92,35 +92,35 @@ void Server::handleClient(int clientSock) {
         } else if (httpRequest.method == HttpMethod::DELETE) {
             handleDelete(clientSock, httpRequest);
         } else {
-            sendResponse(clientSock, "501 Not Implemented", 501, "text/plain");
+            // sendResponse(clientSock, "501 Not Implemented", 501, "text/plain");
         }
     } catch (const std::exception& e) {
-        sendResponse(clientSock, "400 Bad Request: " + std::string(e.what()), 400, "text/plain");
+        // sendResponse(clientSock, "400 Bad Request: " + std::string(e.what()), 400, "text/plain");
     }
 
     close(clientSock);
 }
 
-void Server::sendResponse(int clientSock, const std::string& content, int statusCode, const std::string& contentType) {
-    std::ostringstream responseStream;
-    responseStream << "HTTP/1.1 " << statusCode << " OK\r\n";
-    responseStream << "Content-Type: " << contentType << "\r\n";
-    responseStream << "Content-Length: " << content.size() << "\r\n";
-    responseStream << "\r\n";
-    responseStream << content;
+// void Server::sendResponse(int clientSock, const std::string& content, int statusCode, const std::string& contentType) {
+//     std::ostringstream responseStream;
+//     responseStream << "HTTP/1.1 " << statusCode << " OK\r\n";
+//     responseStream << "Content-Type: " << contentType << "\r\n";
+//     responseStream << "Content-Length: " << content.size() << "\r\n";
+//     responseStream << "\r\n";
+//     responseStream << content;
 
-    std::string response = responseStream.str();
+//     std::string response = responseStream.str();
 
-    size_t totalBytesSent = 0;
-    while (totalBytesSent < response.size()) {
-        ssize_t bytesSent = send(clientSock, response.c_str() + totalBytesSent, response.size() - totalBytesSent, 0);
-        if (bytesSent < 0) {
-            perror("Error sending response");
-            break;
-        }
-        totalBytesSent += bytesSent;
-    }
-}
+//     size_t totalBytesSent = 0;
+//     while (totalBytesSent < response.size()) {
+//         ssize_t bytesSent = send(clientSock, response.c_str() + totalBytesSent, response.size() - totalBytesSent, 0);
+//         if (bytesSent < 0) {
+//             perror("Error sending response");
+//             break;
+//         }
+//         totalBytesSent += bytesSent;
+//     }
+// }
 
 
 std::string Server::readFile(const std::string& filePath) {

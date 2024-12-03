@@ -1,5 +1,7 @@
-#include "Webserv.hpp"
-#include "Server.hpp"
+#include "../include/Webserv.hpp"
+#include "../include/Server.hpp"
+#include "../include/Config.hpp"
+
 #include <csignal>
 #include <iostream>
 #include <atomic>
@@ -27,7 +29,23 @@ void setupSignalHandler() {
     }
 }
 
-int main() {
+int main(int argc, char** argv)
+{
+	if (argc != 2)
+	{
+		std::cerr << "Usage: " << argv[0] << "<config_file_path>\n";
+		return 1;
+	}
+
+	try
+	{
+		Config config_obj(argv[1]);
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Error: " << e.what() << std::endl;
+		return 1;
+	}
     setupSignalHandler(); // Set up the signal handler
     try {
         Server server; // Create server instance

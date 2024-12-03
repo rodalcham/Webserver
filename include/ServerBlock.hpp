@@ -17,7 +17,7 @@ public:
 	void		setErrorPage(std::string& value, std::string& line);
 	void		setDirective(std::string& key, std::string& value);
 	std::string	createDirectiveStr(std::string& line);
+	void		setLocationBlock(std::istream& stream, std::string line);
 };
 
-	// void		setLocationBlock(std::istream& stream, std::string line);
 	// void		debug();

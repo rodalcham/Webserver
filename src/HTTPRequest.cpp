@@ -1,7 +1,5 @@
 #include "../include/HTTPRequest.hpp"
-#include <string>
-#include <sstream>
-#include <iostream>
+
 
 // Constructor
 HttpRequest::HttpRequest()
@@ -89,11 +87,18 @@ HttpRequest parseHttpRequest(const std::string& request) {
     // Parse headers
     parseHeaders(httpRequest, requestStream);
 
+    // Decode chunked encoding if applicable
+    if (httpRequest.headers.find("transfer-encoding") != httpRequest.headers.end() &&
+        httpRequest.headers["transfer-encoding"] == "chunked") {
+        bodyPart = unchunkBody(bodyPart);
+    }
+
     // Set body
     httpRequest.body = bodyPart;
 
     return httpRequest;
 }
+
 
 
 // Print the details of the HTTP request
@@ -119,25 +124,31 @@ std::string HttpRequest::methodToString(HttpMethod method) const {
         default: return "UNKNOWN";
     }
 }
-std::string parseName(const std::string &body) {
-    std::istringstream stream(body);
-    std::string name;
-    std::getline(stream, name, '&');
-    size_t equalPos = name.find('=');
-    if (equalPos != std::string::npos) {
-        return name.substr(equalPos + 1);
-    }
-    return "";
-}
 
-std::string parseContent(const std::string &body) {
-    size_t andPos = body.find('&');
-    if (andPos != std::string::npos) {
-        std::string content = body.substr(andPos + 1);
-        size_t equalPos = content.find('=');
+std::map<std::string, std::string> parseBody(const std::string &body) {
+    std::map<std::string, std::string> keyValueMap;
+    size_t start = 0, end = 0;
+
+    // Split body by '&' to extract key-value pairs
+    while ((end = body.find('&', start)) != std::string::npos) {
+        std::string pair = body.substr(start, end - start);
+        size_t equalPos = pair.find('=');
         if (equalPos != std::string::npos) {
-            return content.substr(equalPos + 1);
+            std::string key = pair.substr(0, equalPos);
+            std::string value = pair.substr(equalPos + 1);
+            keyValueMap[key] = value; // Add key-value pair to map
         }
+        start = end + 1;
     }
-    return "";
+
+    // Handle the last pair (or the only pair if no '&' was found)
+    std::string pair = body.substr(start);
+    size_t equalPos = pair.find('=');
+    if (equalPos != std::string::npos) {
+        std::string key = pair.substr(0, equalPos);
+        std::string value = pair.substr(equalPos + 1);
+        keyValueMap[key] = value;
+    }
+
+    return keyValueMap;
 }

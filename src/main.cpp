@@ -2,14 +2,6 @@
 #include "../include/Server.hpp"
 #include "../include/Config.hpp"
 
-#include <csignal>
-#include <iostream>
-#include <atomic>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <string>
-
 std::atomic<bool> keepRunning(true);
 
 void signalHandler(int signum) {

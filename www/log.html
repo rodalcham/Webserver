@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment Log</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .log {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Comment Log</h1>
+    <div id="logContainer"></div>
+    <button onclick="goBack()">Back to Main Page</button>
+
+    <script>
+        // Load comments from session storage
+        const comments = JSON.parse(sessionStorage.getItem('comments') || '[]');
+        const logContainer = document.getElementById('logContainer');
+
+        // Display all comments
+        comments.forEach(comment => {
+            const logDiv = document.createElement('div');
+            logDiv.className = 'log';
+            logDiv.innerHTML = `
+                <strong>${comment.name}</strong>
+                <p>${comment.comment}</p>
+            `;
+            logContainer.appendChild(logDiv);
+        });
+
+        // Function to go back to the main page
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

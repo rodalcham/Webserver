@@ -1,11 +1,8 @@
 #ifndef HTTPREQUEST_HPP
 #define HTTPREQUEST_HPP
 
-#include <string>
-#include <map>
-#include <sstream>
-#include <iostream>
-#include <algorithm> // For std::transform
+#include "Webserv.hpp" 
+
 
 // Enum for supported HTTP methods
 enum class HttpMethod {
@@ -49,7 +46,7 @@ private:
 
 // Function to parse an HTTP request string into an HttpRequest object
 HttpRequest parseHttpRequest(const std::string &request);
-
-    std::string parseName(const std::string &body);
-    std::string parseContent(const std::string &body);
+ std::map<std::string, std::string> parseBody(const std::string &body);
+    // std::string parseName(const std::string &body);
+    // std::string parseContent(const std::string &body);
 #endif // HTTPREQUEST_HPP

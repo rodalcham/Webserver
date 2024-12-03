@@ -1,36 +1,25 @@
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <stdexcept>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#define PORT 8080
-// #define ROOT_DIR "www/" 
 
 extern std::atomic<bool> keepRunning;
 
 
-Server::Server() {
+Server::Server(ServerBlock& serverBlock) {
+    // Example of applying configuration
+    int port = std::stoi(serverBlock.directive_pairs["listen"]);
     serverSock = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSock < 0) throw std::runtime_error("Socket creation failed");
 
-    int flags = fcntl(serverSock, F_GETFL, 0);
-    if (flags < 0 || fcntl(serverSock, F_SETFL, flags | O_NONBLOCK) < 0)
-        throw std::runtime_error("Failed to set non-blocking mode");
-
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
         throw std::runtime_error("Bind failed");
 
-    if (listen(serverSock, 5) < 0) throw std::runtime_error("Listen failed");
+    if (listen(serverSock, 5) < 0)
+        throw std::runtime_error("Listen failed");
 
     kq = kqueue();
     if (kq < 0) throw std::runtime_error("kqueue creation failed");
@@ -96,58 +85,47 @@ void Server::handleClient(int clientSock) {
     std::string request(buffer, bytes);
     std::cout << "Received Request:\n" << request << std::endl;
 
-    HttpRequest httpRequest = parseHttpRequest(request);
-
     try {
+        HttpRequest httpRequest = parseHttpRequest(request);
+
+        std::string rootDir = serverBlock.directive_pairs["root"];
+        std::string errorPage404 = serverBlock.error_pages["404"];
+
+        // Route requests based on the HTTP method
         if (httpRequest.method == HttpMethod::GET) {
+            std::string resolvedPath = resolvePath(rootDir + httpRequest.uri);
+            if (!std::ifstream(resolvedPath).good()) {
+                // Serve 404 error page
+                if (!errorPage404.empty()) {
+                    std::string errorContent = readFile(errorPage404);
+                    // sendResponse(clientSock, errorContent, 404, "text/html");
+                } else {
+                    // sendResponse(clientSock, "404 Not Found", 404, "text/plain");
+                }
+                return;
+            }
             handleGet(clientSock, httpRequest);
         } else if (httpRequest.method == HttpMethod::POST) {
             handlePost(clientSock, httpRequest);
         } else if (httpRequest.method == HttpMethod::DELETE) {
             handleDelete(clientSock, httpRequest);
         } else {
-            sendResponse(clientSock, "501 Not Implemented", 501, "text/plain");
+            // sendResponse(clientSock, "501 Not Implemented", 501, "text/plain");
         }
     } catch (const std::exception& e) {
-        sendResponse(clientSock, "400 Bad Request: " + std::string(e.what()), 400, "text/plain");
+        std::cerr << "Error handling client: " << e.what() << std::endl;
+
+        // Serve a generic 400 error or a custom error page if configured
+        std::string errorPage400 = serverBlock.error_pages["400"];
+        if (!errorPage400.empty()) {
+            std::string errorContent = readFile(errorPage400);
+            // sendResponse(clientSock, errorContent, 400, "text/html");
+        } else {
+            // sendResponse(clientSock, "400 Bad Request", 400, "text/plain");
+        }
     }
 
     close(clientSock);
-}
-// void Server::sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType) {
-//     std::string statusLine;
-//     if (statusCode == 200) statusLine = "HTTP/1.1 200 OK\r\n";
-//     else if (statusCode == 201) statusLine = "HTTP/1.1 201 Created\r\n";
-//     else if (statusCode == 400) statusLine = "HTTP/1.1 400 Bad Request\r\n";
-//     else if (statusCode == 404) statusLine = "HTTP/1.1 404 Not Found\r\n";
-//     else if (statusCode == 501) statusLine = "HTTP/1.1 501 Not Implemented\r\n";
-
-//     std::string response = statusLine +
-//                            "Content-Type: " + contentType + "\r\n" +
-//                            "Content-Length: " + std::to_string(body.size()) + "\r\n" +
-//                            "\r\n" + body;
-
-//     write(clientSock, response.c_str(), response.size());
-// }
-void Server::sendResponse(int clientSock, const std::string& content, int statusCode, const std::string& contentType) {
-    std::ostringstream responseStream;
-    responseStream << "HTTP/1.1 " << statusCode << " OK\r\n";
-    responseStream << "Content-Type: " << contentType << "\r\n";
-    responseStream << "Content-Length: " << content.size() << "\r\n";
-    responseStream << "\r\n";
-    responseStream << content;
-
-    std::string response = responseStream.str();
-
-    size_t totalBytesSent = 0;
-    while (totalBytesSent < response.size()) {
-        ssize_t bytesSent = send(clientSock, response.c_str() + totalBytesSent, response.size() - totalBytesSent, 0);
-        if (bytesSent < 0) {
-            perror("Error sending response");
-            break;
-        }
-        totalBytesSent += bytesSent;
-    }
 }
 
 
@@ -159,7 +137,6 @@ std::string Server::readFile(const std::string& filePath) {
     content << file.rdbuf();
     return content.str();
 }
-#include <stdexcept>
 
 std::string Server::resolvePath(const std::string& uri) {
     std::string path = ROOT_DIR + uri;

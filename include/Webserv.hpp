@@ -1,16 +1,29 @@
 #pragma once
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <sys/event.h>
 #include <unistd.h>
+#include <stdexcept>
 #include <fcntl.h>
-#include <string>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <map>
-#include <set>
+#include <algorithm>
+#include <csignal>
 #include <atomic>
+#include <sstream>
+#include <vector>
+#include <string>
+#include "Server.hpp"
+#include "HTTPRequest.hpp"
+#include <fstream>
 #include <iostream>
 #include <fstream>
+#include "cgi.hpp"
+#include "ServerBlock.hpp"
+
+
+extern bool keepRunning;
+#define ROOT_DIR "www"
 
 #define SOCKET_BACKLOG_MAX 5
 #define PORT 8080
@@ -20,8 +33,6 @@
 #define YELLOW "\033[33m"
 #define BLUE "\033[34m"
 #define RESET "\033[0m"
-
-extern std::atomic<bool> keepRunning;
 
 using std::string;
 using std::cout;

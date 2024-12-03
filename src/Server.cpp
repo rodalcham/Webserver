@@ -1,5 +1,5 @@
-#include "Server.hpp"
-#include "HTTPRequest.hpp"
+#include "../include/Server.hpp"
+#include "../include/HTTPRequest.hpp"
 #include <iostream>
 #include <sstream>
 #include <fstream>

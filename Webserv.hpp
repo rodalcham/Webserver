@@ -18,6 +18,7 @@
 #include <fstream>
 #include <iostream>
 #include "cgi.hpp"
+#include "ServerBlock.hpp"
 
 
 extern bool keepRunning;

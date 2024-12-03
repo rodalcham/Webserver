@@ -7,8 +7,9 @@
 
 class Server {
 public:
-    Server();
+    // Server();
     ~Server();
+    Server(ServerBlock& serverBlock);
     void run();
     void handleGet(int clientSock, HttpRequest& httpRequest);
     void handlePost(int clientSock, HttpRequest& httpRequest);
@@ -16,6 +17,7 @@ public:
     std::string resolvePath(const std::string& uri);
 
 private:
+    ServerBlock serverBlock;
     int serverSock;
     int kq;
 

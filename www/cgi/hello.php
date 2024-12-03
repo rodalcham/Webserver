@@ -1,19 +1,17 @@
-#!/usr/bin/env php
 <?php
-header("Content-Type: text/html");
+echo "Content-Type: text/html\n\n";
 
-echo "<html>";
-echo "<head><title>CGI Hello</title></head>";
-echo "<body>";
+echo "<html><head><title>CGI Hello</title></head><body>";
 echo "<h1>Hello, World! This is PHP!</h1>";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    echo "<h2>POST Data</h2>";
-    echo "<pre>";
-    print_r($_POST);
-    echo "</pre>";
+    $name = $_POST['name'] ?? '';
+    $message = $_POST['message'] ?? '';
+
+    echo "<h2>Received POST Data</h2>";
+    echo "<p>Name: $name</p>";
+    echo "<p>Message: $message</p>";
 }
 
-echo "</body>";
-echo "</html>";
+echo "</body></html>";
 ?>

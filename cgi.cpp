@@ -36,28 +36,36 @@ bool isCGIRequest(const std::string& uri) {
     return false;
 }
 
-// Build CGI environment variables based on the HTTP request and script path
+
+// Helper function to get header value in a case-insensitive manner
+std::string getHeaderValue(const std::map<std::string, std::string>& headers, const std::string& key) {
+    for (const auto& [headerKey, headerValue] : headers) {
+        if (strcasecmp(headerKey.c_str(), key.c_str()) == 0) {
+            return headerValue;
+        }
+    }
+    return "";
+}
+
+// Update buildCGIEnvironment to use getHeaderValue
 std::map<std::string, std::string> buildCGIEnvironment(const HttpRequest& httpRequest, const std::string& scriptPath) {
     std::map<std::string, std::string> env;
     env["GATEWAY_INTERFACE"] = "CGI/1.1";
     env["SERVER_PROTOCOL"] = "HTTP/1.1";
-    env["REQUEST_METHOD"] = methodToString(httpRequest.method); // Convert enum to string
+    env["REQUEST_METHOD"] = methodToString(httpRequest.method);
     env["SCRIPT_NAME"] = scriptPath;
     env["PATH_INFO"] = scriptPath;
 
-    // Add query string for GET requests
     size_t queryPos = httpRequest.uri.find('?');
     env["QUERY_STRING"] = (queryPos != std::string::npos) ? httpRequest.uri.substr(queryPos + 1) : "";
 
-    // Add Content-Type and Content-Length for POST requests
-    auto contentTypeIt = httpRequest.headers.find("content-type");
-    env["CONTENT_TYPE"] = (contentTypeIt != httpRequest.headers.end()) ? contentTypeIt->second : "";
-
-    auto contentLengthIt = httpRequest.headers.find("content-length");
-    env["CONTENT_LENGTH"] = (contentLengthIt != httpRequest.headers.end()) ? contentLengthIt->second : "0";
+    env["CONTENT_TYPE"] = getHeaderValue(httpRequest.headers, "Content-Type");
+    env["CONTENT_LENGTH"] = getHeaderValue(httpRequest.headers, "Content-Length");
 
     return env;
 }
+
+
 
 // Unchunk a request body if it is chunked
 std::string unchunkBody(const std::string& body) {
@@ -107,27 +115,19 @@ void handleCGI(int clientSock, const HttpRequest& httpRequest) {
         chdir(scriptDir.c_str());
 
         std::map<std::string, std::string> cgiEnv = buildCGIEnvironment(httpRequest, scriptPath);
+
+        // Corrected environment variable construction
+        std::vector<std::string> envStrings;
         std::vector<char*> envp;
         for (const auto& [key, value] : cgiEnv) {
-            envp.push_back(const_cast<char*>((key + "=" + value).c_str()));
+            envStrings.push_back(key + "=" + value);
+            envp.push_back(envStrings.back().data());
         }
         envp.push_back(nullptr);
 
         char* argv[] = {const_cast<char*>(scriptPath.c_str()), nullptr};
 
-        // Debug statements before execve
-        std::cout << "Executing CGI Script: " << scriptPath << std::endl;
-
-        std::cout << "Environment Variables:" << std::endl;
-        for (const auto& [key, value] : cgiEnv) {
-            std::cout << key << "=" << value << std::endl;
-        }
-
-        std::cout << "Arguments:" << std::endl;
-        std::cout << argv[0] << std::endl;
-        if (argv[1] != nullptr) {
-            std::cout << argv[1] << std::endl;
-        }
+        // Remove debug statements to avoid interfering with CGI output
 
         execve(scriptPath.c_str(), argv, envp.data());
         perror("execve failed");

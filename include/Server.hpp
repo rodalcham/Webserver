@@ -3,21 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 13:41:32 by gstronge         ###   ########.fr       */
+/*   Updated: 2024/12/05 14:20:13 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <string>
-#include <map>
-#include <sys/event.h>
-#include <unistd.h>
+#include "Webserv.hpp" 
 #include "HTTPRequest.hpp"
-#define ROOT_DIR "www/" // Adjust the directory path as per your project setup
+#include "ServerBlock.hpp"
+
+
+class HttpRequest; // Forward declaration
 
 /**
  * A Class representing the server, used to create a socket and listen to inncoming connections or requests.
@@ -27,8 +27,9 @@
  */
 class Server {
 public:
-    Server();
+    // Server();
     ~Server();
+    Server(ServerBlock& serverBlock);
     void run();
     void handleGet(int clientSock, HttpRequest& httpRequest);
     void handlePost(int clientSock, HttpRequest& httpRequest);
@@ -36,14 +37,16 @@ public:
     std::string resolvePath(const std::string& uri);
 
 private:
-    int		serverSock;
-    int		kq;
+    ServerBlock serverBlock;
+    int serverSock;
+    int kq;
 
     void acceptClient();
     void handleClient(int clientSock);
-    void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
+    // void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 
     std::string readFile(const std::string& filePath); // Function to read static files
     std::string getMimeType(const std::string& filePath);
 };
+
 

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+         #
+#    By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/12/05 10:29:16 by rchavez           #+#    #+#              #
-#    Updated: 2024/12/05 13:43:29 by gstronge         ###   ########.fr        #
+#    Updated: 2024/12/05 14:22:33 by mbankhar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ NAME		= webserver
 CC			= c++
 
 # Compilation flags
-CFLAGS		= -Wall -Wextra -Werror -std=c++11
+CFLAGS		= -Wall -Wextra -Werror -std=c++17
 
 # Directories
 SRC_DIR		= src
@@ -32,9 +32,9 @@ SRCS		=	$(SRC_DIR)/Config.cpp \
 				$(SRC_DIR)/HTTPRequest.cpp \
 				$(SRC_DIR)/Server.cpp \
 				$(SRC_DIR)/methods.cpp \
-				$(SRC_DIR)/Utils.cpp \
-				$(SRC_DIR)/log.cpp \
-				$(SRC_DIR)/main.cpp
+				$(SRC_DIR)/main.cpp \
+				$(SRC_DIR)/cgi.cpp \
+				$(SRC_DIR)/Utils.cpp
 
 # Objects
 OBJS		= $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)

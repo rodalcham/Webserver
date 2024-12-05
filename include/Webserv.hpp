@@ -3,29 +3,38 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 12:19:07 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 14:02:58 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <sys/event.h>
 #include <unistd.h>
+#include <stdexcept>
 #include <fcntl.h>
-#include <string>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <map>
-#include <set>
+#include <algorithm>
+#include <csignal>
 #include <atomic>
+#include <sstream>
+#include <vector>
+#include <string>
+#include "Server.hpp"
+#include "HTTPRequest.hpp"
+#include <fstream>
 #include <iostream>
 #include <fstream>
+// #include "cgi.hpp"
+#include "ServerBlock.hpp"
 
 #define SOCKET_BACKLOG_MAX 10
-#define PORT 8080
+// #define PORT 8080
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"

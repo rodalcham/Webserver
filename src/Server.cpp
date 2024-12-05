@@ -3,19 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 13:40:39 by gstronge         ###   ########.fr       */
+/*   Updated: 2024/12/05 14:26:30 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
 #include "../include/Webserv.hpp"
-
-class	Log;
-
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -24,149 +21,101 @@ class	Log;
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#define PORT 8080
-// #define ROOT_DIR "www/" 
+class log;
 
 extern std::atomic<bool> keepRunning;
 
+Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
+    int port = std::stoi(serverBlock.directive_pairs["listen"]);
+    serverSock = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSock < 0) throw std::runtime_error("Socket creation failed");
 
-Server::Server()
-{
-	serverSock = socket(AF_INET, SOCK_STREAM, 0);
-	if (serverSock < 0) throw std::runtime_error("Socket creation failed");
+    int flags = fcntl(serverSock, F_GETFL, 0);
+    if (flags < 0 || fcntl(serverSock, F_SETFL, flags | O_NONBLOCK) < 0)
+        throw std::runtime_error("Failed to set non-blocking mode");
 
-	int flags = fcntl(serverSock, F_GETFL, 0);
-	if (flags < 0 || fcntl(serverSock, F_SETFL, flags | O_NONBLOCK) < 0)
-		throw std::runtime_error("Failed to set non-blocking mode");
+    sockaddr_in serverAddr{};
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(port);
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
 
-	sockaddr_in serverAddr{};
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(PORT);
-	serverAddr.sin_addr.s_addr = INADDR_ANY;
+    if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+        throw std::runtime_error("Bind failed");
 
-	if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
-		throw std::runtime_error("Bind failed");
+    if (listen(serverSock, 5) < 0)
+        throw std::runtime_error("Listen failed");
 
-	if (listen(serverSock, 5) < 0) throw std::runtime_error("Listen failed");
+    kq = kqueue();
+    if (kq < 0) throw std::runtime_error("kqueue creation failed");
 
-	kq = kqueue();
-	if (kq < 0) throw std::runtime_error("kqueue creation failed");
-
-	struct kevent event;
-	EV_SET(&event, serverSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		throw std::runtime_error("Failed to add server socket to kqueue");
+    struct kevent event;
+    EV_SET(&event, serverSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+    if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+        throw std::runtime_error("Failed to add server socket to kqueue");
 }
 
 Server::~Server() {
-	close(serverSock);
-	close(kq);
-	debug("Server Destroyed");
+    close(serverSock);
+    close(kq);
+    std::cout << "Server Destroyed\n";
 }
 
 void Server::run() {
-	while (keepRunning) {
-		struct kevent eventList[1024];
-		int eventCount = kevent(this->kq, nullptr, 0, eventList, 1024, nullptr);
+    while (keepRunning) {
+        struct kevent eventList[1024];
+        int eventCount = kevent(kq, nullptr, 0, eventList, 1024, nullptr);
 
-		if (eventCount < 0) {
-			if (errno == EINTR) continue; // Handle signal interruption
-			throw std::runtime_error("kevent() failed");
-		}
+        if (eventCount < 0) {
+            if (errno == EINTR) continue;
+            throw std::runtime_error("kevent() failed");
+        }
 
-		for (int i = 0; i < eventCount; ++i) {
-			int eventSock = eventList[i].ident;
+        for (int i = 0; i < eventCount; ++i) {
+            int eventSock = eventList[i].ident;
 
-			if (eventSock == this->serverSock) {
-				this->acceptClient();
-			} else {
-				this->handleClient(eventSock);
-			}
-		}
-	}
+            if (eventSock == serverSock) {
+                acceptClient();
+            } else {
+                handleClient(eventSock);
+            }
+        }
+    }
 }
 
-
 void Server::acceptClient() {
-	int clientSock = accept(serverSock, nullptr, nullptr);
-	if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
+    int clientSock = accept(serverSock, nullptr, nullptr);
+    if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
 
-	struct kevent event;
-	EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		throw std::runtime_error("Failed to add client socket to kqueue");
-	debug("Client accepted: " + std::to_string(clientSock));
+    struct kevent event;
+    EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+    if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+        throw std::runtime_error("Failed to add client socket to kqueue");
 }
 
 void Server::handleClient(int clientSock) {
-	char buffer[1024];
-	ssize_t bytes = read(clientSock, buffer, sizeof(buffer));
-	if (bytes < 0) {
-		std::cerr << "Failed to read from client\n";
-		close(clientSock);
-		return;
-	}
-	if (bytes == 0) {
-		std::cerr << "Client disconnected\n";
-		close(clientSock);
-		return;
-	}
+    char buffer[1024];
+    ssize_t bytes = read(clientSock, buffer, sizeof(buffer));
+    if (bytes <= 0) {
+        close(clientSock);
+        return;
+    }
 
-	std::string request(buffer, bytes);
-	std::cout << "Received Request:\n" << request << std::endl;
+    std::string request(buffer, bytes);
+    try {
+        HttpRequest httpRequest = parseHttpRequest(request);
 
-	HttpRequest httpRequest = parseHttpRequest(request);
+        std::string rootDir = serverBlock.directive_pairs["root"];
+        std::string resolvedPath = resolvePath(rootDir + httpRequest.uri);
+        if (!std::ifstream(resolvedPath).good()) {
+            std::cerr << "404 Not Found: " << resolvedPath << std::endl;
+            return;
+        }
+        handleGet(clientSock, httpRequest);
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
 
-	debug("Request received from client " + std::to_string(clientSock) + ":\n" + request);
-	try {
-		if (httpRequest.method == HttpMethod::GET) {
-			handleGet(clientSock, httpRequest);
-		} else if (httpRequest.method == HttpMethod::POST) {
-			handlePost(clientSock, httpRequest);
-		} else if (httpRequest.method == HttpMethod::DELETE) {
-			handleDelete(clientSock, httpRequest);
-		} else {
-			sendResponse(clientSock, "501 Not Implemented", 501, "text/plain");
-		}
-	} catch (const std::exception& e) {
-		sendResponse(clientSock, "400 Bad Request: " + std::string(e.what()), 400, "text/plain");
-	}
-	close(clientSock);/*Not closing client every time*/
-}
-// void Server::sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType) {
-//     std::string statusLine;
-//     if (statusCode == 200) statusLine = "HTTP/1.1 200 OK\r\n";
-//     else if (statusCode == 201) statusLine = "HTTP/1.1 201 Created\r\n";
-//     else if (statusCode == 400) statusLine = "HTTP/1.1 400 Bad Request\r\n";
-//     else if (statusCode == 404) statusLine = "HTTP/1.1 404 Not Found\r\n";
-//     else if (statusCode == 501) statusLine = "HTTP/1.1 501 Not Implemented\r\n";
-
-//     std::string response = statusLine +
-//                            "Content-Type: " + contentType + "\r\n" +
-//                            "Content-Length: " + std::to_string(body.size()) + "\r\n" +
-//                            "\r\n" + body;
-
-//     write(clientSock, response.c_str(), response.size());
-// }
-void Server::sendResponse(int clientSock, const std::string& content, int statusCode, const std::string& contentType) {
-	std::ostringstream responseStream;
-	responseStream << "HTTP/1.1 " << statusCode << " OK\r\n";
-	responseStream << "Content-Type: " << contentType << "\r\n";
-	responseStream << "Content-Length: " << content.size() << "\r\n";
-	responseStream << "\r\n";
-	responseStream << content;
-
-	std::string response = responseStream.str();
-
-	size_t totalBytesSent = 0;
-	while (totalBytesSent < response.size()) {
-		ssize_t bytesSent = send(clientSock, response.c_str() + totalBytesSent, response.size() - totalBytesSent, 0);
-		if (bytesSent < 0) {
-			perror("Error sending response");
-			break;
-		}
-		totalBytesSent += bytesSent;
-	}
+    close(clientSock);
 }
 
 
@@ -178,13 +127,27 @@ std::string Server::readFile(const std::string& filePath) {
 	content << file.rdbuf();
 	return content.str();
 }
-#include <stdexcept>
 
 std::string Server::resolvePath(const std::string& uri) {
-	std::string path = ROOT_DIR + uri;
-	if (path.find("..") != std::string::npos) throw std::runtime_error("Invalid path");
-	return path;
+    // Root directory from configuration or default macro
+    std::string rootDir = serverBlock.directive_pairs.count("root") ? 
+                          serverBlock.directive_pairs["root"] : "www";
+
+    // Combine root directory with the requested URI
+    std::string path = /*rootDir +*/ uri;
+
+    // Sanitize and validate the path to prevent directory traversal
+    if (path.find("..") != std::string::npos) {
+        throw std::runtime_error("Invalid path: Directory traversal attempt");
+    }
+
+    // Debug logging to print the resolved path
+    std::cout << "[DEBUG] Resolved path: " << path << std::endl;
+
+    return path;
 }
+
+
 std::string Server::getMimeType(const std::string& filePath) {
 	size_t dotPos = filePath.find_last_of('.');
 	if (dotPos == std::string::npos) return "application/octet-stream";
@@ -199,5 +162,5 @@ std::string Server::getMimeType(const std::string& filePath) {
 	if (extension == "gif") return "image/gif";
 	if (extension == "txt") return "text/plain";
 
-	return "application/octet-stream";  // Default MIME type
+    return "application/octet-stream";
 }

@@ -6,12 +6,13 @@
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 10:29:53 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 11:06:06 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
+#include "../include/Webserv.hpp"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -56,6 +57,7 @@ Server::Server() {
 Server::~Server() {
     close(serverSock);
     close(kq);
+    debug("Server Destroyed");
 }
 
 void Server::run() {
@@ -89,6 +91,7 @@ void Server::acceptClient() {
     EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
     if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
         throw std::runtime_error("Failed to add client socket to kqueue");
+    debug("Client accepted: " + std::to_string(clientSock));
 }
 
 void Server::handleClient(int clientSock) {
@@ -110,6 +113,7 @@ void Server::handleClient(int clientSock) {
 
     HttpRequest httpRequest = parseHttpRequest(request);
 
+    debug("Request received from client " + std::to_string(clientSock) + ":\n" + request);
     try {
         if (httpRequest.method == HttpMethod::GET) {
             handleGet(clientSock, httpRequest);
@@ -124,7 +128,7 @@ void Server::handleClient(int clientSock) {
         sendResponse(clientSock, "400 Bad Request: " + std::string(e.what()), 400, "text/plain");
     }
 
-    close(clientSock);
+    close(clientSock);/*Not closing client every time*/
 }
 // void Server::sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType) {
 //     std::string statusLine;

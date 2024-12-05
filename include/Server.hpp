@@ -6,7 +6,7 @@
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 10:29:33 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 10:57:13 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,12 @@
 #include "HTTPRequest.hpp"
 #define ROOT_DIR "www/" // Adjust the directory path as per your project setup
 
-
+/**
+ * A Class representing the server, used to create a socket and listen to inncoming connections or requests.
+ * 
+ * @param serverSock An Integer containing the file descriptor for the server socket.
+ * @param kq An integer representing the KQueue.
+ */
 class Server {
 public:
     Server();

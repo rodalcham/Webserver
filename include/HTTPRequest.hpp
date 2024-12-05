@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 09:51:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 17:47:37 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 18:08:21 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,11 @@ private:
 
 public:
 
-	HttpRequest();
+	HttpRequest(HttpMethod method,
+				const std::string& uri,
+				const std::string& httpVersion,
+				const std::map<std::string, std::string>& headers,
+				const std::string& body);
 	~HttpRequest();
 
 	HttpMethod get_method() const;
@@ -60,5 +64,3 @@ public:
 // Function to parse an HTTP request string into an HttpRequest object
 HttpRequest parseHttpRequest(const std::string &request);
  std::map<std::string, std::string> parseBody(const std::string &body);
-    // std::string parseName(const std::string &body);
-    // std::string parseContent(const std::string &body);

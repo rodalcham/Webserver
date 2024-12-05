@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:41 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 17:52:55 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 18:18:03 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,12 @@
 #include "../include/cgi.hpp"
 #include "../include/Webserv.hpp"
 
-
-// Constructor
-HttpRequest::HttpRequest()
-	: method(HttpMethod::UNKNOWN), uri("/"), httpVersion("HTTP/1.1") {
-	headers.clear();
-	body.clear();
-}
+HttpRequest::HttpRequest(HttpMethod method,
+						const std::string& uri,
+						const std::string& httpVersion,
+						const std::map<std::string, std::string>& headers,
+						const std::string& body)
+	: method(method), uri(uri), httpVersion(httpVersion), headers(headers), body(body) {}
 
 // Destructor
 HttpRequest::~HttpRequest() {
@@ -36,81 +35,87 @@ HttpMethod parseHttpMethod(const std::string& methodStr) {
 }
 
 // Helper function to parse headers from the request
-void parseHeaders(HttpRequest& httpRequest, std::istringstream& requestStream) {
-	std::string line;
+std::map<std::string, std::string> parseHeaders(std::istringstream& requestStream) {
+    std::map<std::string, std::string> headers;
+    std::string line;
 
-	while (std::getline(requestStream, line)) {
-		if (!line.empty() && line.back() == '\r') {
-			line.pop_back(); // Remove trailing \r
-		}
-		if (line.empty()) {
-			break; // End of headers
-		}
-		size_t colonPos = line.find(':');
-		if (colonPos != std::string::npos) {
-			std::string headerName = line.substr(0, colonPos);
-			std::string headerValue = line.substr(colonPos + 1); // Skip ':'
+    while (std::getline(requestStream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back(); // Remove trailing \r
+        }
+        if (line.empty()) {
+            break; // End of headers
+        }
+        size_t colonPos = line.find(':');
+        if (colonPos != std::string::npos) {
+            std::string headerName = line.substr(0, colonPos);
+            std::string headerValue = line.substr(colonPos + 1); // Skip ':'
 
-			// Trim leading and trailing whitespace from headerName
-			headerName.erase(0, headerName.find_first_not_of(" \t\r\n"));
-			headerName.erase(headerName.find_last_not_of(" \t\r\n") + 1);
+            // Trim leading and trailing whitespace from headerName
+            headerName.erase(0, headerName.find_first_not_of(" \t\r\n"));
+            headerName.erase(headerName.find_last_not_of(" \t\r\n") + 1);
 
-			// Trim leading and trailing whitespace from headerValue
-			headerValue.erase(0, headerValue.find_first_not_of(" \t\r\n"));
-			headerValue.erase(headerValue.find_last_not_of(" \t\r\n") + 1);
+            // Trim leading and trailing whitespace from headerValue
+            headerValue.erase(0, headerValue.find_first_not_of(" \t\r\n"));
+            headerValue.erase(headerValue.find_last_not_of(" \t\r\n") + 1);
 
-			// Normalize header name to lowercase for case-insensitivity
-			std::transform(headerName.begin(), headerName.end(), headerName.begin(), ::tolower);
+            // Normalize header name to lowercase for case-insensitivity
+            std::transform(headerName.begin(), headerName.end(), headerName.begin(), ::tolower);
 
-			httpRequest.headers[headerName] = headerValue;
-		}
-	}
+            headers[headerName] = headerValue;
+        }
+    }
+
+    return headers;
 }
 
+
 HttpRequest parseHttpRequest(const std::string& request) {
-	HttpRequest httpRequest;
+    // Split the request into request line, headers, and body
+    size_t headerEnd = request.find("\r\n\r\n");
+    if (headerEnd == std::string::npos) {
+        throw std::runtime_error("Invalid HTTP request: Missing headers or body");
+    }
 
-	// Split the request into request line, headers, and body
-	size_t headerEnd = request.find("\r\n\r\n");
-	if (headerEnd == std::string::npos) throw std::runtime_error("Invalid HTTP request");
+    std::string headerPart = request.substr(0, headerEnd);
+    std::string bodyPart = request.substr(headerEnd + 4); // Body starts after \r\n\r\n
 
-	std::string headerPart = request.substr(0, headerEnd);
-	std::string bodyPart = request.substr(headerEnd + 4); // Body starts after \r\n\r\n
+    // Parse the request line
+    std::istringstream requestStream(headerPart);
+    std::string requestLine;
+    std::getline(requestStream, requestLine);
+    if (!requestLine.empty() && requestLine.back() == '\r') {
+        requestLine.pop_back(); // Remove trailing \r
+    }
 
-	std::istringstream requestStream(headerPart);
+    size_t methodEnd = requestLine.find(' ');
+    if (methodEnd == std::string::npos) {
+        throw std::runtime_error("Invalid HTTP request line: Missing method");
+    }
+    std::string methodStr = requestLine.substr(0, methodEnd);
+    HttpMethod method = parseHttpMethod(methodStr);
 
-	// Parse request line
-	std::string requestLine;
-	std::getline(requestStream, requestLine);
-	if (!requestLine.empty() && requestLine.back() == '\r') {
-		requestLine.pop_back(); // Remove trailing \r
-	}
-	size_t methodEnd = requestLine.find(' ');
-	if (methodEnd == std::string::npos) throw std::runtime_error("Invalid HTTP request line");
+    size_t uriEnd = requestLine.find(' ', methodEnd + 1);
+    if (uriEnd == std::string::npos) {
+        throw std::runtime_error("Invalid HTTP request line: Missing URI");
+    }
+    std::string uri = requestLine.substr(methodEnd + 1, uriEnd - methodEnd - 1);
+    std::string httpVersion = requestLine.substr(uriEnd + 1);
 
-	std::string methodStr = requestLine.substr(0, methodEnd);
-	httpRequest.method = parseHttpMethod(methodStr);
-
-	size_t uriEnd = requestLine.find(' ', methodEnd + 1);
-	if (uriEnd == std::string::npos) throw std::runtime_error("Invalid HTTP request line");
-
-	httpRequest.uri = requestLine.substr(methodEnd + 1, uriEnd - methodEnd - 1);
-	httpRequest.httpVersion = requestLine.substr(uriEnd + 1);
-
-	// Parse headers
-	parseHeaders(httpRequest, requestStream);
+    // Parse headers
+    std::map<std::string, std::string> headers = parseHeaders(requestStream);
 
     // Decode chunked encoding if applicable
-    if (httpRequest.headers.find("transfer-encoding") != httpRequest.headers.end() &&
-        httpRequest.headers["transfer-encoding"] == "chunked") {
+    if (headers.find("transfer-encoding") != headers.end() &&
+        headers["transfer-encoding"] == "chunked") {
         bodyPart = unchunkBody(bodyPart);
     }
 
-    // Set body
-    httpRequest.body = bodyPart;
-
-	return httpRequest;
+    // Create and return the HttpRequest object using the constructor
+    return HttpRequest(method, uri, httpVersion, headers, bodyPart);
 }
+
+
 
 
 

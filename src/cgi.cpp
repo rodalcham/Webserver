@@ -73,18 +73,20 @@ std::map<std::string, std::string> buildCGIEnvironment(const HttpRequest& httpRe
     std::map<std::string, std::string> env;
     env["GATEWAY_INTERFACE"] = "CGI/1.1";
     env["SERVER_PROTOCOL"] = "HTTP/1.1";
-    env["REQUEST_METHOD"] = methodToString(httpRequest.method);
+    env["REQUEST_METHOD"] = methodToString(httpRequest.get_method());
     env["SCRIPT_NAME"] = scriptPath;
     env["PATH_INFO"] = scriptPath;
 
-    size_t queryPos = httpRequest.uri.find('?');
-    env["QUERY_STRING"] = (queryPos != std::string::npos) ? httpRequest.uri.substr(queryPos + 1) : "";
+    size_t queryPos = httpRequest.get_uri().find('?');
+    env["QUERY_STRING"] = (queryPos != std::string::npos) ? httpRequest.get_uri().substr(queryPos + 1) : "";
 
-    env["CONTENT_TYPE"] = getHeaderValue(httpRequest.headers, "Content-Type");
-    env["CONTENT_LENGTH"] = getHeaderValue(httpRequest.headers, "Content-Length");
+    env["CONTENT_TYPE"] = httpRequest.get_header("Content-Type");
+    env["CONTENT_LENGTH"] = httpRequest.get_header("Content-Length");
 
     return env;
 }
+
+
 
 // Capture output from the CGI script
 void captureCGIOutput(int pipeFd, std::string& output) {
@@ -97,7 +99,7 @@ void captureCGIOutput(int pipeFd, std::string& output) {
 
 // Handle CGI execution for the given HTTP request
 void handleCGI(int clientSock, const HttpRequest& httpRequest) {
-    std::string scriptPath = resolvePath(httpRequest.uri);
+    std::string scriptPath = resolvePath(httpRequest.get_uri());
     std::string scriptDir = scriptPath.substr(0, scriptPath.find_last_of('/'));
 
     int inPipe[2], outPipe[2];
@@ -130,8 +132,6 @@ void handleCGI(int clientSock, const HttpRequest& httpRequest) {
 
         char* argv[] = {const_cast<char*>(scriptPath.c_str()), nullptr};
 
-        // Remove debug statements to avoid interfering with CGI output
-
         execve(scriptPath.c_str(), argv, envp.data());
         perror("execve failed");
         exit(1);
@@ -140,7 +140,7 @@ void handleCGI(int clientSock, const HttpRequest& httpRequest) {
         close(inPipe[0]);
         close(outPipe[1]);
 
-        write(inPipe[1], httpRequest.body.c_str(), httpRequest.body.size());
+        write(inPipe[1], httpRequest.get_body().c_str(), httpRequest.get_body().size());
         close(inPipe[1]);
 
         std::string cgiOutput;

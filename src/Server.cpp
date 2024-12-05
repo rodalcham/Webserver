@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 15:32:33 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 18:20:28 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,7 @@ void Server::handleClient(int clientSock) {
         HttpRequest httpRequest = parseHttpRequest(request);
 
         std::string rootDir = serverBlock.directive_pairs["root"];
-        std::string resolvedPath = resolvePath(rootDir + httpRequest.uri);
+        std::string resolvedPath = resolvePath(rootDir + httpRequest.get_uri());
         if (!std::ifstream(resolvedPath).good()) {
             std::cerr << "404 Not Found: " << resolvedPath << std::endl;
             return;

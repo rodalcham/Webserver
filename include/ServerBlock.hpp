@@ -3,16 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   ServerBlock.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:34 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 10:29:36 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 17:58:43 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "Webserv.hpp"
+#include <string>
+#include <map>
 
 class ServerBlock
 {

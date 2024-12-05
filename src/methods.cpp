@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   methods.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 12:17:13 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 18:22:27 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 19:12:46 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
+#include "../include/HTTPResponse.hpp"
 #include "../include/cgi.hpp"
 
 
@@ -38,6 +39,12 @@ void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
 	} catch (const std::exception& e) {
 		return;
 	}
+	
+	// httpRequest.debug();
+
+	HttpResponse	response(httpRequest);
+	// response.debug();
+	response.sendResponse(clientSock);
 }
 
 

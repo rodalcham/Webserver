@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 09:51:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 18:08:21 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 19:13:20 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ public:
 	std::string get_header(const std::string& key) const;
 
 	
-	void debugPrint() const;
+	void debug() const;
 	// Helper function to get a header value in a case-insensitive manner
 	std::string getHeader(const std::string& headerName) const;
 };

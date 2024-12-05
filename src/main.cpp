@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:43 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 14:28:38 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 14:39:27 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,9 +51,7 @@ int main(int argc, char** argv) {
         ServerBlock serverBlock(config_file); // Initialize directly with ifstream
         Server server(serverBlock);
 
-        while (keepRunning) {
-            server.run();
-        }
+        server.run();
 
         std::cout << "Server shutting down...\n";
 

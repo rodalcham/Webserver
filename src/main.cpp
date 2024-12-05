@@ -2,8 +2,6 @@
 #include "../include/Server.hpp"
 #include "../include/Config.hpp"
 
-std::atomic<bool> keepRunning(true);
-
 void signalHandler(int signum) {
     std::cout << "\nInterrupt signal (" << signum << ") received.\n";
     keepRunning = false; // Stop the server loop

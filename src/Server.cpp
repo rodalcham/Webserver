@@ -1,11 +1,11 @@
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
 
-extern std::atomic<bool> keepRunning;
+Server::Server() : serverBlock(*(new ServerBlock())) {
+    // Initialize with default ServerBlock if no arguments are passed
+}
 
-
-Server::Server(ServerBlock& serverBlock) {
-    // Example of applying configuration
+Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
     int port = std::stoi(serverBlock.directive_pairs["listen"]);
     serverSock = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSock < 0) throw std::runtime_error("Socket creation failed");
@@ -57,7 +57,6 @@ void Server::run() {
     }
 }
 
-
 void Server::acceptClient() {
     int clientSock = accept(serverSock, nullptr, nullptr);
     if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
@@ -90,17 +89,15 @@ void Server::handleClient(int clientSock) {
 
         std::string rootDir = serverBlock.directive_pairs["root"];
         std::string errorPage404 = serverBlock.error_pages["404"];
+        std::string errorPage400 = serverBlock.error_pages["400"];
 
-        // Route requests based on the HTTP method
         if (httpRequest.method == HttpMethod::GET) {
             std::string resolvedPath = resolvePath(rootDir + httpRequest.uri);
             if (!std::ifstream(resolvedPath).good()) {
-                // Serve 404 error page
                 if (!errorPage404.empty()) {
                     std::string errorContent = readFile(errorPage404);
-                    // sendResponse(clientSock, errorContent, 404, "text/html");
                 } else {
-                    // sendResponse(clientSock, "404 Not Found", 404, "text/plain");
+                    std::cerr << "404 Not Found\n";
                 }
                 return;
             }
@@ -110,24 +107,19 @@ void Server::handleClient(int clientSock) {
         } else if (httpRequest.method == HttpMethod::DELETE) {
             handleDelete(clientSock, httpRequest);
         } else {
-            // sendResponse(clientSock, "501 Not Implemented", 501, "text/plain");
+            std::cerr << "501 Not Implemented\n";
         }
     } catch (const std::exception& e) {
         std::cerr << "Error handling client: " << e.what() << std::endl;
-
-        // Serve a generic 400 error or a custom error page if configured
-        std::string errorPage400 = serverBlock.error_pages["400"];
-        if (!errorPage400.empty()) {
-            std::string errorContent = readFile(errorPage400);
-            // sendResponse(clientSock, errorContent, 400, "text/html");
-        } else {
-            // sendResponse(clientSock, "400 Bad Request", 400, "text/plain");
-        }
+        // if (!errorPage400.empty()) {
+        //     std::string errorContent = readFile(errorPage400);
+        // } else {
+        //     std::cerr << "400 Bad Request\n";
+        // }
     }
 
     close(clientSock);
 }
-
 
 std::string Server::readFile(const std::string& filePath) {
     std::ifstream file(filePath, std::ios::binary);
@@ -139,10 +131,12 @@ std::string Server::readFile(const std::string& filePath) {
 }
 
 std::string Server::resolvePath(const std::string& uri) {
-    std::string path = ROOT_DIR + uri;
+    std::string rootDir = serverBlock.directive_pairs["root"];
+    std::string path = rootDir + uri;
     if (path.find("..") != std::string::npos) throw std::runtime_error("Invalid path");
     return path;
 }
+
 std::string Server::getMimeType(const std::string& filePath) {
     size_t dotPos = filePath.find_last_of('.');
     if (dotPos == std::string::npos) return "application/octet-stream";
@@ -157,5 +151,5 @@ std::string Server::getMimeType(const std::string& filePath) {
     if (extension == "gif") return "image/gif";
     if (extension == "txt") return "text/plain";
 
-    return "application/octet-stream";  // Default MIME type
+    return "application/octet-stream";
 }

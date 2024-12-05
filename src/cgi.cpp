@@ -1,6 +1,6 @@
-// #include "cgi.hpp"
-#include "Webserv.hpp"
-// #include "Server.hpp"
+#include "../include/Webserv.hpp"
+#include "../include/cgi.hpp"
+
 
 std::string resolvePath(const std::string& uri) {
     std::string filePath = ROOT_DIR + uri;
@@ -10,6 +10,27 @@ std::string resolvePath(const std::string& uri) {
         return "";
     }
     return std::string(realPath);
+}
+
+std::string unchunkBody(const std::string& body) {
+    std::string result;
+    size_t pos = 0;
+
+    while (pos < body.size()) {
+        // Find the end of the chunk size line
+        size_t chunkSizeEnd = body.find("\r\n", pos);
+        if (chunkSizeEnd == std::string::npos) break;
+
+        // Parse the chunk size
+        int chunkSize = std::stoi(body.substr(pos, chunkSizeEnd - pos), nullptr, 16);
+        if (chunkSize == 0) break; // End of chunked body
+
+        pos = chunkSizeEnd + 2; // Move past the chunk size and \r\n
+        result += body.substr(pos, chunkSize);
+        pos += chunkSize + 2; // Move past the chunk and its trailing \r\n
+    }
+
+    return result;
 }
 
 
@@ -63,24 +84,6 @@ std::map<std::string, std::string> buildCGIEnvironment(const HttpRequest& httpRe
     env["CONTENT_LENGTH"] = getHeaderValue(httpRequest.headers, "Content-Length");
 
     return env;
-}
-
-
-
-// Unchunk a request body if it is chunked
-std::string unchunkBody(const std::string& body) {
-    std::istringstream stream(body);
-    std::ostringstream unchunkedBody;
-    std::string line;
-    while (std::getline(stream, line)) {
-        size_t chunkSize = std::stoul(line, nullptr, 16); // Hex size
-        if (chunkSize == 0) break; // End of chunks
-        char buffer[chunkSize];
-        stream.read(buffer, chunkSize);
-        unchunkedBody.write(buffer, chunkSize);
-        stream.ignore(2); // Skip \r\n
-    }
-    return unchunkedBody.str();
 }
 
 // Capture output from the CGI script

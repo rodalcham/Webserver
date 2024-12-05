@@ -1,4 +1,6 @@
 #include "../include/HTTPRequest.hpp"
+#include "../include/cgi.hpp"
+#include "../include/Webserv.hpp"
 
 
 // Constructor

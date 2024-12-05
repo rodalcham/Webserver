@@ -1,9 +1,11 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
 #include "Webserv.hpp" 
 #include "HTTPRequest.hpp"
+#include "ServerBlock.hpp"
 
+
+class HttpRequest; // Forward declaration
 
 class Server {
 public:
@@ -29,4 +31,4 @@ private:
     std::string getMimeType(const std::string& filePath);
 };
 
-#endif // SERVER_HPP
+

@@ -5,7 +5,7 @@ NAME		= webserver
 CC			= c++
 
 # Compilation flags
-CFLAGS		= -Wall -Wextra -Werror -std=c++11
+CFLAGS		= -Wall -Wextra -Werror -std=c++17
 
 # Directories
 SRC_DIR		= src
@@ -17,7 +17,8 @@ SRCS		=	$(SRC_DIR)/Config.cpp \
 				$(SRC_DIR)/HTTPRequest.cpp \
 				$(SRC_DIR)/Server.cpp \
 				$(SRC_DIR)/methods.cpp \
-				$(SRC_DIR)/main.cpp
+				$(SRC_DIR)/main.cpp \
+				$(SRC_DIR)/cgi.cpp
 
 # Objects
 OBJS		= $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)

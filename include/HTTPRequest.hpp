@@ -1,5 +1,4 @@
-#ifndef HTTPREQUEST_HPP
-#define HTTPREQUEST_HPP
+#pragma once
 
 #include "Webserv.hpp" 
 
@@ -26,6 +25,7 @@ public:
     std::map<std::string, std::string> headers;  // Headers as key-value pairs
     std::string body;                            // Request body (e.g., for POST)
 
+
     void debugPrint() const;
     // Helper function to get a header value in a case-insensitive manner
     std::string getHeader(const std::string& headerName) const {
@@ -49,4 +49,3 @@ HttpRequest parseHttpRequest(const std::string &request);
  std::map<std::string, std::string> parseBody(const std::string &body);
     // std::string parseName(const std::string &body);
     // std::string parseContent(const std::string &body);
-#endif // HTTPREQUEST_HPP

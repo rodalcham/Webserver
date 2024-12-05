@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 14:54:06 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 15:32:33 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,11 +115,11 @@ void Server::handleClient(int clientSock) {
             std::cerr << "404 Not Found: " << resolvedPath << std::endl;
             return;
         }
+        debug("Received from client " + std::to_string(clientSock) + ":\n" + request);
         handleGet(clientSock, httpRequest);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
-
     close(clientSock);
 }
 

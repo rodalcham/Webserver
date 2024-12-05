@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:41 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 12:57:52 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 17:51:07 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,4 +164,29 @@ std::map<std::string, std::string> parseBody(const std::string &body) {
     }
 
     return keyValueMap;
+}
+
+HttpMethod HttpRequest::get_method() const {
+	return method; // Return the private member `method`
+}
+
+std::string HttpRequest::get_uri() const {
+	return uri; // Return the private member `uri`
+}
+
+std::string HttpRequest::get_httpVersion() const {
+	return httpVersion; // Return the private member `httpVersion`
+}
+
+std::string HttpRequest::get_body() const {
+	return body; // Return the private member `body`
+}
+
+std::string HttpRequest::get_header(const std::string& key) const
+{
+	auto it = headers.find(key);
+	if (it != headers.end()) {
+		return it->second; // Return the value if the key exists
+	}
+	return ""; // Return an empty string if the key is not found
 }

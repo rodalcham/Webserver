@@ -1,20 +1,20 @@
-#pragma once
-
-#include "Webserv.hpp" 
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   HTTPRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 09:51:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 12:25:26 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 17:47:37 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
+#include "Webserv.hpp"
+#include <string>
+#include <map>
 
 // Enum for supported HTTP methods
 enum class HttpMethod
@@ -30,23 +30,28 @@ enum class HttpMethod
 class HttpRequest 
 {
 
-	private:
-
-	// Helper function to convert HttpMethod to string
-	std::string methodToString(HttpMethod method) const;
-
-	public:
-
-	HttpRequest();
-
-	~HttpRequest();
-
+private:
 	HttpMethod method;                           // HTTP method (e.g., GET, POST)
 	std::string uri;                             // Requested URI
 	std::string httpVersion;                     // HTTP version (e.g., HTTP/1.1)
 	std::map<std::string, std::string> headers;  // Headers as key-value pairs
 	std::string body;                            // Request body (e.g., for POST)
 
+	// Helper function to convert HttpMethod to string
+	std::string methodToString(HttpMethod method) const;
+
+public:
+
+	HttpRequest();
+	~HttpRequest();
+
+	HttpMethod get_method() const;
+	std::string get_uri() const;
+	std::string get_httpVersion() const;
+	std::string get_body() const;
+	std::string get_header(const std::string& key) const;
+
+	
 	void debugPrint() const;
 	// Helper function to get a header value in a case-insensitive manner
 	std::string getHeader(const std::string& headerName) const;
@@ -55,3 +60,5 @@ class HttpRequest
 // Function to parse an HTTP request string into an HttpRequest object
 HttpRequest parseHttpRequest(const std::string &request);
  std::map<std::string, std::string> parseBody(const std::string &body);
+    // std::string parseName(const std::string &body);
+    // std::string parseContent(const std::string &body);

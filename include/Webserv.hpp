@@ -6,12 +6,16 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 14:02:58 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 15:45:22 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
+#include "Server.hpp"
+#include "HTTPRequest.hpp"
+#include "cgi.hpp"
+#include "ServerBlock.hpp"
 #include <sys/event.h>
 #include <unistd.h>
 #include <stdexcept>
@@ -25,13 +29,9 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include "Server.hpp"
-#include "HTTPRequest.hpp"
 #include <fstream>
 #include <iostream>
 #include <fstream>
-// #include "cgi.hpp"
-#include "ServerBlock.hpp"
 
 #define SOCKET_BACKLOG_MAX 10
 // #define PORT 8080

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 10:57:13 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 13:41:32 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,8 @@ public:
     std::string resolvePath(const std::string& uri);
 
 private:
-    int serverSock;
-    int kq;
+    int		serverSock;
+    int		kq;
 
     void acceptClient();
     void handleClient(int clientSock);

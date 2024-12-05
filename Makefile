@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+         #
+#    By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/12/05 10:29:16 by rchavez           #+#    #+#              #
-#    Updated: 2024/12/05 10:50:09 by rchavez          ###   ########.fr        #
+#    Updated: 2024/12/05 13:43:29 by gstronge         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,6 +33,7 @@ SRCS		=	$(SRC_DIR)/Config.cpp \
 				$(SRC_DIR)/Server.cpp \
 				$(SRC_DIR)/methods.cpp \
 				$(SRC_DIR)/Utils.cpp \
+				$(SRC_DIR)/log.cpp \
 				$(SRC_DIR)/main.cpp
 
 # Objects

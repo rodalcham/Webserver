@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:41 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 18:18:03 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 18:57:22 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,18 +119,6 @@ HttpRequest parseHttpRequest(const std::string& request) {
 
 
 
-// Print the details of the HTTP request
-void HttpRequest::debugPrint() const {
-	std::cout << "Received HTTP Request:\n";
-	std::cout << "Method: " << methodToString(method) << "\n";
-	std::cout << "URI: " << uri << "\n";
-	std::cout << "HTTP Version: " << httpVersion << "\n";
-	std::cout << "Headers:\n";
-	for (const auto& header : headers) {
-		std::cout << "  " << header.first << ": " << header.second << "\n";
-	}
-	std::cout << "Body: " << body << "\n\n";
-}
 
 // Convert HttpMethod enum to a string, for debug only
 std::string HttpRequest::methodToString(HttpMethod method) const {
@@ -198,4 +186,15 @@ std::string HttpRequest::get_header(const std::string& key) const
 		return it->second;
 	}
 	return "";
+}
+
+// Print the details of the HTTP request
+void HttpRequest::debug() const {
+    std::cout << "Received HTTP Request:\n";
+    std::cout << "Header Connection: " << get_header("connection") << "\n\n";
+    std::cout << "Header accept: " << get_header("accept") << "\n\n";
+    // std::cout << "Method: " << get_method() << "\n";
+    std::cout << "URI: " << get_uri() << "\n";
+    std::cout << "HTTP Version: " << get_httpVersion() << "\n";
+    std::cout << "Body: " << get_body() << "\n\n";
 }

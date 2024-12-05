@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 12:55:54 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 14:11:33 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,9 @@
 
 extern std::atomic<bool> keepRunning;
 
-Server::Server() : serverBlock(*(new ServerBlock())) {
-    // Initialize with default ServerBlock if no arguments are passed
-}
+// Server::Server() : serverBlock(*(new ServerBlock())) {
+//     // Initialize with default ServerBlock if no arguments are passed
+// }
 
 Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
     int port = std::stoi(serverBlock.directive_pairs["listen"]);
@@ -158,11 +158,24 @@ std::string Server::readFile(const std::string& filePath) {
 }
 
 std::string Server::resolvePath(const std::string& uri) {
-    std::string rootDir = serverBlock.directive_pairs["root"];
-    std::string path = rootDir + uri;
-    if (path.find("..") != std::string::npos) throw std::runtime_error("Invalid path");
+    // Root directory from configuration or default macro
+    std::string rootDir = serverBlock.directive_pairs.count("root") ? 
+                          serverBlock.directive_pairs["root"] : "www";
+
+    // Combine root directory with the requested URI
+    std::string path = /*rootDir +*/ uri;
+
+    // Sanitize and validate the path to prevent directory traversal
+    if (path.find("..") != std::string::npos) {
+        throw std::runtime_error("Invalid path: Directory traversal attempt");
+    }
+
+    // Debug logging to print the resolved path
+    std::cout << "[DEBUG] Resolved path: " << path << std::endl;
+
     return path;
 }
+
 
 std::string Server::getMimeType(const std::string& filePath) {
 	size_t dotPos = filePath.find_last_of('.');

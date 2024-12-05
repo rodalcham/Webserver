@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 12:58:21 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 14:02:58 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,12 +33,8 @@
 // #include "cgi.hpp"
 #include "ServerBlock.hpp"
 
-
-extern bool keepRunning;
-#define ROOT_DIR "www"
-
 #define SOCKET_BACKLOG_MAX 10
-#define PORT 8080
+// #define PORT 8080
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"

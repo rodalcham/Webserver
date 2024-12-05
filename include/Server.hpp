@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 12:59:04 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 13:08:32 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class HttpRequest; // Forward declaration
  */
 class Server {
 public:
-    Server();
+    // Server();
     ~Server();
     Server(ServerBlock& serverBlock);
     void run();

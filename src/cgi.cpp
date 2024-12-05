@@ -3,7 +3,7 @@
 
 
 std::string resolvePath(const std::string& uri) {
-    std::string filePath = ROOT_DIR + uri;
+    std::string filePath = uri;
     char realPath[PATH_MAX];
     if (realpath(filePath.c_str(), realPath) == nullptr) {
         perror("realpath failed");

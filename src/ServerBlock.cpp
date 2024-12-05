@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerBlock.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:55 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 10:29:58 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 13:00:12 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ void ServerBlock::parseBlock(std::istream& stream)
 		std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
 
 
-		if (key == "server_name" || key == "listen" || key == "root" || key == "index")
+		if (key == "server_name" || key == "listen" || key == "root" || key == "index" || key == "client_max_body_size")
 			directive_pairs.insert({key, value});
 		else if (key == "error_page")
 			setErrorPage(value, line);			
@@ -116,7 +116,7 @@ void	ServerBlock::setLocationBlock(std::istream& stream, std::string line)
 		std::string key = directive.substr(0, space_pos);
 		std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
 
-		if (key == "allow_methods" || key == "index" || key == "root" || key == "autoindex" || key == "cgi_pass" || key == "return")
+		if (key == "allow_methods" || key == "index" || key == "root" || key == "autoindex" || key == "cgi_pass" || key == "return" || key == "client_max_body_size")
 			location_blocks[location].insert({key, value});
 		// else if (key == "error_page")
 		// 	setErrorPage(value, line);			

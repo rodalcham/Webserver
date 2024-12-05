@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:43 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 13:29:09 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 14:28:38 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     }
 
     debug("Server running in DEBUG mode.");
-
+    setupSignalHandler(); // Set up the signal handler
     try {
         std::ifstream config_file(argv[1]);
         if (!config_file.is_open()) {

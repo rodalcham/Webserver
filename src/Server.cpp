@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 14:11:33 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 14:26:30 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,132 +21,103 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#define PORT 8080
-// #define ROOT_DIR "www/" 
+class log;
 
 extern std::atomic<bool> keepRunning;
-
-// Server::Server() : serverBlock(*(new ServerBlock())) {
-//     // Initialize with default ServerBlock if no arguments are passed
-// }
 
 Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
     int port = std::stoi(serverBlock.directive_pairs["listen"]);
     serverSock = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSock < 0) throw std::runtime_error("Socket creation failed");
 
+    int flags = fcntl(serverSock, F_GETFL, 0);
+    if (flags < 0 || fcntl(serverSock, F_SETFL, flags | O_NONBLOCK) < 0)
+        throw std::runtime_error("Failed to set non-blocking mode");
+
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
-	if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
-		throw std::runtime_error("Bind failed");
+    if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+        throw std::runtime_error("Bind failed");
 
     if (listen(serverSock, 5) < 0)
         throw std::runtime_error("Listen failed");
 
-	kq = kqueue();
-	if (kq < 0) throw std::runtime_error("kqueue creation failed");
+    kq = kqueue();
+    if (kq < 0) throw std::runtime_error("kqueue creation failed");
 
-	struct kevent event;
-	EV_SET(&event, serverSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		throw std::runtime_error("Failed to add server socket to kqueue");
+    struct kevent event;
+    EV_SET(&event, serverSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+    if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+        throw std::runtime_error("Failed to add server socket to kqueue");
 }
 
 Server::~Server() {
-	close(serverSock);
-	close(kq);
-	debug("Server Destroyed");
+    close(serverSock);
+    close(kq);
+    std::cout << "Server Destroyed\n";
 }
 
 void Server::run() {
-	while (keepRunning) {
-		struct kevent eventList[1024];
-		int eventCount = kevent(this->kq, nullptr, 0, eventList, 1024, nullptr);
+    while (keepRunning) {
+        struct kevent eventList[1024];
+        int eventCount = kevent(kq, nullptr, 0, eventList, 1024, nullptr);
 
-		if (eventCount < 0) {
-			if (errno == EINTR) continue; // Handle signal interruption
-			throw std::runtime_error("kevent() failed");
-		}
+        if (eventCount < 0) {
+            if (errno == EINTR) continue;
+            throw std::runtime_error("kevent() failed");
+        }
 
-		for (int i = 0; i < eventCount; ++i) {
-			int eventSock = eventList[i].ident;
+        for (int i = 0; i < eventCount; ++i) {
+            int eventSock = eventList[i].ident;
 
-			if (eventSock == this->serverSock) {
-				this->acceptClient();
-			} else {
-				this->handleClient(eventSock);
-			}
-		}
-	}
+            if (eventSock == serverSock) {
+                acceptClient();
+            } else {
+                handleClient(eventSock);
+            }
+        }
+    }
 }
 
 void Server::acceptClient() {
-	int clientSock = accept(serverSock, nullptr, nullptr);
-	if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
+    int clientSock = accept(serverSock, nullptr, nullptr);
+    if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
 
-	struct kevent event;
-	EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		throw std::runtime_error("Failed to add client socket to kqueue");
-	debug("Client accepted: " + std::to_string(clientSock));
+    struct kevent event;
+    EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+    if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+        throw std::runtime_error("Failed to add client socket to kqueue");
 }
 
 void Server::handleClient(int clientSock) {
     char buffer[1024];
     ssize_t bytes = read(clientSock, buffer, sizeof(buffer));
-    if (bytes < 0) {
-        std::cerr << "Failed to read from client\n";
-        close(clientSock);
-        return;
-    }
-    if (bytes == 0) {
-        std::cerr << "Client disconnected\n";
+    if (bytes <= 0) {
         close(clientSock);
         return;
     }
 
     std::string request(buffer, bytes);
-    std::cout << "Received Request:\n" << request << std::endl;
-
     try {
         HttpRequest httpRequest = parseHttpRequest(request);
 
         std::string rootDir = serverBlock.directive_pairs["root"];
-        std::string errorPage404 = serverBlock.error_pages["404"];
-        std::string errorPage400 = serverBlock.error_pages["400"];
-
-        if (httpRequest.method == HttpMethod::GET) {
-            std::string resolvedPath = resolvePath(rootDir + httpRequest.uri);
-            if (!std::ifstream(resolvedPath).good()) {
-                if (!errorPage404.empty()) {
-                    std::string errorContent = readFile(errorPage404);
-                } else {
-                    std::cerr << "404 Not Found\n";
-                }
-                return;
-            }
-            handleGet(clientSock, httpRequest);
-        } else if (httpRequest.method == HttpMethod::POST) {
-            handlePost(clientSock, httpRequest);
-        } else if (httpRequest.method == HttpMethod::DELETE) {
-            handleDelete(clientSock, httpRequest);
-        } else {
-            std::cerr << "501 Not Implemented\n";
+        std::string resolvedPath = resolvePath(rootDir + httpRequest.uri);
+        if (!std::ifstream(resolvedPath).good()) {
+            std::cerr << "404 Not Found: " << resolvedPath << std::endl;
+            return;
         }
+        handleGet(clientSock, httpRequest);
     } catch (const std::exception& e) {
-        std::cerr << "Error handling client: " << e.what() << std::endl;
-        // if (!errorPage400.empty()) {
-        //     std::string errorContent = readFile(errorPage400);
-        // } else {
-        //     std::cerr << "400 Bad Request\n";
-        // }
+        std::cerr << "Error: " << e.what() << std::endl;
     }
 
     close(clientSock);
 }
+
 
 std::string Server::readFile(const std::string& filePath) {
 	std::ifstream file(filePath, std::ios::binary);

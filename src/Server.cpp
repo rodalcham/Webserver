@@ -1,5 +1,30 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 12:55:54 by mbankhar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
+#include "../include/Webserv.hpp"
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <stdexcept>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#define PORT 8080
+// #define ROOT_DIR "www/" 
+
+extern std::atomic<bool> keepRunning;
 
 Server::Server() : serverBlock(*(new ServerBlock())) {
     // Initialize with default ServerBlock if no arguments are passed
@@ -15,56 +40,58 @@ Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
-        throw std::runtime_error("Bind failed");
+	if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+		throw std::runtime_error("Bind failed");
 
     if (listen(serverSock, 5) < 0)
         throw std::runtime_error("Listen failed");
 
-    kq = kqueue();
-    if (kq < 0) throw std::runtime_error("kqueue creation failed");
+	kq = kqueue();
+	if (kq < 0) throw std::runtime_error("kqueue creation failed");
 
-    struct kevent event;
-    EV_SET(&event, serverSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-    if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-        throw std::runtime_error("Failed to add server socket to kqueue");
+	struct kevent event;
+	EV_SET(&event, serverSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+		throw std::runtime_error("Failed to add server socket to kqueue");
 }
 
 Server::~Server() {
-    close(serverSock);
-    close(kq);
+	close(serverSock);
+	close(kq);
+	debug("Server Destroyed");
 }
 
 void Server::run() {
-    while (keepRunning) {
-        struct kevent eventList[1024];
-        int eventCount = kevent(this->kq, nullptr, 0, eventList, 1024, nullptr);
+	while (keepRunning) {
+		struct kevent eventList[1024];
+		int eventCount = kevent(this->kq, nullptr, 0, eventList, 1024, nullptr);
 
-        if (eventCount < 0) {
-            if (errno == EINTR) continue; // Handle signal interruption
-            throw std::runtime_error("kevent() failed");
-        }
+		if (eventCount < 0) {
+			if (errno == EINTR) continue; // Handle signal interruption
+			throw std::runtime_error("kevent() failed");
+		}
 
-        for (int i = 0; i < eventCount; ++i) {
-            int eventSock = eventList[i].ident;
+		for (int i = 0; i < eventCount; ++i) {
+			int eventSock = eventList[i].ident;
 
-            if (eventSock == this->serverSock) {
-                this->acceptClient();
-            } else {
-                this->handleClient(eventSock);
-            }
-        }
-    }
+			if (eventSock == this->serverSock) {
+				this->acceptClient();
+			} else {
+				this->handleClient(eventSock);
+			}
+		}
+	}
 }
 
 void Server::acceptClient() {
-    int clientSock = accept(serverSock, nullptr, nullptr);
-    if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
+	int clientSock = accept(serverSock, nullptr, nullptr);
+	if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
 
-    struct kevent event;
-    EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-    if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-        throw std::runtime_error("Failed to add client socket to kqueue");
+	struct kevent event;
+	EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+		throw std::runtime_error("Failed to add client socket to kqueue");
+	debug("Client accepted: " + std::to_string(clientSock));
 }
 
 void Server::handleClient(int clientSock) {
@@ -122,12 +149,12 @@ void Server::handleClient(int clientSock) {
 }
 
 std::string Server::readFile(const std::string& filePath) {
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file.is_open()) throw std::runtime_error("File not found");
+	std::ifstream file(filePath, std::ios::binary);
+	if (!file.is_open()) throw std::runtime_error("File not found");
 
-    std::ostringstream content;
-    content << file.rdbuf();
-    return content.str();
+	std::ostringstream content;
+	content << file.rdbuf();
+	return content.str();
 }
 
 std::string Server::resolvePath(const std::string& uri) {
@@ -138,18 +165,18 @@ std::string Server::resolvePath(const std::string& uri) {
 }
 
 std::string Server::getMimeType(const std::string& filePath) {
-    size_t dotPos = filePath.find_last_of('.');
-    if (dotPos == std::string::npos) return "application/octet-stream";
+	size_t dotPos = filePath.find_last_of('.');
+	if (dotPos == std::string::npos) return "application/octet-stream";
 
-    std::string extension = filePath.substr(dotPos + 1);
+	std::string extension = filePath.substr(dotPos + 1);
 
-    if (extension == "html" || extension == "htm") return "text/html";
-    if (extension == "css") return "text/css";
-    if (extension == "js") return "application/javascript";
-    if (extension == "jpg" || extension == "jpeg") return "image/jpeg";
-    if (extension == "png") return "image/png";
-    if (extension == "gif") return "image/gif";
-    if (extension == "txt") return "text/plain";
+	if (extension == "html" || extension == "htm") return "text/html";
+	if (extension == "css") return "text/css";
+	if (extension == "js") return "application/javascript";
+	if (extension == "jpg" || extension == "jpeg") return "image/jpeg";
+	if (extension == "png") return "image/png";
+	if (extension == "gif") return "image/gif";
+	if (extension == "txt") return "text/plain";
 
     return "application/octet-stream";
 }

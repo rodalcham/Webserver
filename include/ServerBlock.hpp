@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerBlock.hpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:34 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 10:29:36 by rchavez          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include "Webserv.hpp"
@@ -17,7 +29,7 @@ public:
 	void		setErrorPage(std::string& value, std::string& line);
 	void		setDirective(std::string& key, std::string& value);
 	std::string	createDirectiveStr(std::string& line);
+	void		setLocationBlock(std::istream& stream, std::string line);
 };
 
-	// void		setLocationBlock(std::istream& stream, std::string line);
 	// void		debug();

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 12:59:04 by mbankhar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include "Webserv.hpp" 
@@ -7,6 +19,12 @@
 
 class HttpRequest; // Forward declaration
 
+/**
+ * A Class representing the server, used to create a socket and listen to inncoming connections or requests.
+ * 
+ * @param serverSock An Integer containing the file descriptor for the server socket.
+ * @param kq An integer representing the KQueue.
+ */
 class Server {
 public:
     Server();

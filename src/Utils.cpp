@@ -1,34 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HTTPForm.hpp                                       :+:      :+:    :+:   */
+/*   Utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:27 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 12:20:58 by rchavez          ###   ########.fr       */
+/*   Created: 2024/12/05 10:43:44 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 12:17:39 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#include "../include/Webserv.hpp"
 
-#include "Webserv.hpp"
-
-/**
- * 
- */
-class HTTPForm
+uint16_t	ft_htons(uint16_t port)
 {
-protected:
-	
-	string	process;
-	string	headers;
-	string	body;
-	int		status;
+	uint16_t test = 1;
 
-public:
+	bool isLittleEndian = *(reinterpret_cast<uint8_t*>(&test)) == 1;
 
-	HTTPForm(/* args */);
-	~HTTPForm();
+	if (isLittleEndian) {
+		return (port >> 8) | (port << 8);
+	} else {
+		return port;
+	}
+}
 
-};
+void	debug(string message)
+{
+	if	(DEBUG)
+		cout << "\n" << message << "\n";
+}

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Webserv.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 12:58:21 by mbankhar         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include <sys/event.h>
@@ -25,7 +37,7 @@
 extern bool keepRunning;
 #define ROOT_DIR "www"
 
-#define SOCKET_BACKLOG_MAX 5
+#define SOCKET_BACKLOG_MAX 10
 #define PORT 8080
 
 #define RED "\033[31m"
@@ -34,5 +46,16 @@ extern bool keepRunning;
 #define BLUE "\033[34m"
 #define RESET "\033[0m"
 
+#ifndef DEBUG
+# define DEBUG 0
+#endif
+
+extern std::atomic<bool> keepRunning;
+
 using std::string;
 using std::cout;
+
+/*Custom functions*/
+uint16_t	ft_htons(uint16_t port);
+void		debug(string message);
+

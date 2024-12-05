@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Config.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:39 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 10:29:40 by rchavez          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Webserv.hpp"
 #include "../include/Config.hpp"
 #include "../include/ServerBlock.hpp"
@@ -21,10 +33,17 @@ Config::~Config() {}
 
 void	Config::debug(ServerBlock one_block)
 {
-	std::cout << "\n ===== DIRECTIVE PAIRS =====\n";
+	std::cout << "\n ===== DIRECTIVE PAIRS =====\n\n";
 	for (const auto& pair : one_block.directive_pairs)
-		std::cout << "Key: >" << pair.first << "<, Value: >" << pair.second << "<\n";
-	std::cout << "\n ===== ERROR PAGES =====\n";
+		std::cout << "Key: --" << pair.first << "<-- Value: -->" << pair.second << "<--\n";
+	std::cout << "\n ===== ERROR PAGES =====\n\n";
 	for (const auto& pair : one_block.error_pages)
-		std::cout << "Key: >" << pair.first << "<, Value: >" << pair.second << "<\n";
+		std::cout << "Key: -->" << pair.first << "<-- Value: -->" << pair.second << "<--\n";
+	std::cout << "\n ===== LOCATION BLOCK =====\n";
+	for (const auto& pair : one_block.location_blocks)
+	{
+		std::cout << "\nLocation: -->" << pair.first << "<--\n";
+		for (const auto& location_pair : pair.second)
+			std::cout << "Key: -->" << location_pair.first << "<-- Value: -->" << location_pair.second << "<--\n";
+	}
 }

@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:43 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 10:48:10 by rchavez          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/Webserv.hpp"
 #include "../include/Server.hpp"
 #include "../include/Config.hpp"
@@ -29,6 +41,7 @@ void setupSignalHandler() {
     }
 }
 
+
 int main(int argc, char** argv)
 {
 	if (argc != 2)
@@ -36,7 +49,7 @@ int main(int argc, char** argv)
 		std::cerr << "Usage: " << argv[0] << " <config_file_path>\n";
 		return 1;
 	}
-
+    debug("Server running on DEBUG mode.");
 	try
 	{
 		Config config_obj(argv[1]);

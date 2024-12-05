@@ -1,5 +1,16 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 10:29:33 by rchavez          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#pragma once
 
 #include <string>
 #include <map>
@@ -31,4 +42,3 @@ private:
     std::string getMimeType(const std::string& filePath);
 };
 
-#endif // SERVER_HPP

@@ -1,5 +1,16 @@
-#ifndef HTTPREQUEST_HPP
-#define HTTPREQUEST_HPP
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPRequest.hpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 09:51:51 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 09:51:59 by rchavez          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#pragma once
 
 #include <string>
 #include <map>
@@ -52,4 +63,3 @@ HttpRequest parseHttpRequest(const std::string &request);
 
     std::string parseName(const std::string &body);
     std::string parseContent(const std::string &body);
-#endif // HTTPREQUEST_HPP

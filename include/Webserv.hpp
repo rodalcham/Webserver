@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Webserv.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 10:46:01 by rchavez          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include <sys/socket.h>
@@ -21,7 +33,16 @@
 #define BLUE "\033[34m"
 #define RESET "\033[0m"
 
+#ifndef DEBUG
+# define DEBUG 0
+#endif
+
 extern std::atomic<bool> keepRunning;
 
 using std::string;
 using std::cout;
+
+/*Custom functions*/
+uint16_t	ft_htons(uint16_t port);
+void		debug(string message);
+

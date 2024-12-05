@@ -1,31 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Config.hpp                                         :+:      :+:    :+:   */
+/*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:22 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 10:29:26 by rchavez          ###   ########.fr       */
+/*   Created: 2024/12/05 10:43:44 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 10:49:50 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#include "../include/Webserv.hpp"
 
-#include "Webserv.hpp"
-
-class ServerBlock;
-
-class Config
+uint16_t	ft_htons(uint16_t port)
 {
-public:
-	const std::string			config_path;
-	// std::vector<ServerBlock>	server_blocks;
+    uint16_t test = 1;
 
-	Config(const std::string& conf_path);
-	~Config();
+    bool isLittleEndian = *(reinterpret_cast<uint8_t*>(&test)) == 1;
 
-	void	debug(ServerBlock one_block);
-};
+    if (isLittleEndian) {
+        return (port >> 8) | (port << 8);
+    } else {
+        return port;
+    }
+}
 
-	// std::vector<ServerBlock>	server_blocks;
+void	debug(string message)
+{
+	if	(DEBUG)
+		cout << "\n" << message << "\n";
+}

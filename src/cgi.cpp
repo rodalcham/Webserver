@@ -68,12 +68,12 @@ std::string getHeaderValue(const std::map<std::string, std::string>& headers, co
     return "";
 }
 
-// Update buildCGIEnvironment to use getHeaderValue
+// Updated buildCGIEnvironment function with case-insensitive header access
 std::map<std::string, std::string> buildCGIEnvironment(const HttpRequest& httpRequest, const std::string& scriptPath) {
     std::map<std::string, std::string> env;
     env["GATEWAY_INTERFACE"] = "CGI/1.1";
     env["SERVER_PROTOCOL"] = "HTTP/1.1";
-    env["REQUEST_METHOD"] = methodToString(httpRequest.get_method());
+    env["REQUEST_METHOD"] = HttpRequest::methodToString(httpRequest.get_method());
     env["SCRIPT_NAME"] = scriptPath;
     env["PATH_INFO"] = scriptPath;
 

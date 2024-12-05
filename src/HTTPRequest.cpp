@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:41 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 18:18:03 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 19:06:40 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,15 +26,29 @@ HttpRequest::~HttpRequest() {
 	// Clean up resources if needed
 }
 
-// Helper function to parse the HTTP method from the request line
 HttpMethod parseHttpMethod(const std::string& methodStr) {
-	if (methodStr == "GET") return HttpMethod::GET;
-	if (methodStr == "POST") return HttpMethod::POST;
-	if (methodStr == "DELETE") return HttpMethod::DELETE;
-	throw std::runtime_error("Unsupported HTTP method: " + methodStr);
+    if (methodStr == "GET") return HttpMethod::GET;
+    if (methodStr == "POST") return HttpMethod::POST;
+    if (methodStr == "DELETE") return HttpMethod::DELETE;
+
+    // Log unsupported method for debugging
+    std::cerr << "Unsupported HTTP method: " << methodStr << std::endl;
+    throw std::runtime_error("Unsupported HTTP method: " + methodStr);
 }
 
-// Helper function to parse headers from the request
+
+std::string HttpRequest::get_header(const std::string& key) const {
+    std::string normalizedKey = key;
+    std::transform(normalizedKey.begin(), normalizedKey.end(), normalizedKey.begin(), ::tolower);
+    auto it = headers.find(normalizedKey);
+    if (it != headers.end()) {
+        return it->second;
+    }
+    return ""; // Return empty string if header not found
+}
+
+
+// Updated parseHeaders function to store headers in a case-insensitive manner
 std::map<std::string, std::string> parseHeaders(std::istringstream& requestStream) {
     std::map<std::string, std::string> headers;
     std::string line;
@@ -70,8 +84,10 @@ std::map<std::string, std::string> parseHeaders(std::istringstream& requestStrea
 }
 
 
+
 HttpRequest parseHttpRequest(const std::string& request) {
     // Split the request into request line, headers, and body
+	
     size_t headerEnd = request.find("\r\n\r\n");
     if (headerEnd == std::string::npos) {
         throw std::runtime_error("Invalid HTTP request: Missing headers or body");

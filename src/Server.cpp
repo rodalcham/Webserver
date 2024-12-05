@@ -3,16 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 12:15:50 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 13:40:39 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
 #include "../include/Webserv.hpp"
+
+class	Log;
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -27,7 +30,8 @@
 extern std::atomic<bool> keepRunning;
 
 
-Server::Server() {
+Server::Server()
+{
 	serverSock = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSock < 0) throw std::runtime_error("Socket creation failed");
 
@@ -127,7 +131,6 @@ void Server::handleClient(int clientSock) {
 	} catch (const std::exception& e) {
 		sendResponse(clientSock, "400 Bad Request: " + std::string(e.what()), 400, "text/plain");
 	}
-
 	close(clientSock);/*Not closing client every time*/
 }
 // void Server::sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType) {

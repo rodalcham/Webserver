@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 14:26:30 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/05 14:54:06 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,10 @@ Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
 
     int flags = fcntl(serverSock, F_GETFL, 0);
     if (flags < 0 || fcntl(serverSock, F_SETFL, flags | O_NONBLOCK) < 0)
+        throw std::runtime_error("Failed to set non-blocking mode");
+
+	int opt = 1;
+	if (setsockopt(this->serverSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
         throw std::runtime_error("Failed to set non-blocking mode");
 
     sockaddr_in serverAddr{};
@@ -90,6 +94,7 @@ void Server::acceptClient() {
     EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
     if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
         throw std::runtime_error("Failed to add client socket to kqueue");
+		debug("Acepted client: " + std::to_string(clientSock));
 }
 
 void Server::handleClient(int clientSock) {

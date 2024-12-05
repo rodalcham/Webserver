@@ -6,7 +6,7 @@
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:43 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 14:39:27 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 14:48:10 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,6 @@ int main(int argc, char** argv) {
         Server server(serverBlock);
 
         server.run();
-
         std::cout << "Server shutting down...\n";
 
     } catch (const std::exception& e) {

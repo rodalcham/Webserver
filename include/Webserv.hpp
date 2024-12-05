@@ -6,7 +6,7 @@
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 10:46:01 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/05 12:19:07 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 #include <iostream>
 #include <fstream>
 
-#define SOCKET_BACKLOG_MAX 5
+#define SOCKET_BACKLOG_MAX 10
 #define PORT 8080
 
 #define RED "\033[31m"

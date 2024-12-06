@@ -13,7 +13,7 @@
 
 class HttpResponse
 {
-private:
+protected:
 	std::string							httpVersion;
 	std::string							status_code;
 	std::map<std::string, std::string>	headers;
@@ -26,8 +26,7 @@ public:
 	HttpResponse(HttpRequest& request);
 	~HttpResponse();
 
-	std::string	get_header_list();
-	void		parseBody();
+	std::string	getHeaderList();
 	void		sendResponse(int clientSock);
 	// void 		errorResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 

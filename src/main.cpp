@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:43 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/06 12:50:05 by mbankhar         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/Webserv.hpp"
 #include "../include/Server.hpp"
 #include "../include/Config.hpp"
@@ -39,8 +27,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    debug("Server running in DEBUG mode.");
     Config config(argv[1]);
+    debug("Server running in DEBUG mode.");
     setupSignalHandler(); // Set up the signal handler
     try {
         std::ifstream config_file(argv[1]);

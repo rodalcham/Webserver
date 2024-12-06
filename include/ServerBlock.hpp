@@ -20,6 +20,8 @@ public:
 	void		setDirective(std::string& key, std::string& value);
 	std::string	createDirectiveStr(std::string& line);
 	void		setLocationBlock(std::istream& stream, std::string line);
+	void		debugPrint() const;
+	bool isRequestAllowed(const HttpRequest& request) const;
+
 };
 
-	// void		debug();

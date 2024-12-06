@@ -6,10 +6,10 @@
 
 void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
     // Check if URI corresponds to CGI
-    if (isCGIRequest(httpRequest.getUri())) {
-        handleCGI(clientSock, httpRequest);
-        return;
-    }
+    // if (isCGIRequest(httpRequest.getUri())) {
+    //     handleCGI(clientSock, httpRequest);
+    //     return;
+    // }
 
     // Validate and resolve file path
     std::string filePath = httpRequest.getFilePath();
@@ -95,10 +95,10 @@ void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
 
 
 void Server::handlePost(int clientSock, HttpRequest& httpRequest) {
-	if (isCGIRequest(httpRequest.getUri())) {
-		handleCGI(clientSock, httpRequest);
-		return;
-	}
+	// if (isCGIRequest(httpRequest.getUri())) {
+	// 	handleCGI(clientSock, httpRequest);
+	// 	return;
+	// }
 
 	auto expectHeader = httpRequest.getHeader("expect");
 	if (!expectHeader.empty()) {

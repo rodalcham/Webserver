@@ -99,16 +99,18 @@ void Server::handleClient(int clientSock) {
 
         httpRequest.setRootDir(serverBlock.directive_pairs["root"]);
         httpRequest.setFilePath(httpRequest.getRootDir() + httpRequest.getUri());
-
-        // Print the root directory and file path for debugging
-        std::cout << "Root Directory: " << httpRequest.getRootDir() << std::endl;
-        std::cout << "File Path: " << httpRequest.getFilePath() << std::endl;
+        // serverBlock.debugPrint();
 
         if (!std::ifstream(httpRequest.getFilePath()).good()) {
             std::cerr << "404 Not Found: " << httpRequest.getFilePath() << std::endl;
             return;
         }
         debug("Received from client " + std::to_string(clientSock) + ":\n" + request);
+        if (!serverBlock.isRequestAllowed(httpRequest))
+        {
+            std::cerr << "Request denied: " << httpRequest.getUri() << std::endl;
+            return;
+        }
         handleGet(clientSock, httpRequest);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

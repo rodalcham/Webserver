@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 18:20:28 by mbankhar         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
 #include "../include/Webserv.hpp"
@@ -109,10 +97,15 @@ void Server::handleClient(int clientSock) {
     try {
         HttpRequest httpRequest = parseHttpRequest(request);
 
-        std::string rootDir = serverBlock.directive_pairs["root"];
-        std::string resolvedPath = resolvePath(rootDir + httpRequest.get_uri());
-        if (!std::ifstream(resolvedPath).good()) {
-            std::cerr << "404 Not Found: " << resolvedPath << std::endl;
+        httpRequest.setRootDir(serverBlock.directive_pairs["root"]);
+        httpRequest.setFilePath(httpRequest.getRootDir() + httpRequest.getUri());
+
+        // Print the root directory and file path for debugging
+        std::cout << "Root Directory: " << httpRequest.getRootDir() << std::endl;
+        std::cout << "File Path: " << httpRequest.getFilePath() << std::endl;
+
+        if (!std::ifstream(httpRequest.getFilePath()).good()) {
+            std::cerr << "404 Not Found: " << httpRequest.getFilePath() << std::endl;
             return;
         }
         debug("Received from client " + std::to_string(clientSock) + ":\n" + request);
@@ -122,6 +115,7 @@ void Server::handleClient(int clientSock) {
     }
     close(clientSock);
 }
+
 
 
 std::string Server::readFile(const std::string& filePath) {

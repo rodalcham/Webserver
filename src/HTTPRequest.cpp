@@ -212,15 +212,13 @@ std::string HttpRequest::methodToString(HttpMethod method) {
     }
 }
 
-
-=======
 // Print the details of the HTTP request
 void HttpRequest::debug() const {
     std::cout << "Received HTTP Request:\n";
-    std::cout << "Header Connection: " << get_header("connection") << "\n\n";
-    std::cout << "Header accept: " << get_header("accept") << "\n\n";
+    std::cout << "Header Connection: " << getHeaders("connection") << "\n\n";
+    std::cout << "Header accept: " << getHeaders("accept") << "\n\n";
     // std::cout << "Method: " << get_method() << "\n";
-    std::cout << "URI: " << get_uri() << "\n";
-    std::cout << "HTTP Version: " << get_httpVersion() << "\n";
-    std::cout << "Body: " << get_body() << "\n\n";
+    std::cout << "URI: " << getUri() << "\n";
+    std::cout << "HTTP Version: " << getHttpVersion() << "\n";
+    std::cout << "Body: " << getBody() << "\n\n";
 }

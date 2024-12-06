@@ -56,7 +56,6 @@ void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
         std::cerr << "Error handling GET request: " << e.what() << std::endl;
         return;
     }
-=======
 	try {
 		std::string content((std::istreambuf_iterator<char>(file)),
 							std::istreambuf_iterator<char>());

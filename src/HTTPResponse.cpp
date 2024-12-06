@@ -5,19 +5,19 @@ class HttpRequest;
 
 HttpResponse::HttpResponse(HttpRequest& request)
 {
-	this->httpVersion = request.get_httpVersion();
+	this->httpVersion = request.getHttpVersion();
 
 	//remove hardcoded values later - this is for testing only
 	this->status_code = "200 OK";
 	// this->headers["server"] = "localhost";
 	// this->headers["content-Type"] = request.get_header("accept");
 	this->headers["content-Type"] = "text/html; charset=UTF-8";
-	this->headers["connection"] = request.get_header("connection");
+	this->headers["connection"] = request.getHeaders("connection");
 	this->chunking_required = false;
-	if (request.get_uri() == "/")
+	if (request.getUri() == "/")
 		this->file_path = "./www/index.html";
 	else
-		this->file_path = "./www" + request.get_uri();
+		this->file_path = "./www" + request.getUri();
 	this->parseBody();
 }
 

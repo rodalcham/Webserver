@@ -49,7 +49,7 @@ public:
 	void	setFilePath (const std::string& filePath);
 
 	
-	void debugPrint() const;
+	void debug() const;
 	// Helper function to get a header value in a case-insensitive manner
 	std::string getHeaders(const std::string& headerName) const;
 };

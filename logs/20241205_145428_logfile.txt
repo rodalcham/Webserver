@@ -1,1 +1,0 @@
-[20241205_145428] Server running in DEBUG mode.

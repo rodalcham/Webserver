@@ -124,18 +124,6 @@ HttpRequest parseHttpRequest(const std::string& request) {
 
 
 
-// Print the details of the HTTP request
-void HttpRequest::debugPrint() const {
-	std::cout << "Received HTTP Request:\n";
-	std::cout << "Method: " << methodToString(method) << "\n";
-	std::cout << "URI: " << uri << "\n";
-	std::cout << "HTTP Version: " << httpVersion << "\n";
-	std::cout << "Headers:\n";
-	for (const auto& header : headers) {
-		std::cout << "  " << header.first << ": " << header.second << "\n";
-	}
-	std::cout << "Body: " << body << "\n\n";
-}
 
 std::map<std::string, std::string> parseBody(const std::string &body) {
     std::map<std::string, std::string> keyValueMap;
@@ -225,3 +213,14 @@ std::string HttpRequest::methodToString(HttpMethod method) {
 }
 
 
+=======
+// Print the details of the HTTP request
+void HttpRequest::debug() const {
+    std::cout << "Received HTTP Request:\n";
+    std::cout << "Header Connection: " << get_header("connection") << "\n\n";
+    std::cout << "Header accept: " << get_header("accept") << "\n\n";
+    // std::cout << "Method: " << get_method() << "\n";
+    std::cout << "URI: " << get_uri() << "\n";
+    std::cout << "HTTP Version: " << get_httpVersion() << "\n";
+    std::cout << "Body: " << get_body() << "\n\n";
+}

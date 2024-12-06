@@ -1,5 +1,6 @@
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
+#include "../include/HTTPResponse.hpp"
 #include "../include/cgi.hpp"
 
 
@@ -55,6 +56,20 @@ void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
         std::cerr << "Error handling GET request: " << e.what() << std::endl;
         return;
     }
+=======
+	try {
+		std::string content((std::istreambuf_iterator<char>(file)),
+							std::istreambuf_iterator<char>());
+		std::string contentType = getMimeType(filePath);
+	} catch (const std::exception& e) {
+		return;
+	}
+	
+	// httpRequest.debug();
+
+	HttpResponse	response(httpRequest);
+	// response.debug();
+	response.sendResponse(clientSock);
 }
 
 

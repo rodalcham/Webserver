@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 09:51:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 18:08:21 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/06 12:31:21 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,8 @@ private:
 	std::string httpVersion;                     // HTTP version (e.g., HTTP/1.1)
 	std::map<std::string, std::string> headers;  // Headers as key-value pairs
 	std::string body;                            // Request body (e.g., for POST)
-
-	// Helper function to convert HttpMethod to string
-	std::string methodToString(HttpMethod method) const;
+	std::string rootDir;
+	std::string filePath;
 
 public:
 
@@ -49,18 +48,24 @@ public:
 				const std::string& body);
 	~HttpRequest();
 
-	HttpMethod get_method() const;
-	std::string get_uri() const;
-	std::string get_httpVersion() const;
-	std::string get_body() const;
-	std::string get_header(const std::string& key) const;
+	HttpMethod getMethod() const;
+	std::string getUri() const;
+	std::string getHttpVersion() const;
+	std::string getBody() const;
+	std::string getHeader(const std::string& key) const;
+	std::string getRootDir() const;
+	std::string getFilePath () const;
+
+	static std::string methodToString(HttpMethod method);
+	void	setRootDir (const std::string& rootDir);
+	void	setFilePath (const std::string& filePath);
 
 	
 	void debugPrint() const;
 	// Helper function to get a header value in a case-insensitive manner
-	std::string getHeader(const std::string& headerName) const;
+	std::string getHeaders(const std::string& headerName) const;
 };
 
 // Function to parse an HTTP request string into an HttpRequest object
-HttpRequest parseHttpRequest(const std::string &request);
+HttpRequest parseHttpRequest(const std::string& request);
  std::map<std::string, std::string> parseBody(const std::string &body);

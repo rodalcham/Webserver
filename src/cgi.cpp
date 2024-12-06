@@ -33,18 +33,6 @@ std::string unchunkBody(const std::string& body) {
     return result;
 }
 
-
-// Convert HttpMethod enum to string
-std::string methodToString(HttpMethod method) {
-    switch (method) {
-        case HttpMethod::GET: return "GET";
-        case HttpMethod::POST: return "POST";
-        case HttpMethod::PUT: return "PUT";
-        case HttpMethod::DELETE: return "DELETE";
-        default: return "UNKNOWN";
-    }
-}
-
 // Check if the URI corresponds to a CGI request
 bool isCGIRequest(const std::string& uri) {
     std::vector<std::string> cgiExtensions = {".php", ".py"};
@@ -73,15 +61,15 @@ std::map<std::string, std::string> buildCGIEnvironment(const HttpRequest& httpRe
     std::map<std::string, std::string> env;
     env["GATEWAY_INTERFACE"] = "CGI/1.1";
     env["SERVER_PROTOCOL"] = "HTTP/1.1";
-    env["REQUEST_METHOD"] = HttpRequest::methodToString(httpRequest.get_method());
+    env["REQUEST_METHOD"] = HttpRequest::methodToString(httpRequest.getMethod());
     env["SCRIPT_NAME"] = scriptPath;
     env["PATH_INFO"] = scriptPath;
 
-    size_t queryPos = httpRequest.get_uri().find('?');
-    env["QUERY_STRING"] = (queryPos != std::string::npos) ? httpRequest.get_uri().substr(queryPos + 1) : "";
+    size_t queryPos = httpRequest.getUri().find('?');
+    env["QUERY_STRING"] = (queryPos != std::string::npos) ? httpRequest.getUri().substr(queryPos + 1) : "";
 
-    env["CONTENT_TYPE"] = httpRequest.get_header("Content-Type");
-    env["CONTENT_LENGTH"] = httpRequest.get_header("Content-Length");
+    env["CONTENT_TYPE"] = httpRequest.getHeader("Content-Type");
+    env["CONTENT_LENGTH"] = httpRequest.getHeader("Content-Length");
 
     return env;
 }
@@ -99,7 +87,7 @@ void captureCGIOutput(int pipeFd, std::string& output) {
 
 // Handle CGI execution for the given HTTP request
 void handleCGI(int clientSock, const HttpRequest& httpRequest) {
-    std::string scriptPath = resolvePath(httpRequest.get_uri());
+    std::string scriptPath = resolvePath(httpRequest.getUri());
     std::string scriptDir = scriptPath.substr(0, scriptPath.find_last_of('/'));
 
     int inPipe[2], outPipe[2];
@@ -140,7 +128,7 @@ void handleCGI(int clientSock, const HttpRequest& httpRequest) {
         close(inPipe[0]);
         close(outPipe[1]);
 
-        write(inPipe[1], httpRequest.get_body().c_str(), httpRequest.get_body().size());
+        write(inPipe[1], httpRequest.getBody().c_str(), httpRequest.getBody().size());
         close(inPipe[1]);
 
         std::string cgiOutput;

@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 12:17:13 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 18:22:27 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/06 12:36:25 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,29 +16,59 @@
 
 
 void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
-	if (isCGIRequest(httpRequest.get_uri())) {
-		handleCGI(clientSock, httpRequest);
-		return;
-	}
+    // Check if URI corresponds to CGI
+    if (isCGIRequest(httpRequest.getUri())) {
+        handleCGI(clientSock, httpRequest);
+        return;
+    }
 
-	std::string rootDir = serverBlock.directive_pairs["root"];
-	std::string filePath = resolvePath(rootDir + httpRequest.get_uri());
+    // Validate and resolve file path
+    std::string filePath = httpRequest.getFilePath();
+    char realPath[PATH_MAX];
+    if (realpath(filePath.c_str(), realPath) == nullptr) {
+        std::cerr << "Invalid path or file not found: " << filePath << std::endl;
+        return;
+    }
 
-	if (filePath == rootDir) filePath += "/index.html";
+    filePath = std::string(realPath);
 
-	std::ifstream file(filePath);
-	if (!file.good()) {
-		return;
-	}
+    // If the resolved filePath matches the root directory, append index.html
+    if (filePath == httpRequest.getRootDir()) {
+        filePath += "/index.html";
+        httpRequest.setFilePath(filePath);
+    }
 
-	try {
-		std::string content((std::istreambuf_iterator<char>(file)),
-							std::istreambuf_iterator<char>());
-		std::string contentType = getMimeType(filePath);
-	} catch (const std::exception& e) {
-		return;
-	}
+    // Open the file and check if it's accessible
+    std::ifstream file(httpRequest.getFilePath());
+    if (!file.good()) {
+        std::cerr << "File not found: " << httpRequest.getFilePath() << std::endl;
+        return;
+    }
+
+    try {
+        // Read the file content
+        std::string content((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
+
+        // Determine the content type based on the file extension
+        std::string contentType = getMimeType(httpRequest.getFilePath());
+
+        // Send the response
+        std::ostringstream response;
+        response << "HTTP/1.1 200 OK\r\n";
+        response << "Content-Type: " << contentType << "\r\n";
+        response << "Content-Length: " << content.size() << "\r\n";
+        response << "\r\n";
+        response << content;
+
+        std::string responseStr = response.str();
+        write(clientSock, responseStr.c_str(), responseStr.size());
+    } catch (const std::exception& e) {
+        std::cerr << "Error handling GET request: " << e.what() << std::endl;
+        return;
+    }
 }
+
 
 
 void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
@@ -47,7 +77,7 @@ void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
 	}
 
 	try {
-		std::string filePath = resolvePath(httpRequest.get_uri());
+		std::string filePath = resolvePath(httpRequest.getUri());
 
 		std::ifstream file(filePath);
 		if (!file.good()) {
@@ -63,12 +93,12 @@ void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
 
 
 void Server::handlePost(int clientSock, HttpRequest& httpRequest) {
-	if (isCGIRequest(httpRequest.get_uri())) {
+	if (isCGIRequest(httpRequest.getUri())) {
 		handleCGI(clientSock, httpRequest);
 		return;
 	}
 
-	auto expectHeader = httpRequest.get_header("expect");
+	auto expectHeader = httpRequest.getHeader("expect");
 	if (!expectHeader.empty()) {
 		std::string expectValue = expectHeader;
 		std::transform(expectValue.begin(), expectValue.end(), expectValue.begin(), ::tolower);

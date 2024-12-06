@@ -6,7 +6,7 @@
 /*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:41 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 19:06:40 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/06 12:37:04 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ HttpMethod parseHttpMethod(const std::string& methodStr) {
 }
 
 
-std::string HttpRequest::get_header(const std::string& key) const {
+std::string HttpRequest::getHeader(const std::string& key) const {
     std::string normalizedKey = key;
     std::transform(normalizedKey.begin(), normalizedKey.end(), normalizedKey.begin(), ::tolower);
     auto it = headers.find(normalizedKey);
@@ -83,11 +83,8 @@ std::map<std::string, std::string> parseHeaders(std::istringstream& requestStrea
     return headers;
 }
 
-
-
 HttpRequest parseHttpRequest(const std::string& request) {
     // Split the request into request line, headers, and body
-	
     size_t headerEnd = request.find("\r\n\r\n");
     if (headerEnd == std::string::npos) {
         throw std::runtime_error("Invalid HTTP request: Missing headers or body");
@@ -127,11 +124,15 @@ HttpRequest parseHttpRequest(const std::string& request) {
         bodyPart = unchunkBody(bodyPart);
     }
 
-    // Create and return the HttpRequest object using the constructor
-    return HttpRequest(method, uri, httpVersion, headers, bodyPart);
+    // Initialize HttpRequest
+    HttpRequest httpRequest(method, uri, httpVersion, headers, bodyPart);
+
+    // Set rootDir and filePath in HttpRequest
+    // httpRequest.setRootDir(serverBlock.directive_pairs["root"]);
+    // httpRequest.setFilePath(httpRequest.getRootDir() + uri);
+
+    return httpRequest;
 }
-
-
 
 
 
@@ -146,17 +147,6 @@ void HttpRequest::debugPrint() const {
 		std::cout << "  " << header.first << ": " << header.second << "\n";
 	}
 	std::cout << "Body: " << body << "\n\n";
-}
-
-// Convert HttpMethod enum to a string, for debug only
-std::string HttpRequest::methodToString(HttpMethod method) const {
-	switch (method) {
-		case HttpMethod::GET: return "GET";
-		case HttpMethod::POST: return "POST";
-		case HttpMethod::PUT: return "PUT";
-		case HttpMethod::DELETE: return "DELETE";
-		default: return "UNKNOWN";
-	}
 }
 
 std::map<std::string, std::string> parseBody(const std::string &body) {
@@ -187,27 +177,27 @@ std::map<std::string, std::string> parseBody(const std::string &body) {
     return keyValueMap;
 }
 
-HttpMethod HttpRequest::get_method() const
+HttpMethod HttpRequest::getMethod() const
 {
 	return method;
 }
 
-std::string HttpRequest::get_uri() const
+std::string HttpRequest::getUri() const
 {
 	return uri;
 }
 
-std::string HttpRequest::get_httpVersion() const
+std::string HttpRequest::getHttpVersion() const
 {
 	return httpVersion;
 }
 
-std::string HttpRequest::get_body() const
+std::string HttpRequest::getBody() const
 {
 	return body;
 }
 
-std::string HttpRequest::get_header(const std::string& key) const
+std::string HttpRequest::getHeaders(const std::string& key) const
 {
 	auto it = headers.find(key);
 	if (it != headers.end()) {
@@ -215,3 +205,35 @@ std::string HttpRequest::get_header(const std::string& key) const
 	}
 	return "";
 }
+
+// Get the root directory
+std::string HttpRequest::getRootDir() const {
+    return rootDir;
+}
+
+// Get the file path
+std::string HttpRequest::getFilePath() const {
+    return filePath;
+}
+
+// Set the root directory
+void HttpRequest::setRootDir(const std::string& newRootDir) {
+    rootDir = newRootDir;
+}
+
+// Set the file path
+void HttpRequest::setFilePath(const std::string& newFilePath) {
+    filePath = newFilePath;
+}
+
+std::string HttpRequest::methodToString(HttpMethod method) {
+    switch (method) {
+        case HttpMethod::GET: return "GET";
+        case HttpMethod::POST: return "POST";
+        case HttpMethod::PUT: return "PUT";
+        case HttpMethod::DELETE: return "DELETE";
+        default: return "UNKNOWN";
+    }
+}
+
+

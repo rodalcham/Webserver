@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:43 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 14:48:10 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/06 12:50:05 by mbankhar         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
     }
 
     debug("Server running in DEBUG mode.");
+    Config config(argv[1]);
     setupSignalHandler(); // Set up the signal handler
     try {
         std::ifstream config_file(argv[1]);

@@ -8,7 +8,7 @@ class Config
 {
 public:
 	const std::string			config_path;
-	// std::vector<ServerBlock>	server_blocks;
+	std::vector<ServerBlock>	server_blocks;
 
 	Config(const std::string& conf_path);
 	~Config();

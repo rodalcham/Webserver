@@ -2,6 +2,24 @@
 #include "../include/Config.hpp"
 #include "../include/ServerBlock.hpp"
 
+// Config::Config(const std::string& conf_path) : config_path(conf_path)
+// {
+// 	std::ifstream config_file(config_path);
+	
+// 	if (!config_file.is_open())
+// 		throw std::runtime_error("Failed to open file: " + config_path);
+
+// 	ServerBlock one_block(config_file);
+// 	debug(one_block);
+// 	// while (config_file)
+// 	// {
+// 	// 	server_blocks.push_back(ServerBlock(config_file));
+// 	// }
+// }
+
+// Config::~Config() {}
+
+
 Config::Config(const std::string& conf_path) : config_path(conf_path)
 {
 	std::ifstream config_file(config_path);
@@ -9,12 +27,17 @@ Config::Config(const std::string& conf_path) : config_path(conf_path)
 	if (!config_file.is_open())
 		throw std::runtime_error("Failed to open file: " + config_path);
 
-	ServerBlock one_block(config_file);
-	debug(one_block);
-	// while (config_file)
-	// {
-	// 	server_blocks.push_back(ServerBlock(config_file));
-	// }
+	std::string line;
+	while (std::getline(config_file, line))
+	{
+		// Check if the line marks the start of a server block
+		if (line.find("server") != std::string::npos && line.find("{") != std::string::npos)
+		{
+			// Create a ServerBlock object and add it to the vector
+			ServerBlock one_block(config_file);
+			server_blocks.push_back(one_block);
+		}
+	}
 }
 
 Config::~Config() {}

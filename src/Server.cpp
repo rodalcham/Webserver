@@ -13,8 +13,56 @@ class log;
 
 extern std::atomic<bool> keepRunning;
 
-Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
-    int port = std::stoi(serverBlock.directive_pairs["listen"]);
+// Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
+//     int port = std::stoi(serverBlock.directive_pairs["listen"]);
+//     serverSock = socket(AF_INET, SOCK_STREAM, 0);
+//     if (serverSock < 0) throw std::runtime_error("Socket creation failed");
+
+//     int flags = fcntl(serverSock, F_GETFL, 0);
+//     if (flags < 0 || fcntl(serverSock, F_SETFL, flags | O_NONBLOCK) < 0)
+//         throw std::runtime_error("Failed to set non-blocking mode");
+
+// 	int opt = 1;
+// 	if (setsockopt(this->serverSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+//         throw std::runtime_error("Failed to set non-blocking mode");
+
+//     sockaddr_in serverAddr{};
+//     serverAddr.sin_family = AF_INET;
+//     serverAddr.sin_port = htons(port);
+//     serverAddr.sin_addr.s_addr = INADDR_ANY;
+
+//     if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+//         throw std::runtime_error("Bind failed");
+
+//     if (listen(serverSock, 5) < 0)
+//         throw std::runtime_error("Listen failed");
+
+//     kq = kqueue();
+//     if (kq < 0) throw std::runtime_error("kqueue creation failed");
+
+//     struct kevent event;
+//     EV_SET(&event, serverSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+//     if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+//         throw std::runtime_error("Failed to add server socket to kqueue");
+// }
+
+ServerBlock& Server::matchServerBlock(const HttpRequest& httpRequest) {
+    for (auto& block : serverBlocks) {
+        if (block.directive_pairs.at("server_name") == httpRequest.getHeader("host")) {
+            return block;
+        }
+    }
+    return serverBlocks[0]; // Default to the first block if no match
+}
+
+Server::Server(const std::vector<ServerBlock>& blocks) : serverBlocks(blocks) {
+    if (serverBlocks.empty()) {
+        throw std::runtime_error("No server blocks provided");
+    }
+
+    const ServerBlock& initialBlock = serverBlocks[0];
+    int port = std::stoi(initialBlock.directive_pairs.at("listen"));
+
     serverSock = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSock < 0) throw std::runtime_error("Socket creation failed");
 
@@ -22,9 +70,9 @@ Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
     if (flags < 0 || fcntl(serverSock, F_SETFL, flags | O_NONBLOCK) < 0)
         throw std::runtime_error("Failed to set non-blocking mode");
 
-	int opt = 1;
-	if (setsockopt(this->serverSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-        throw std::runtime_error("Failed to set non-blocking mode");
+    int opt = 1;
+    if (setsockopt(serverSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+        throw std::runtime_error("Failed to set socket options");
 
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
@@ -52,13 +100,42 @@ Server::~Server() {
     std::cout << "Server Destroyed\n";
 }
 
+// void Server::run() {
+//     while (keepRunning) {
+//         struct kevent eventList[1024];
+//         int eventCount = kevent(kq, nullptr, 0, eventList, 1024, nullptr);
+
+//         if (eventCount < 0) {
+//             if (errno == EINTR) continue;
+//             throw std::runtime_error("kevent() failed");
+//         }
+
+//         for (int i = 0; i < eventCount; ++i) {
+//             int eventSock = eventList[i].ident;
+
+//             if (eventSock == serverSock) {
+//                 acceptClient();
+//             } else {
+//                 handleClient(eventSock);
+//             }
+//         }
+//     }
+// }
+
 void Server::run() {
+    // Iterate over all the configured server blocks
+    for (const auto& serverBlock : config.getServerBlocks()) {
+        // Create a new server instance for each block
+        servers.emplace_back(serverBlock);
+    }
+
+    // Run each server in a loop (can also be done in separate threads if needed)
     while (keepRunning) {
         struct kevent eventList[1024];
         int eventCount = kevent(kq, nullptr, 0, eventList, 1024, nullptr);
 
         if (eventCount < 0) {
-            if (errno == EINTR) continue;
+            if (errno == EINTR) continue; // Handle interrupts
             throw std::runtime_error("kevent() failed");
         }
 
@@ -66,13 +143,14 @@ void Server::run() {
             int eventSock = eventList[i].ident;
 
             if (eventSock == serverSock) {
-                acceptClient();
+                acceptClient(); // Handle incoming client connections
             } else {
-                handleClient(eventSock);
+                handleClient(eventSock); // Process client requests
             }
         }
     }
 }
+
 
 void Server::acceptClient() {
     int clientSock = accept(serverSock, nullptr, nullptr);
@@ -84,6 +162,39 @@ void Server::acceptClient() {
         throw std::runtime_error("Failed to add client socket to kqueue");
 		debug("Acepted client: " + std::to_string(clientSock));
 }
+
+// void Server::handleClient(int clientSock) {
+//     char buffer[1024];
+//     ssize_t bytes = read(clientSock, buffer, sizeof(buffer));
+//     if (bytes <= 0) {
+//         close(clientSock);
+//         return;
+//     }
+
+//     std::string request(buffer, bytes);
+//     try {
+//         HttpRequest httpRequest = parseHttpRequest(request);
+
+//         httpRequest.setRootDir(serverBlock.directive_pairs["root"]);
+//         httpRequest.setFilePath(httpRequest.getRootDir() + httpRequest.getUri());
+//         // serverBlock.debugPrint();
+
+//         if (!std::ifstream(httpRequest.getFilePath()).good()) {
+//             std::cerr << "404 Not Found: " << httpRequest.getFilePath() << std::endl;
+//             return;
+//         }
+//         debug("Received from client " + std::to_string(clientSock) + ":\n" + request);
+//         if (!serverBlock.isRequestAllowed(httpRequest))
+//         {
+//             std::cerr << "Request denied: " << httpRequest.getUri() << std::endl;
+//             return;
+//         }
+//         handleGet(clientSock, httpRequest);
+//     } catch (const std::exception& e) {
+//         std::cerr << "Error: " << e.what() << std::endl;
+//     }
+//     close(clientSock);
+// }
 
 void Server::handleClient(int clientSock) {
     char buffer[1024];
@@ -97,27 +208,28 @@ void Server::handleClient(int clientSock) {
     try {
         HttpRequest httpRequest = parseHttpRequest(request);
 
-        httpRequest.setRootDir(serverBlock.directive_pairs["root"]);
-        httpRequest.setFilePath(httpRequest.getRootDir() + httpRequest.getUri());
-        // serverBlock.debugPrint();
+        // Match the server block for this request
+        ServerBlock& matchedBlock = matchServerBlock(httpRequest);
+
+        httpRequest.setRootDir(matchedBlock.directive_pairs.at("root"));
+        httpRequest.setFilePath(resolvePath(httpRequest.getUri(), matchedBlock));
 
         if (!std::ifstream(httpRequest.getFilePath()).good()) {
             std::cerr << "404 Not Found: " << httpRequest.getFilePath() << std::endl;
             return;
         }
-        debug("Received from client " + std::to_string(clientSock) + ":\n" + request);
-        if (!serverBlock.isRequestAllowed(httpRequest))
-        {
+
+        if (!matchedBlock.isRequestAllowed(httpRequest)) {
             std::cerr << "Request denied: " << httpRequest.getUri() << std::endl;
             return;
         }
+
         handleGet(clientSock, httpRequest);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
     close(clientSock);
 }
-
 
 
 std::string Server::readFile(const std::string& filePath) {
@@ -129,22 +241,36 @@ std::string Server::readFile(const std::string& filePath) {
 	return content.str();
 }
 
-std::string Server::resolvePath(const std::string& uri) {
-    // Root directory from configuration or default macro
-    std::string rootDir = serverBlock.directive_pairs.count("root") ? 
-                          serverBlock.directive_pairs["root"] : "www";
+// std::string Server::resolvePath(const std::string& uri) {
+//     // Root directory from configuration or default macro
+//     std::string rootDir = serverBlock.directive_pairs.count("root") ? 
+//                           serverBlock.directive_pairs["root"] : "www";
 
-    // Combine root directory with the requested URI
-    std::string path = /*rootDir +*/ uri;
+//     // Combine root directory with the requested URI
+//     std::string path = /*rootDir +*/ uri;
 
-    // Sanitize and validate the path to prevent directory traversal
+//     // Sanitize and validate the path to prevent directory traversal
+//     if (path.find("..") != std::string::npos) {
+//         throw std::runtime_error("Invalid path: Directory traversal attempt");
+//     }
+
+//     // Debug logging to print the resolved path
+//     std::cout << "[DEBUG] Resolved path: " << path << std::endl;
+
+//     return path;
+// }
+
+std::string Server::resolvePath(const std::string& uri, const ServerBlock& block) {
+    std::string rootDir = block.directive_pairs.count("root") ? 
+                          block.directive_pairs.at("root") : "www";
+
+    std::string path = rootDir + uri;
+
     if (path.find("..") != std::string::npos) {
         throw std::runtime_error("Invalid path: Directory traversal attempt");
     }
 
-    // Debug logging to print the resolved path
     std::cout << "[DEBUG] Resolved path: " << path << std::endl;
-
     return path;
 }
 

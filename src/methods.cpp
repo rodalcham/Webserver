@@ -5,108 +5,100 @@
 
 
 void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
-    // Check if URI corresponds to CGI
-    // if (isCGIRequest(httpRequest.getUri())) {
-    //     handleCGI(clientSock, httpRequest);
-    //     return;
-    // }
+    // Match the server block for this request
+    ServerBlock& matchedBlock = matchServerBlock(httpRequest);
 
-    // Validate and resolve file path
-    std::string filePath = httpRequest.getFilePath();
+    // Resolve the path using the matched block
+    std::string filePath = resolvePath(httpRequest.getUri(), matchedBlock);
+    httpRequest.setFilePath(filePath);
+
     char realPath[PATH_MAX];
     if (realpath(filePath.c_str(), realPath) == nullptr) {
         std::cerr << "Invalid path or file not found: " << filePath << std::endl;
+        // Here you might want to send a 404 response:
+        HttpResponse response(httpRequest, 404, "Not Found");
+        response.sendResponse(clientSock);
         return;
     }
 
     filePath = std::string(realPath);
+    httpRequest.setFilePath(filePath);
 
-    // If the resolved filePath matches the root directory, append index.html
+    // If the resolved filePath matches the root directory exactly, try index.html
     if (filePath == httpRequest.getRootDir()) {
         filePath += "/index.html";
         httpRequest.setFilePath(filePath);
     }
 
-    // Open the file and check if it's accessible
     std::ifstream file(httpRequest.getFilePath());
     if (!file.good()) {
         std::cerr << "File not found: " << httpRequest.getFilePath() << std::endl;
+        HttpResponse response(httpRequest, 404, "Not Found");
+        response.sendResponse(clientSock);
         return;
     }
 
-    try {
-        // Read the file content
-        std::string content((std::istreambuf_iterator<char>(file)),
-                            std::istreambuf_iterator<char>());
-
-        // Determine the content type based on the file extension
-        std::string contentType = getMimeType(httpRequest.getFilePath());
-
-        // Send the response
-        std::ostringstream response;
-        response << "HTTP/1.1 200 OK\r\n";
-        response << "Content-Type: " << contentType << "\r\n";
-        response << "Content-Length: " << content.size() << "\r\n";
-        response << "\r\n";
-        response << content;
-
-        std::string responseStr = response.str();
-        write(clientSock, responseStr.c_str(), responseStr.size());
-    } catch (const std::exception& e) {
-        std::cerr << "Error handling GET request: " << e.what() << std::endl;
-        return;
-    }
-	try {
-		std::string content((std::istreambuf_iterator<char>(file)),
-							std::istreambuf_iterator<char>());
-		std::string contentType = getMimeType(filePath);
-	} catch (const std::exception& e) {
-		return;
-	}
-	
-	// httpRequest.debug();
-
-	HttpResponse	response(httpRequest);
-	// response.debug();
-	response.sendResponse(clientSock);
+    // Since HttpResponse presumably reads the file and sets headers, etc.
+    // Just create and send it using HttpResponse
+    HttpResponse response(httpRequest);
+    response.sendResponse(clientSock);
 }
+
 
 
 
 void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
-	if (2) {
-		(void)clientSock; // Suppress unused-variable warnings
-	}
+    (void)clientSock; // In case we don't use it yet, but we likely will.
 
-	try {
-		std::string filePath = resolvePath(httpRequest.getUri());
+    try {
+        ServerBlock& matchedBlock = matchServerBlock(httpRequest);
+        std::string filePath = resolvePath(httpRequest.getUri(), matchedBlock);
 
-		std::ifstream file(filePath);
-		if (!file.good()) {
-		} else {
-			file.close();
-			if (remove(filePath.c_str()) != 0) {
-				throw std::runtime_error("Failed to delete file");
-			}
-		}
-	} catch (const std::exception& e) {
-	}
+        std::ifstream file(filePath);
+        if (!file.good()) {
+            // File doesn't exist, send a 404
+            HttpResponse response(httpRequest, 404, "Not Found");
+            response.sendResponse(clientSock);
+        } else {
+            file.close();
+            if (remove(filePath.c_str()) != 0) {
+                // Failed to delete
+                HttpResponse response(httpRequest, 500, "Internal Server Error");
+                response.sendResponse(clientSock);
+            } else {
+                // Successfully deleted
+                HttpResponse response(httpRequest, 200, "OK");
+                response.sendResponse(clientSock);
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error handling DELETE request: " << e.what() << std::endl;
+        HttpResponse response(httpRequest, 500, "Internal Server Error");
+        response.sendResponse(clientSock);
+    }
 }
 
 
-void Server::handlePost(int clientSock, HttpRequest& httpRequest) {
-	// if (isCGIRequest(httpRequest.getUri())) {
-	// 	handleCGI(clientSock, httpRequest);
-	// 	return;
-	// }
 
-	auto expectHeader = httpRequest.getHeader("expect");
-	if (!expectHeader.empty()) {
-		std::string expectValue = expectHeader;
-		std::transform(expectValue.begin(), expectValue.end(), expectValue.begin(), ::tolower);
-		if (expectValue == "100-continue") {
-			std::string continueResponse = "HTTP/1.1 100 Continue\r\n\r\n";
-			write(clientSock, continueResponse.c_str(), continueResponse.size());
-		}
-	}
+void Server::handlePost(int clientSock, HttpRequest& httpRequest) {
+    // If you need the correct server block and path:
+    // ServerBlock& matchedBlock = matchServerBlock(httpRequest);
+    // std::string filePath = resolvePath(httpRequest.getUri(), matchedBlock);
+    // httpRequest.setFilePath(filePath);
+
+    auto expectHeader = httpRequest.getHeader("expect");
+    if (!expectHeader.empty()) {
+        std::string expectValue = expectHeader;
+        std::transform(expectValue.begin(), expectValue.end(), expectValue.begin(), ::tolower);
+        if (expectValue == "100-continue") {
+            std::string continueResponse = "HTTP/1.1 100 Continue\r\n\r\n";
+            write(clientSock, continueResponse.c_str(), continueResponse.size());
+        }
+    }
+
+    // Handle post data as needed...
+
+    // For now, just respond with a 200 OK or some other appropriate response
+    HttpResponse response(httpRequest, 200, "OK");
+    response.sendResponse(clientSock);
 }

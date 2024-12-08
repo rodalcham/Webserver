@@ -3,7 +3,8 @@
 #include "Webserv.hpp" 
 #include "HTTPRequest.hpp"
 #include "ServerBlock.hpp"
-
+#include <vector>
+#include <map>
 
 class HttpRequest; // Forward declaration
 
@@ -37,32 +38,30 @@ class HttpRequest; // Forward declaration
 //     std::string getMimeType(const std::string& filePath);
 // };
 
-/**
- * A Class representing the server, used to create a socket and listen to incoming connections or requests.
- * 
- * @param serverSock An Integer containing the file descriptor for the server socket.
- * @param kq An integer representing the KQueue.
- */
+
 class Server {
 public:
+    Server(const std::vector<ServerBlock>& blocks);
     ~Server();
-    Server(const std::vector<ServerBlock>& blocks); // Accept multiple server blocks
 
     void run();
     void handleGet(int clientSock, HttpRequest& httpRequest);
     void handlePost(int clientSock, HttpRequest& httpRequest);
     void handleDelete(int clientSock, HttpRequest& httpRequest);
-    std::string resolvePath(const std::string& uri, const ServerBlock& block); // Updated to accept a ServerBlock
+    std::string resolvePath(const std::string& uri, const ServerBlock& block);
 
 private:
-    std::vector<ServerBlock> serverBlocks; // Store all server configurations
-    int serverSock;
+    std::vector<ServerBlock> serverBlocks;
     int kq;
 
-    void acceptClient();
-    void handleClient(int clientSock);
-    ServerBlock& matchServerBlock(const HttpRequest& httpRequest); // Match correct ServerBlock for a request
+    // We will have multiple listening sockets
+    std::vector<int> listenSockets;
+    std::map<int, ServerBlock*> socketToBlockMap;
 
-    std::string readFile(const std::string& filePath); // Function to read static files
+    void acceptClient(int listeningSock);
+    void handleClient(int clientSock);
+    ServerBlock& matchServerBlock(const HttpRequest& httpRequest);
+
+    std::string readFile(const std::string& filePath);
     std::string getMimeType(const std::string& filePath);
 };

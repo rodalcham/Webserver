@@ -1,19 +1,38 @@
+// #pragma once
+
+// #include "Webserv.hpp"
+
+// class ServerBlock;
+
+// class Config
+// {
+// public:
+// 	const std::string			config_path;
+// 	std::vector<ServerBlock>	server_blocks;
+
+// 	Config(const std::string& conf_path);
+// 	~Config();
+
+// 	void	debug(ServerBlock one_block);
+// };
+
+// 	// std::vector<ServerBlock>	server_blocks;
+
+
 #pragma once
 
 #include "Webserv.hpp"
+#include "ServerBlock.hpp"
+#include <vector>
 
-class ServerBlock;
-
-class Config
-{
+class Config {
 public:
-	const std::string			config_path;
-	std::vector<ServerBlock>	server_blocks;
+    const std::string            config_path;
+    std::vector<ServerBlock>     server_blocks;
 
-	Config(const std::string& conf_path);
-	~Config();
+    Config(const std::string& conf_path);
+    ~Config();
 
-	void	debug(ServerBlock one_block);
+    const std::vector<ServerBlock>& getServerBlocks() const; // <-- Add this getter
+    void debug(ServerBlock one_block);
 };
-
-	// std::vector<ServerBlock>	server_blocks;

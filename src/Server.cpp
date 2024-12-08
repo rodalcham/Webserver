@@ -1,6 +1,9 @@
+#include "../include/Webserv.hpp"
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
-#include "../include/Webserv.hpp"
+#include "../include/HTTPResponse.hpp"
+#include "../include/GetResponse.hpp"
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -395,6 +398,34 @@ void Server::handleClient(int clientSock) {
         } else {
             // Method not supported
         }
+			// check method is allowed using config file parsing and request methood
+		
+		// if (httpRequest.getMethod() == "GET")
+			GetResponse		response(httpRequest);
+		// else if (httpRequest.getMethod() == "POST")
+		// 	PostResponse	response(httpRequest);
+		// else if (httpRequest.getMethod() == "DELETE")
+		// 	DeleteResponse	response(httpRequest);
+		// else
+		// {
+		// 	httpRequest.badRequest(clientSock);
+		// 	return ;
+		// }
+		response.debug();
+		response.sendResponse(clientSock);
+        // httpRequest.setRootDir(serverBlock.directive_pairs["root"]);
+        // httpRequest.setFilePath(httpRequest.getRootDir() + httpRequest.getUri());
+
+        // // Print the root directory and file path for debugging
+        // std::cout << "Root Directory: " << httpRequest.getRootDir() << std::endl;
+        // std::cout << "File Path: " << httpRequest.getFilePath() << std::endl;
+
+        // if (!std::ifstream(httpRequest.getFilePath()).good()) {
+        //     std::cerr << "404 Not Found: " << httpRequest.getFilePath() << std::endl;
+        //     return;
+        // }
+        // debug("Received from client " + std::to_string(clientSock) + ":\n" + request);
+        // handleGet(clientSock, httpRequest);
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+         #
+#    By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/12/05 10:29:16 by rchavez           #+#    #+#              #
-#    Updated: 2024/12/05 17:52:16 by gstronge         ###   ########.fr        #
+#    Updated: 2024/12/08 12:01:06 by mbankhar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,7 +36,8 @@ SRCS		=	$(SRC_DIR)/Config.cpp \
 				$(SRC_DIR)/main.cpp \
 				$(SRC_DIR)/cgi.cpp \
 				$(SRC_DIR)/log.cpp \
-				$(SRC_DIR)/Utils.cpp
+				$(SRC_DIR)/Utils.cpp \
+				$(SRC_DIR)/GetResponse.cpp 
 
 # Objects
 OBJS		= $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)

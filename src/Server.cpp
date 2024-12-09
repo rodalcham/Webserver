@@ -6,7 +6,7 @@
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/06 12:55:07 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/09 14:16:56 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,7 @@ void Server::acceptClient() {
 		close(clientSock);
 		throw std::runtime_error("Failed to add client socket to kqueue");
 	}
-
+	this->clients[clientSock] = Client(clientSock);
 	debug("Acepted client: " + std::to_string(clientSock));
 }
 

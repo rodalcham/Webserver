@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mbankhar <mbankhar@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 15:45:22 by mbankhar         ###   ########.fr       */
+/*   Updated: 2024/12/09 09:38:51 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@
 #include <fstream>
 #include <iostream>
 #include <fstream>
+#include <deque>
 
 #define SOCKET_BACKLOG_MAX 10
 // #define PORT 8080

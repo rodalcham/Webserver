@@ -6,7 +6,7 @@
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/06 15:39:13 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/09 14:44:36 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "Webserv.hpp" 
 #include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
+#include "Client.hpp"
 #include "ServerBlock.hpp"
 
 
@@ -44,7 +45,7 @@ private:
 	ServerBlock 			serverBlock;
 	int 					serverSock;
 	int 					kq;
-	std::map<int, Client>	clients
+	std::map<int, Client>	clients;
 
 	void acceptClient();
 	void handleClient(int clientSock);
@@ -52,9 +53,14 @@ private:
 
 	std::string readFile(const std::string& filePath); // Function to read static files
 	std::string getMimeType(const std::string& filePath);
-	
-	void		msg_send(int clientSock, HttpResponse &msg);
-	HttpRequest	&msg_receive(int clientSock);
+
+	void	enable_write_listen(int clientSock);
+	void	disable_write_listen(int clientSock);
+	void	msg_send(Client &client, int mode);
+	void	msg_receive(Client &client, int mode);
+
+	//Posting events
+	void	postEvent(int clientSock, int mode);
 };
 
 

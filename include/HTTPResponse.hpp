@@ -24,6 +24,7 @@ protected:
 public:
 	HttpResponse();
 	HttpResponse(HttpRequest& request);
+	HttpResponse(HttpRequest& request, int statusCode, const std::string& statusMessage); // <-- Add this line
 	~HttpResponse();
 
 	std::string	getHeaderList();

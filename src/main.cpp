@@ -27,22 +27,23 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    Config config(argv[1]);
     debug("Server running in DEBUG mode.");
     setupSignalHandler(); // Set up the signal handler
+
     try {
-        std::ifstream config_file(argv[1]);
-        if (!config_file.is_open()) {
-            std::cerr << "Error: Failed to open configuration file: " << argv[1] << std::endl;
+        Config config(argv[1]);
+
+        const std::vector<ServerBlock>& blocks = config.getServerBlocks();
+        if (blocks.empty()) {
+            std::cerr << "No server blocks found in configuration.\n";
             return 1;
         }
 
-        ServerBlock serverBlock(config_file); // Initialize directly with ifstream
-        Server server(serverBlock);
-
+        // Server can now handle one or multiple blocks.
+        Server server(blocks);
         server.run();
-        std::cout << "Server shutting down...\n";
 
+        std::cout << "Server shutting down...\n";
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
@@ -50,3 +51,4 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+

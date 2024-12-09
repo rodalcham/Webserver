@@ -7,8 +7,10 @@
 
 // GET Handler
 void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
-    ServerBlock& matchedBlock = matchServerBlock(httpRequest);
-    std::string filePath = resolvePath(httpRequest.getUri(), matchedBlock);
+		int i = matchServerBlock(httpRequest);
+		if (i < 0)
+			std::cout << "SOME ERROR\n";
+        std::string filePath = resolvePath(httpRequest.getUri(), serverBlocks[i]);
     httpRequest.setFilePath(filePath);
 
     char realPath[PATH_MAX];
@@ -36,8 +38,10 @@ void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
 // DELETE Handler
 void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
     try {
-        ServerBlock& matchedBlock = matchServerBlock(httpRequest);
-        std::string filePath = resolvePath(httpRequest.getUri(), matchedBlock);
+		int i = matchServerBlock(httpRequest);
+		if (i < 0)
+			std::cout << "SOME ERROR\n"; // need to fix this so that it doesn't carry on in the code and give a segfault
+        std::string filePath = resolvePath(httpRequest.getUri(), serverBlocks[i]);
 
         std::ifstream file(filePath);
         if (!file.good()) {

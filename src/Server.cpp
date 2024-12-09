@@ -359,11 +359,13 @@ void Server::handleClient(int clientSock) {
     try {
         HttpRequest httpRequest = parseHttpRequest(request);
 
-        ServerBlock& matchedBlock = matchServerBlock(httpRequest);
+		int i = matchServerBlock(httpRequest);
+		if (i < 0)
+			std::cout << "SOME ERROR\n";
         std::cout << "[DEBUG] Matched server block for request.\n";
 
-        httpRequest.setRootDir(matchedBlock.directive_pairs.at("root"));
-        httpRequest.setFilePath(resolvePath(httpRequest.getUri(), matchedBlock));
+        httpRequest.setRootDir(serverBlocks[i].directive_pairs.at("root"));
+        httpRequest.setFilePath(resolvePath(httpRequest.getUri(), serverBlocks[i]));
 
         if (!std::ifstream(httpRequest.getFilePath()).good()) {
             std::cerr << "[DEBUG] File not found: " << httpRequest.getFilePath() << "\n";
@@ -373,7 +375,7 @@ void Server::handleClient(int clientSock) {
             return;
         }
 
-        if (!matchedBlock.isRequestAllowed(httpRequest)) {
+        if (!serverBlocks[i].isRequestAllowed(httpRequest)) {
             std::cerr << "[DEBUG] Request not allowed for URI: " << httpRequest.getUri() << "\n";
             HttpResponse response(httpRequest, 403, "Forbidden");
             response.sendResponse(clientSock);
@@ -402,21 +404,25 @@ void Server::handleClient(int clientSock) {
     close(clientSock);
 }
 
-ServerBlock& Server::matchServerBlock(const HttpRequest& httpRequest) {
+int Server::matchServerBlock(const HttpRequest& httpRequest) {
     std::string host = httpRequest.getHeader("host");
     std::cout << "[DEBUG] Matching server block for host: " << host << "\n";
 
-    for (auto& block : serverBlocks) {
-        if (block.directive_pairs.find("server_name") != block.directive_pairs.end()) {
-            if (block.directive_pairs.at("server_name") == host) {
+	std::cout << "\n";
+	httpRequest.printHeaders();
+	std::cout << "\n";
+
+    for (int i = 0; i < int(serverBlocks.size()); i++) {
+        if (serverBlocks[i].directive_pairs.find("server_name") != serverBlocks[i].directive_pairs.end()) {
+            if (serverBlocks[i].directive_pairs.at("server_name") == host) {
                 std::cout << "[DEBUG] Matched server block for host: " << host << "\n";
-                return block;
+                return (i);
             }
         }
     }
 
-    std::cout << "[DEBUG] No matching server block found. Using default block.\n";
-    return serverBlocks[0];
+    std::cout << "[DEBUG] No matching server block found.\n";
+    return (-1);
 }
 
 // std::string Server::resolvePath(const std::string& uri, const ServerBlock& block) {

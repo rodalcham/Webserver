@@ -201,3 +201,9 @@ std::string HttpRequest::getHeaders(const std::string& headerName) const {
     }
     return ""; // Return empty string if the header is not found
 }
+
+void    HttpRequest::printHeaders() const
+{
+    for (auto pair : headers)
+        std::cout << pair.first << " | " << pair.second << "\n";
+}

@@ -29,7 +29,7 @@ private:
 
     void acceptClient(int listeningSock);
     void handleClient(int clientSock);
-    ServerBlock& matchServerBlock(const HttpRequest& httpRequest);
+    int matchServerBlock(const HttpRequest& httpRequest);
 
     std::string readFile(const std::string& filePath);
     std::string getMimeType(const std::string& filePath);

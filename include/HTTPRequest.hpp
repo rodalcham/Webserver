@@ -41,6 +41,7 @@ public:
 	void debug() const;
 	// Helper function to get a header value in a case-insensitive manner
 	std::string getHeaders(const std::string& headerName) const;
+	void    printHeaders() const;
 };
 
 // Function to parse an HTTP request string into an HttpRequest object

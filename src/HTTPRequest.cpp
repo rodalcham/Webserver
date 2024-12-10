@@ -162,8 +162,8 @@ HttpRequest parseHttpRequest(const std::string& request) {
     HttpRequest httpRequest(method, uri, httpVersion, headers, bodyPart);
 
     // Example: Setting rootDir and filePath (could be customized)
-    httpRequest.setRootDir("www");
-    httpRequest.setFilePath(httpRequest.getRootDir() + uri);
+    // httpRequest.setRootDir("www");
+    // httpRequest.setFilePath(httpRequest.getRootDir() + uri);
 
     return httpRequest;
 }
@@ -206,4 +206,12 @@ void    HttpRequest::printHeaders() const
 {
     for (auto pair : headers)
         std::cout << pair.first << " | " << pair.second << "\n";
+}
+
+int HttpRequest::getBlockIndex() const {
+	return block_index;
+}
+
+void HttpRequest::setBlockIndex(int index) {
+	block_index = index;
 }

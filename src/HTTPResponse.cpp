@@ -70,6 +70,14 @@
 #include <sstream>
 #include <iostream>
 #include <unistd.h>
+#include <map>
+
+
+HttpResponse::HttpResponse() : status_code("200"), body("")
+{
+    headers["Content-Type"] = "text/plain";
+    headers["Content-Length"] = "0";
+}
 
 HttpResponse::HttpResponse(HttpRequest& request)
 {
@@ -138,4 +146,11 @@ void HttpResponse::debug()
 
 	std::cout << "\n =============== BODY ===============\n\n";
 	std::cout << body << "\n";
+}
+void HttpResponse::setBody(const std::string& bodyContent) {
+    body = bodyContent;
+    headers["Content-Length"] = std::to_string(body.size());
+}
+void HttpResponse::setHeader(const std::string& key, const std::string& value) {
+    headers[key] = value;
 }

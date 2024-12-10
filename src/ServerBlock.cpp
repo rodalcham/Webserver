@@ -137,40 +137,6 @@ void ServerBlock::debugPrint() const {
 	}
 }
 
-// bool ServerBlock::isRequestAllowed(const HttpRequest& request) const
-// {
-// 	// Step 1: Match URI to a location block
-// 	std::string uri = request.getUri();
-// 	auto locationIt = location_blocks.find(uri);
-// 	if (locationIt == location_blocks.end()) {
-// 		std::cerr << "No matching location block for URI: " << uri << std::endl;
-// 		return false; // No matching location
-// 	}
-
-// 	const auto& locationDirectives = locationIt->second;
-
-// 	// Step 2: Check allowed methods
-// 	auto methodIt = locationDirectives.find("allowed_methods");
-// 	if (methodIt != locationDirectives.end()) {
-// 		std::string allowedMethods = methodIt->second;
-// 		std::string requestMethod = request.getMethod();
-
-// 		// Split allowed methods into a list and check if the request method is included
-// 		if (allowedMethods.find(requestMethod) == std::string::npos) {
-// 			std::cerr << "Method not allowed: " << requestMethod << std::endl;
-// 			return false; // Method not allowed
-// 		}
-// 	}
-
-// 	// Step 3: Check file access (if applicable)
-// 	std::string filePath = request.getFilePath();
-// 	if (!std::ifstream(filePath).good()) {
-// 		std::cerr << "File not accessible: " << filePath << std::endl;
-// 		return false; // File cannot be accessed
-// 	}
-// 	return true;
-// }
-
 bool ServerBlock::isRequestAllowed(const HttpRequest& request) const {
     std::string uri = request.getUri();
     std::cerr << "[DEBUG] Checking if request URI: " << uri << " is allowed.\n";

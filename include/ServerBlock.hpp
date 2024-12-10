@@ -18,7 +18,7 @@ public:
 
 	void		parseBlock(std::istream& stream);
 	void		setErrorPage(std::string& value, std::string& line);
-	void		setDirective(std::string& key, std::string& value);
+	// void		setDirective(std::string& key, std::string& value);
 	std::string	createDirectiveStr(std::string& line);
 	void		setLocationBlock(std::istream& stream, std::string line);
 	void		debugPrint() const;

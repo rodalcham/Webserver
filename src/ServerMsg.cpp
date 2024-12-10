@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerMsg.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/06 12:37:14 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/09 15:35:37 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/10 17:36:28 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,13 @@ void	Server::disable_write_listen(int	clientSock)
 		throw std::runtime_error("Failed disable listen for write readiness");
 	}
 }
-
+/**
+ * Posts custom events,
+ * 
+ * 0 for read
+ * 1 for process
+ * 2 for write
+ */
 void	Server::postEvent(int clientSock, int mode)
 {
 	struct kevent	event;
@@ -49,6 +55,11 @@ void	Server::postEvent(int clientSock, int mode)
 	}
 }
 
+
+/**
+ * Send message, post event 2 to postpone a send until the previous is finished
+ * Posts Write listen to keep sending when not finished
+ */
 void		Server::msg_send(Client &client, int mode)
 {
 	size_t	bytes;
@@ -97,17 +108,24 @@ void		Server::msg_send(Client &client, int mode)
 	}
 }
 
+/**
+ * Receiving message, posts event 0 to continue reading
+ * Post event 1 n times to process n requests
+ */
 void	Server::msg_receive(Client &client, int mode)
 {
 	const size_t bufferSize = 4096;
 	char	buffer[bufferSize];
 	size_t	bytes;
+	size_t	received;
 
 	bytes = recv(client.getSocket(), buffer, bufferSize, 0);
 
 	if (bytes > 0)
 	{
-		client.parseRequest(&buffer[0], bytes);
+		received = client.parseRequest(&buffer[0], bytes);
+		for (int i = 0; i < received; i++)
+			this->postEvent(client.getSocket(), 1);
 		if (bytes == bufferSize)
 			this->postEvent(client.getSocket(), 0);
 	}

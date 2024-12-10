@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/06 15:39:23 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/09 15:06:57 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/10 17:31:40 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,5 +42,5 @@ class Client
 	bool	&isSending();
 	bool	&isReceiving();
 
-	void	parseRequest(char *buffer, size_t bytesRead);
+	size_t	parseRequest(char *buffer, size_t bytesRead);
 };

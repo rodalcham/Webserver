@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
+/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 11:34:06 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/09 16:06:29 by rchavez          ###   ########.fr       */
+/*   Updated: 2024/12/10 17:31:13 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,8 +52,9 @@ bool	&Client::isReceiving()
 	return (this->is_receiving);
 }
 
-void	Client::parseRequest(char *buffer, size_t bytesRead)
+size_t	Client::parseRequest(char *buffer, size_t bytesRead)
 {
+	size_t	count = 0;
 	static const string delimiter = "\r\n\r\n"; // HTTP request delimiter
 	size_t i = 0;
 	string	request;
@@ -73,11 +74,13 @@ void	Client::parseRequest(char *buffer, size_t bytesRead)
 		{
 			this->is_sending = false;
 			i += end + delimiter.size();
+			count++;
 			//post event, maybe return a counter to handle posting in server::recv
 		}
 		else
 			this->is_sending = true;
 	}
+	return (count);
 }
 	//Extract a part of the buffer until a /r/n/r/n or the end into a string
 

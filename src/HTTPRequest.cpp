@@ -183,6 +183,10 @@ std::string HttpRequest::unchunkBody(const std::string& body) {
 
     return result;
 }
+const ServerBlock& HttpRequest::getRequestBlock() const
+{
+    return _request_block;
+}
 
 // std::map<std::string, std::string> parseBody(const std::string &body) {
 //     std::map<std::string, std::string> keyValueMap;

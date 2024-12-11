@@ -34,6 +34,8 @@ public:
 	std::map<std::string, std::string>	parseHeaders(std::istringstream& requestStream);
 	std::string unchunkBody(const std::string& body);
 	std::string							parseHttpMethod(const std::string& methodStr);
+	const ServerBlock& getRequestBlock() const;
+
 	ServerBlock& matchServerBlock(std::vector<ServerBlock>& serverBlocks);
 	void								debug() const;
 };

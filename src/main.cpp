@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:43 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 14:48:10 by rchavez          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/Webserv.hpp"
 #include "../include/Server.hpp"
 #include "../include/Config.hpp"
@@ -39,6 +27,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    Config config(argv[1]);
     debug("Server running in DEBUG mode.");
     setupSignalHandler(); // Set up the signal handler
     try {

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   HTTPRequest.cpp                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:41 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/05 18:57:22 by gstronge         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/HTTPRequest.hpp"
 #include "../include/cgi.hpp"
 #include "../include/Webserv.hpp"
@@ -26,15 +14,29 @@ HttpRequest::~HttpRequest() {
 	// Clean up resources if needed
 }
 
-// Helper function to parse the HTTP method from the request line
 HttpMethod parseHttpMethod(const std::string& methodStr) {
-	if (methodStr == "GET") return HttpMethod::GET;
-	if (methodStr == "POST") return HttpMethod::POST;
-	if (methodStr == "DELETE") return HttpMethod::DELETE;
-	throw std::runtime_error("Unsupported HTTP method: " + methodStr);
+    if (methodStr == "GET") return HttpMethod::GET;
+    if (methodStr == "POST") return HttpMethod::POST;
+    if (methodStr == "DELETE") return HttpMethod::DELETE;
+
+    // Log unsupported method for debugging
+    std::cerr << "Unsupported HTTP method: " << methodStr << std::endl;
+    throw std::runtime_error("Unsupported HTTP method: " + methodStr);
 }
 
-// Helper function to parse headers from the request
+
+std::string HttpRequest::getHeader(const std::string& key) const {
+    std::string normalizedKey = key;
+    std::transform(normalizedKey.begin(), normalizedKey.end(), normalizedKey.begin(), ::tolower);
+    auto it = headers.find(normalizedKey);
+    if (it != headers.end()) {
+        return it->second;
+    }
+    return ""; // Return empty string if header not found
+}
+
+
+// Updated parseHeaders function to store headers in a case-insensitive manner
 std::map<std::string, std::string> parseHeaders(std::istringstream& requestStream) {
     std::map<std::string, std::string> headers;
     std::string line;
@@ -68,7 +70,6 @@ std::map<std::string, std::string> parseHeaders(std::istringstream& requestStrea
 
     return headers;
 }
-
 
 HttpRequest parseHttpRequest(const std::string& request) {
     // Split the request into request line, headers, and body
@@ -111,25 +112,18 @@ HttpRequest parseHttpRequest(const std::string& request) {
         bodyPart = unchunkBody(bodyPart);
     }
 
-    // Create and return the HttpRequest object using the constructor
-    return HttpRequest(method, uri, httpVersion, headers, bodyPart);
+    // Initialize HttpRequest
+    HttpRequest httpRequest(method, uri, httpVersion, headers, bodyPart);
+
+    // Set rootDir and filePath in HttpRequest
+    // httpRequest.setRootDir(serverBlock.directive_pairs["root"]);
+    // httpRequest.setFilePath(httpRequest.getRootDir() + uri);
+
+    return httpRequest;
 }
 
 
 
-
-
-
-// Convert HttpMethod enum to a string, for debug only
-std::string HttpRequest::methodToString(HttpMethod method) const {
-	switch (method) {
-		case HttpMethod::GET: return "GET";
-		case HttpMethod::POST: return "POST";
-		case HttpMethod::PUT: return "PUT";
-		case HttpMethod::DELETE: return "DELETE";
-		default: return "UNKNOWN";
-	}
-}
 
 std::map<std::string, std::string> parseBody(const std::string &body) {
     std::map<std::string, std::string> keyValueMap;
@@ -159,27 +153,27 @@ std::map<std::string, std::string> parseBody(const std::string &body) {
     return keyValueMap;
 }
 
-HttpMethod HttpRequest::get_method() const
+HttpMethod HttpRequest::getMethod() const
 {
 	return method;
 }
 
-std::string HttpRequest::get_uri() const
+std::string HttpRequest::getUri() const
 {
 	return uri;
 }
 
-std::string HttpRequest::get_httpVersion() const
+std::string HttpRequest::getHttpVersion() const
 {
 	return httpVersion;
 }
 
-std::string HttpRequest::get_body() const
+std::string HttpRequest::getBody() const
 {
 	return body;
 }
 
-std::string HttpRequest::get_header(const std::string& key) const
+std::string HttpRequest::getHeaders(const std::string& key) const
 {
 	auto it = headers.find(key);
 	if (it != headers.end()) {
@@ -188,13 +182,43 @@ std::string HttpRequest::get_header(const std::string& key) const
 	return "";
 }
 
+// Get the root directory
+std::string HttpRequest::getRootDir() const {
+    return rootDir;
+}
+
+// Get the file path
+std::string HttpRequest::getFilePath() const {
+    return filePath;
+}
+
+// Set the root directory
+void HttpRequest::setRootDir(const std::string& newRootDir) {
+    rootDir = newRootDir;
+}
+
+// Set the file path
+void HttpRequest::setFilePath(const std::string& newFilePath) {
+    filePath = newFilePath;
+}
+
+std::string HttpRequest::methodToString(HttpMethod method) {
+    switch (method) {
+        case HttpMethod::GET: return "GET";
+        case HttpMethod::POST: return "POST";
+        case HttpMethod::PUT: return "PUT";
+        case HttpMethod::DELETE: return "DELETE";
+        default: return "UNKNOWN";
+    }
+}
+
 // Print the details of the HTTP request
 void HttpRequest::debug() const {
     std::cout << "Received HTTP Request:\n";
-    std::cout << "Header Connection: " << get_header("connection") << "\n\n";
-    std::cout << "Header accept: " << get_header("accept") << "\n\n";
+    std::cout << "Header Connection: " << getHeaders("connection") << "\n\n";
+    std::cout << "Header accept: " << getHeaders("accept") << "\n\n";
     // std::cout << "Method: " << get_method() << "\n";
-    std::cout << "URI: " << get_uri() << "\n";
-    std::cout << "HTTP Version: " << get_httpVersion() << "\n";
-    std::cout << "Body: " << get_body() << "\n\n";
+    std::cout << "URI: " << getUri() << "\n";
+    std::cout << "HTTP Version: " << getHttpVersion() << "\n";
+    std::cout << "Body: " << getBody() << "\n\n";
 }

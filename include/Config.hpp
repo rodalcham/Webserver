@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HTTPForm.hpp                                       :+:      :+:    :+:   */
+/*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/26 10:50:20 by rchavez           #+#    #+#             */
-/*   Updated: 2024/11/27 15:06:07 by rchavez          ###   ########.fr       */
+/*   Created: 2024/12/05 10:29:22 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/05 10:29:26 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,18 +14,18 @@
 
 #include "Webserv.hpp"
 
-class HTTPForm
+class ServerBlock;
+
+class Config
 {
-protected:
-	
-	string	process;
-	string	headers;
-	string	body;
-	int		status;
-
 public:
+	const std::string			config_path;
+	// std::vector<ServerBlock>	server_blocks;
 
-	HTTPForm(/* args */);
-	~HTTPForm();
+	Config(const std::string& conf_path);
+	~Config();
 
+	void	debug(ServerBlock one_block);
 };
+
+	// std::vector<ServerBlock>	server_blocks;

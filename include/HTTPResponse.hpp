@@ -1,13 +1,11 @@
 #pragma once
 
 #include "Webserv.hpp"
-#include "HTTPRequest.hpp"
-#include <map>
+#include "HttpRequest.hpp"
+#include "ServerBlock.hpp"
+
 #include <fstream>
 #include <sstream>
-#include <string>
-
-class HttpRequest; // Forward declaration
 
 /**
  * HttpResponse
@@ -17,26 +15,34 @@ class HttpRequest; // Forward declaration
 class HttpResponse
 {
 protected:
-	std::string							httpVersion;
-	std::string							status_code;
-	std::map<std::string, std::string> headers;
-	bool								chunking_required;
-	std::string							body;
-	std::string							file_path;
+	std::string							_http_version;
+	std::string							_status_code;
+	std::map<std::string, std::string>	_headers;
+	bool								_chunking_required;
+	std::string							_body;
+	std::string							_file_path;
+	const std::map<int, std::string>	_error_status_codes = {
+	{200, "200 OK"}, {201, "201 Created"}, {400, "400 Bad Request"}, 
+	{401, "401 Unauthorized"}, {403, "403 Forbidden"}, {404, "404 Not Found"}, 
+	{405, "405 Method Not Allowed"}, {413, "413 Payload Too Large"}, 
+	{415, "415 Unsupported Media Type"}, {500, "500 Internal Server Error"}, 
+	{501, "501 Not Implemented"}, {502, "502 Bad Gateway"}, 
+	{503, "503 Service Unavailable"}, {504, "504 Gateway Timeout"}};
 
 public:
 	HttpResponse();
-	HttpResponse(HttpRequest& request);
-	HttpResponse(HttpRequest& request, int statusCode, const std::string& statusMessage); // <-- Add this line
+	HttpResponse(const HttpRequest& request);
 	~HttpResponse();
 
 	std::string	getHeaderList();
+	void		parseBody();
 	void		sendResponse(int clientSock);
-	void 		setBody(const std::string& bodyContent);
-	void 		setHeader(const std::string& key, const std::string& value);
 
-
-	// void 		errorResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
+	int 		setFilePath(const HttpRequest& request);
+	void		setStatusCode(const int& status_code_no);
+	void 		setErrorResponse(const int& error_code);
+	void		setErrorHeaders(const int& error_code);
+	void		setErrorBody(const int& error_code);
 
 	void		debug();
 };

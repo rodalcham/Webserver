@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Webserv.hpp"
-#include "HttpRequest.hpp"
+#include "HTTPRequest.hpp"
 #include "ServerBlock.hpp"
 
 #include <fstream>
@@ -9,7 +9,7 @@
 
 /**
  * HttpResponse
- * @param httpVersion:
+ * @param http_version:
  */
 
 class HttpResponse
@@ -34,15 +34,14 @@ public:
 	HttpResponse(const HttpRequest& request);
 	~HttpResponse();
 
-	std::string	getHeaderList();
-	void		parseBody();
-	void		sendResponse(int clientSock);
+	int 			setFilePath(const HttpRequest& request);
+	std::string		resolvePath(const std::string& uri, const ServerBlock& block, const std::map<std::string, std::string>& locationConfig);
+	void			setStatusCode(const int& status_code_no);
+	void			setBody(bool is_first_try);
+	void			setHeaders(const int& status_code_no, const HttpRequest& request);
+	void			setErrorFilePath(const int& error_code_no);
 
-	int 		setFilePath(const HttpRequest& request);
-	void		setStatusCode(const int& status_code_no);
-	void 		setErrorResponse(const int& error_code);
-	void		setErrorHeaders(const int& error_code);
-	void		setErrorBody(const int& error_code);
-
-	void		debug();
+	std::string		getHeaderList();
+	std::string		returnResponse();
+	void			debug();
 };

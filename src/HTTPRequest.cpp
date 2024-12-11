@@ -4,9 +4,7 @@
 #include "../include/cgi.hpp"
 
 HttpRequest::HttpRequest(const std::string& request, std::vector<ServerBlock>& serverBlocks)
-    : _request_block(matchServerBlock(serverBlocks))  // Initialize the reference
- {
-    this->_request_block = matchServerBlock(serverBlocks);
+{
 
     // Parse the request
     size_t headerEnd = request.find("\r\n\r\n");
@@ -43,6 +41,7 @@ HttpRequest::HttpRequest(const std::string& request, std::vector<ServerBlock>& s
         _headers["transfer-encoding"] == "chunked") {
         this->_body = unchunkBody(_body);
     }
+    this->_request_block = matchServerBlock(serverBlocks);
 }
 
 // Destructor
@@ -51,7 +50,7 @@ HttpRequest::~HttpRequest()
 	// Clean up resources if needed
 }
 
-ServerBlock& HttpRequest::matchServerBlock(std::vector<ServerBlock>& serverBlocks) {
+ServerBlock* HttpRequest::matchServerBlock(std::vector<ServerBlock>& serverBlocks) {
     std::string host = this->getHeader("host");
     std::cout << "[DEBUG] Matching server block for host: " << host << "\n";
 
@@ -59,7 +58,7 @@ ServerBlock& HttpRequest::matchServerBlock(std::vector<ServerBlock>& serverBlock
         auto it = block.directive_pairs.find("server_name");
         if (it != block.directive_pairs.end() && it->second == host) {
             std::cout << "[DEBUG] Matched server block for host: " << host << "\n";
-            return block; // Return a non-const reference
+            return (&block); // Return a non-const reference
         }
     }
 
@@ -185,7 +184,7 @@ std::string HttpRequest::unchunkBody(const std::string& body) {
 }
 const ServerBlock& HttpRequest::getRequestBlock() const
 {
-    return _request_block;
+    return *(_request_block);
 }
 
 // std::map<std::string, std::string> parseBody(const std::string &body) {

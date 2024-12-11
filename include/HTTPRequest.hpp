@@ -17,7 +17,7 @@ private:
 	std::string							_http_version;                     // HTTP version (e.g., HTTP/1.1)
 	std::map<std::string, std::string>	_headers;						  // Headers as key-value pairs
 	std::string							_body;                            // Request body (e.g., for POST)
-	ServerBlock&						_request_block;
+	ServerBlock*						_request_block;
 
 public:
 
@@ -32,11 +32,11 @@ public:
 	
 	std::string							getHeaders(const std::string& headerName) const;
 	std::map<std::string, std::string>	parseHeaders(std::istringstream& requestStream);
-	std::string unchunkBody(const std::string& body);
+	std::string							unchunkBody(const std::string& body);
 	std::string							parseHttpMethod(const std::string& methodStr);
-	const ServerBlock& getRequestBlock() const;
+	const ServerBlock&					getRequestBlock() const;
 
-	ServerBlock& matchServerBlock(std::vector<ServerBlock>& serverBlocks);
+	ServerBlock*						matchServerBlock(std::vector<ServerBlock>& serverBlocks);
 	void								debug() const;
 };
 

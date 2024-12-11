@@ -22,33 +22,25 @@ void setupSignalHandler() {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <config_file_path>\n";
-        return 1;
-    }
+	if (argc != 2) {
+		std::cerr << "Usage: " << argv[0] << " <config_file_path>\n";
+		return 1;
+	}
 
-    debug("Server running in DEBUG mode.");
-    setupSignalHandler(); // Set up the signal handler
+	debug("Server running in DEBUG mode.");
+	setupSignalHandler(); // Set up the signal handler
 
-    try {
-        Config config(argv[1]);
+	try {
+		Config config(argv[1]); // Load and validate configuration
 
-        const std::vector<ServerBlock>& blocks = config.getServerBlocks();
-        if (blocks.empty()) {
-            std::cerr << "No server blocks found in configuration.\n";
-            return 1;
-        }
+		Server server(config.getServerBlocks());
+		server.run();
+		std::cout << "Server shutting down...\n";
+	} catch (const std::exception& e) {
+		std::cerr << "Error: " << e.what() << std::endl;
+		return 1;
+	}
 
-        // Server can now handle one or multiple blocks.
-        Server server(blocks);
-        server.run();
-
-        std::cout << "Server shutting down...\n";
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
-    }
-
-    return 0;
+	return 0;
 }
 

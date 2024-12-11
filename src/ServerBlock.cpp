@@ -168,12 +168,12 @@ bool ServerBlock::isRequestAllowed(const HttpRequest& request) const {
         }
     }
 
-    // Check file accessibility
-    std::string filePath = request.getFilePath();
-    if (!std::ifstream(filePath).good()) {
-        std::cerr << "[DEBUG] File not accessible: " << filePath << "\n";
-        return false;
-    }
+    // // Check file accessibility
+    // std::string filePath = request.getFilePath();
+    // if (!std::ifstream(filePath).good()) {
+    //     std::cerr << "[DEBUG] File not accessible: " << filePath << "\n";
+    //     return false;
+    // }
 
     return true;
 }

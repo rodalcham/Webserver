@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Webserv.hpp"
+#include "ServerBlock.hpp"
+#include "Config.hpp"
 #include <string>
 #include <map>
 
@@ -19,7 +21,7 @@ private:
 
 public:
 
-	HttpRequest(const std::string& request);
+	HttpRequest(const std::string& request, std::vector<ServerBlock>& server_blocks);
 	~HttpRequest();
 
 	std::string getHeader(const std::string& key) const;
@@ -28,10 +30,11 @@ public:
 	std::string getHttpVersion() const;
 	std::string	getBody() const;
 	
-	// Helper function to get a header value in a case-insensitive manner
 	std::string							getHeaders(const std::string& headerName) const;
 	std::map<std::string, std::string>	parseHeaders(std::istringstream& requestStream);
+	std::string unchunkBody(const std::string& body);
 	std::string							parseHttpMethod(const std::string& methodStr);
+	ServerBlock& matchServerBlock(std::vector<ServerBlock>& serverBlocks);
 	void								debug() const;
 };
 

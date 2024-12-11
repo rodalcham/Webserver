@@ -2,6 +2,7 @@
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
 #include "../include/HTTPResponse.hpp"
+#include "../include/Config.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -149,76 +150,11 @@ void Server::handleClient(int clientSock) {
 
     std::string request(buffer, bytes);
     try {
-        HttpRequest httpRequest = parseHttpRequest(request);
-
-        // Match the server block and set the block_index in HttpRequest
-        int i = matchServerBlock(httpRequest);
-        if (i < 0) {
-            std::cerr << "[ERROR] No matching server block found.\n";
-            close(clientSock);
-            return;
-        }
-        httpRequest.setBlockIndex(i); // Set the matched block index
-
-        const auto& locations = serverBlocks[i].location_blocks;
-        std::string matchedLocation = "/";
-        size_t longestMatch = 0;
-
-        // Updated matching logic
-        for (const auto& location : locations) {
-            if (httpRequest.getUri().find(location.first) == 0 && location.first.size() > longestMatch) {
-                matchedLocation = location.first;
-                longestMatch = location.first.size();
-            }
-        }
-
-        const auto& locationConfig = locations.at(matchedLocation);
-        std::string resolvedPath = resolvePath(httpRequest.getUri(), serverBlocks[i], locationConfig);
-        httpRequest.setFilePath(resolvedPath);
-
-        // Debugging Information
-        std::cout << "========== DEBUG INFORMATION ==========\n";
-        std::cout << "[DEBUG] Received request:\n" << request << "\n";
-        std::cout << "[DEBUG] Matched server block index: " << httpRequest.getBlockIndex() << "\n";
-        std::cout << "[DEBUG] Received root:\n" << httpRequest.getRootDir() << "\n";
-        std::cout << "[DEBUG] Matched server block for host: " << httpRequest.getHeader("host") << "\n";
-        std::cout << "[DEBUG] URI: " << httpRequest.getUri() << "\n";
-        std::cout << "[DEBUG] Matched location: " << matchedLocation << "\n";
-        std::cout << "[DEBUG] Resolved path: " << resolvedPath << "\n";
-
-        // Print allowed methods
-        if (locationConfig.find("allow_methods") != locationConfig.end()) {
-            std::cout << "[DEBUG] Allowed methods for location " << matchedLocation << ": ";
-            std::istringstream methods(locationConfig.at("allow_methods"));
-            std::string method;
-            while (methods >> method) {
-                std::cout << method << " ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "=======================================\n";
-
-        // Check Allowed Methods
-        if (locationConfig.find("allow_methods") != locationConfig.end()) {
-            std::set<std::string> allowedMethods;
-            std::istringstream methods(locationConfig.at("allow_methods"));
-            std::string method;
-            while (methods >> method) {
-                allowedMethods.insert(method);
-            }
-
-            if (allowedMethods.find(httpRequest.getMethod()) == allowedMethods.end()) {
-                std::cerr << "[DEBUG] Method not allowed: " << httpRequest.getMethod() << " for location " << matchedLocation << "\n";
-                HttpResponse response(httpRequest, 405, "Method Not Allowed");
-                response.sendResponse(clientSock);
-                close(clientSock);
-                return;
-            }
-        }
+        HttpRequest httpRequest(request, serverBlocks);
 
         // Pass the request to HTTP response handler
-        HttpResponse response(httpRequest);
-        response.sendResponse(clientSock);
+        // HttpResponse response(httpRequest);
+        // response.sendResponse(clientSock);
 
     } catch (const std::exception& e) {
         std::cerr << "[ERROR] Exception while handling client: " << e.what() << "\n";
@@ -226,48 +162,6 @@ void Server::handleClient(int clientSock) {
 
     close(clientSock);
 }
-
-
-
-int Server::matchServerBlock(const HttpRequest& httpRequest) {
-    std::string host = httpRequest.getHeader("host");
-    std::cout << "[DEBUG] Matching server block for host: " << host << "\n";
-
-    for (int i = 0; i < int(serverBlocks.size()); i++) {
-        if (serverBlocks[i].directive_pairs.find("server_name") != serverBlocks[i].directive_pairs.end()) {
-            if (serverBlocks[i].directive_pairs.at("server_name") == host) {
-                std::cout << "[DEBUG] Matched server block for host: " << host << "\n";
-                return i;
-            }
-        }
-    }
-
-    std::cout << "[DEBUG] No matching server block found.\n";
-    return -1;
-}
-
-// std::string Server::resolvePath(const std::string& uri, const ServerBlock& block, const std::map<std::string, std::string>& locationConfig) {
-//     std::string rootDir = locationConfig.count("root") ? 
-//                           locationConfig.at("root") : 
-//                           (block.directive_pairs.count("root") ? block.directive_pairs.at("root") : "www");
-
-//     std::string strippedUri = uri;
-//     if (locationConfig.count("prefix")) {
-//         std::string prefix = locationConfig.at("prefix");
-//         if (uri.find(prefix) == 0) {
-//             strippedUri = uri.substr(prefix.length());
-//         }
-//     }
-
-//     std::string path = rootDir + strippedUri;
-//     if (path.find("..") != std::string::npos) {
-//         throw std::runtime_error("[ERROR] Invalid path: Directory traversal attempt");
-//     }
-
-//     std::cerr << "[DEBUG] Resolved path for URI " << uri << ": " << path << "\n";
-//     return path;
-// }
-
 
 std::string Server::resolvePath(const std::string& uri, const ServerBlock& block, const std::map<std::string, std::string>& locationConfig) {
     // Step 1: Determine the root directory

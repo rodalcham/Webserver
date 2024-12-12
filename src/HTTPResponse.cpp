@@ -100,7 +100,7 @@ std::string HttpResponse::resolvePath(const std::string& uri, const ServerBlock&
 
 
 
-std::string get_from_location(const std::string& location, const std::string& data, const HttpRequest& request)
+std::string HttpResponse::getFromLocation(const std::string& location, const std::string& key, const HttpRequest& request)
 {
 	// Get the server block from the HttpRequest
 	const ServerBlock& block = request.getRequestBlock();
@@ -114,17 +114,17 @@ std::string get_from_location(const std::string& location, const std::string& da
 		const auto& locationConfig = locations.at(location);
 
 		// Extract the requested data from the location
-		if (locationConfig.find(data) != locationConfig.end())
-			return locationConfig.at(data);
+		if (locationConfig.find(key) != locationConfig.end())
+			return locationConfig.at(key);
 		else
-			throw std::runtime_error("Data '" + data + "' not found in the location '" + location + "'.");
+			throw std::runtime_error("Data '" + key + "' not found in the location '" + location + "'.");
 	}
 
 	// If no specific location is provided, look in the global directives
-	if (block.directive_pairs.find(data) != block.directive_pairs.end())
-		return block.directive_pairs.at(data);
+	if (block.directive_pairs.find(key) != block.directive_pairs.end())
+		return block.directive_pairs.at(key);
 
-	throw std::runtime_error("Data '" + data + "' not found in the global or location-specific configuration.");
+	throw std::runtime_error("Data '" + key + "' not found in the global or location-specific configuration.");
 }
 
 
@@ -139,7 +139,7 @@ void HttpResponse::setErrorFilePath(const int& error_code_no, HttpRequest reques
 
 	try {
 		// Use get_from_location to fetch the error page configuration
-		std::string errorPagePath = get_from_location("", "error_page", request);
+		std::string errorPagePath = getFromLocation(this->_file_path, "error_page", request);
 
 		// Construct the full path to the error page
 		this->_file_path = resolvePath(errorPagePath + "/" + error_code_str + ".html", request.getRequestBlock(), {});
@@ -188,9 +188,14 @@ void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
 
 void	HttpResponse::setHeaders(const int& status_code_no, const HttpRequest& request)
 {
+	this->_headers["Server"] = "webserv/42.0";
+	this->_headers["Date"] = this->setDateHeader();
+	this->_headers["Connection"] = "keep-alive";
+
 	if (status_code_no == 200 && request.getMethod() == "GET")
 	{
-
+		this->_headers["Last-Modified"] = this->setLastModifiedHeader();
+		this->_headers["Content-Type"] = this->setMimeTypeHeader();
 	}
 	else if (status_code_no == 201 && request.getMethod() == "POST")
 	{
@@ -225,6 +230,10 @@ std::string HttpResponse::getHeaderList()
 
 	return (headers_list);
 }
+std::string HttpResponse::getFilePath()
+{
+	return (this->_file_path);
+}
 
 std::string	HttpResponse::returnResponse()
 {
@@ -235,6 +244,66 @@ std::string	HttpResponse::returnResponse()
 				this->_body;
 
 	return (response);
+}
+
+std::string	HttpResponse::makeTimestampStr(std::tm* time)
+{
+	std::ostringstream timestamp_stream;
+
+	timestamp_stream << std::put_time(time, "%a") << ", "
+					<< std::put_time(time, "%d %b %Y ")
+					<< std::put_time(time, "%X %Z");
+
+	return (timestamp_stream.str());
+}
+
+std::string	HttpResponse::setDateHeader()
+{
+	std::time_t time_since_epoch = std::time(nullptr);
+	std::tm* current_date_obj = std::localtime(&time_since_epoch);
+	
+	std::string current_date_str = makeTimestampStr(current_date_obj);
+
+	return (current_date_str);
+}
+
+std::string	HttpResponse::setLastModifiedHeader()
+{
+	std::filesystem::file_time_type lw_time = std::filesystem::last_write_time(this->_file_path);
+
+	std::time_t sctp = decltype(lw_time)::clock::to_time_t(lw_time);
+	std::tm* last_modified_obj = std::localtime(&sctp);
+	
+	std::string last_modified_str = makeTimestampStr(last_modified_obj);
+
+	return (last_modified_str);
+}
+
+std::string HttpResponse::setMimeTypeHeader()
+{
+	size_t dotPos = this->_file_path.find_last_of('.');
+
+	if (dotPos == std::string::npos)
+		return "application/octet-stream";
+
+	std::string extension = this->_file_path.substr(dotPos + 1);
+
+	if (extension == "html" || extension == "htm")
+		return "text/html";
+	if (extension == "css")
+		return "text/css";
+	if (extension == "js")
+		return "application/javascript";
+	if (extension == "jpg" || extension == "jpeg")
+		return "image/jpeg";
+	if (extension == "png")
+		return "image/png";
+	if (extension == "gif")
+		return "image/gif";
+	if (extension == "txt")
+		return "text/plain";
+
+	return "application/octet-stream";
 }
 
 void	HttpResponse::debug()

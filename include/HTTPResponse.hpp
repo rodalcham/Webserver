@@ -41,7 +41,13 @@ public:
 	void			setHeaders(const int& status_code_no, const HttpRequest& request);
 	void			setErrorFilePath(const int& error_code_no, HttpRequest request);
 
+	std::string		makeTimestampStr(std::tm* time);
+	std::string		setDateHeader();
+	std::string		setLastModifiedHeader();
+	std::string		setMimeTypeHeader();
 	std::string		getHeaderList();
+	std::string		getFilePath();
 	std::string		returnResponse();
+	std::string		getFromLocation(const std::string& location, const std::string& data, const HttpRequest& request);
 	void			debug();
 };

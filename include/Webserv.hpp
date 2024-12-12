@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Webserv.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/11 12:22:27 by rchavez@stu      ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include "Server.hpp"
@@ -20,6 +32,7 @@
 #include <fstream>
 #include <iostream>
 #include <fstream>
+#include <deque>
 
 #define SOCKET_BACKLOG_MAX 10
 // #define PORT 8080
@@ -30,16 +43,20 @@
 #define BLUE "\033[34m"
 #define RESET "\033[0m"
 
+#define I_AM_THE_BEST true
+
 #ifndef DEBUG
 # define DEBUG 0
 #endif
 
-extern std::atomic<bool> keepRunning;
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/event.h>
+#include <iostream>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string>
+#include <map>
 
 using std::string;
 using std::cout;
-
-/*Custom functions*/
-uint16_t	ft_htons(uint16_t port);
-void		debug(string message);
-

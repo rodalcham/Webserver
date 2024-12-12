@@ -9,7 +9,15 @@
 
 /**
  * HttpResponse
- * @param http_version:
+ * 
+ * A class to  store a response before its ready to send
+ * 
+ * @param _http_version The version number
+ * @param _status_code The retunr code for the response
+ * @param _headers A map of all the headers contained in the response
+ * @param _chunking_required ?
+ * @param _body The body of the response
+ * @param _file_path ?
  */
 
 class HttpResponse

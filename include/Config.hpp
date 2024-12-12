@@ -7,6 +7,10 @@
 #include <fstream>
 #include <stdexcept>
 
+/**
+ * A class for ?
+ */
+
 class Config {
 private:
     const std::string           config_path;

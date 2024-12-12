@@ -1,0 +1,51 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Client.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/06 15:39:23 by rchavez           #+#    #+#             */
+/*   Updated: 2024/12/12 09:42:45 by rchavez@stu      ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#pragma once
+
+#include "Webserv.hpp"
+
+/**
+ * A class containing client info
+ * 
+ * @param clienSock The socket id associated with the client
+ * @param requests A FIFO array of all the requests coming from this client
+ * @param responses A FIFO array of all the responses beint sent to this client
+ * @param is_sending A variable to block multiple concurring recvs
+ * @param is_receiving A variable to block multiple concurring sends
+ * 
+ */
+class Client
+{
+
+	private :
+
+	int					clientSock;
+	std::deque<string>	requests;
+	std::deque<string>	responses;
+	bool				is_sending = false;
+	bool				is_receiving = false;
+
+	public : 
+
+	Client(int clientSock);
+
+	int		&getSocket();
+	string	&getRequest();
+	string	&getResponse();
+	void	popResponse();
+	void	popRequest();
+	bool	&isSending();
+	bool	&isReceiving();
+
+	size_t	parseRequest(char *buffer, size_t bytesRead);
+};

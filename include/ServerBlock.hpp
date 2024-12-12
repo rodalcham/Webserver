@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 
+class HttpRequest;
+
 /**
  * A class to store the config block for each server
  * 
@@ -11,6 +13,7 @@
  * @param error_pages ?
  * @param location_blocks ?
  */
+
 class ServerBlock
 {
 public:
@@ -24,9 +27,11 @@ public:
 
 	void		parseBlock(std::istream& stream);
 	void		setErrorPage(std::string& value, std::string& line);
-	void		setDirective(std::string& key, std::string& value);
+	// void		setDirective(std::string& key, std::string& value);
 	std::string	createDirectiveStr(std::string& line);
 	void		setLocationBlock(std::istream& stream, std::string line);
+	void		debugPrint() const;
+	bool isRequestAllowed(const HttpRequest& request) const;
+
 };
 
-	// void		debug();

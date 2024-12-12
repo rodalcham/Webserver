@@ -22,31 +22,25 @@ void setupSignalHandler() {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <config_file_path>\n";
-        return 1;
-    }
+	if (argc != 2) {
+		std::cerr << "Usage: " << argv[0] << " <config_file_path>\n";
+		return 1;
+	}
 
-    Config config(argv[1]);
-    debug("Server running in DEBUG mode.");
-    setupSignalHandler(); // Set up the signal handler
-    try {
-        std::ifstream config_file(argv[1]);
-        if (!config_file.is_open()) {
-            std::cerr << "Error: Failed to open configuration file: " << argv[1] << std::endl;
-            return 1;
-        }
+	debug("Server running in DEBUG mode.");
+	setupSignalHandler(); // Set up the signal handler
 
-        ServerBlock serverBlock(config_file); // Initialize directly with ifstream
-        Server server(serverBlock);
+	try {
+		Config config(argv[1]); // Load and validate configuration
 
-        server.run();
-        std::cout << "Server shutting down...\n";
+		Server server(config.getServerBlocks());
+		server.run();
+		std::cout << "Server shutting down...\n";
+	} catch (const std::exception& e) {
+		std::cerr << "Error: " << e.what() << std::endl;
+		return 1;
+	}
 
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
-    }
-
-    return 0;
+	return 0;
 }
+

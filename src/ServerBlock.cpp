@@ -115,8 +115,65 @@ void	ServerBlock::setLocationBlock(std::istream& stream, std::string line)
 
 
 
-// void ServerBlock::debug()
-// {
+void ServerBlock::debugPrint() const {
+	std::cout << "ServerBlock Details:\n";
 
-// }
+	std::cout << "\nDirective Pairs:\n";
+	for (const auto& pair : directive_pairs) {
+		std::cout << "  " << pair.first << ": " << pair.second << "\n";
+	}
 
+	std::cout << "\nError Pages:\n";
+	for (const auto& pair : error_pages) {
+		std::cout << "  " << pair.first << ": " << pair.second << "\n";
+	}
+
+	std::cout << "\nLocation Blocks:\n";
+	for (const auto& block : location_blocks) {
+		std::cout << "  Location: " << block.first << "\n";
+		for (const auto& directive : block.second) {
+			std::cout << "    " << directive.first << ": " << directive.second << "\n";
+		}
+	}
+}
+
+bool ServerBlock::isRequestAllowed(const HttpRequest& request) const {
+    std::string uri = request.getUri();
+    std::cerr << "[DEBUG] Checking if request URI: " << uri << " is allowed.\n";
+
+    // Match URI against location blocks
+    auto locationIt = location_blocks.end();
+    for (auto it = location_blocks.begin(); it != location_blocks.end(); ++it) {
+        if (uri.compare(0, it->first.length(), it->first) == 0) {
+            locationIt = it; // Found matching location
+            break;
+        }
+    }
+
+    if (locationIt == location_blocks.end()) {
+        std::cerr << "[DEBUG] No matching location block for URI: " << uri << "\n";
+        return false;
+    }
+
+    const auto& locationDirectives = locationIt->second;
+
+    // Check allowed methods
+    auto methodIt = locationDirectives.find("allow_methods");
+    if (methodIt != locationDirectives.end()) {
+        std::string allowedMethods = methodIt->second;
+        std::string requestMethod = request.getMethod();
+        if (allowedMethods.find(requestMethod) == std::string::npos) {
+            std::cerr << "[DEBUG] Request method not allowed: " << requestMethod << "\n";
+            return false;
+        }
+    }
+
+    // // Check file accessibility
+    // std::string filePath = request.getFilePath();
+    // if (!std::ifstream(filePath).good()) {
+    //     std::cerr << "[DEBUG] File not accessible: " << filePath << "\n";
+    //     return false;
+    // }
+
+    return true;
+}

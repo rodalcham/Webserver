@@ -1,112 +1,122 @@
-#include "../include/Server.hpp"
-#include "../include/HTTPRequest.hpp"
-#include "../include/HTTPResponse.hpp"
-#include "../include/cgi.hpp"
+// #include "../include/Server.hpp"
+// #include "../include/HTTPRequest.hpp"
+// #include "../include/HTTPResponse.hpp"
+// #include "../include/cgi.hpp"
+// #include <iostream>
+// #include <fstream>
+// #include <limits.h> // For PATH_MAX
 
+// // GET Handler
+// void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
+//     int i = matchServerBlock(httpRequest);
+//     if (i < 0) {
+//         std::cerr << "[ERROR] No matching server block found.\n";
+//         close(clientSock);
+//         return;
+//     }
 
-void Server::handleGet(int clientSock, HttpRequest& httpRequest) {
-    // Check if URI corresponds to CGI
-    if (isCGIRequest(httpRequest.getUri())) {
-        handleCGI(clientSock, httpRequest);
-        return;
-    }
+//     const auto& locations = serverBlocks[i].location_blocks;
+//     std::string matchedLocation = "/";
+//     size_t longestMatch = 0;
 
-    // Validate and resolve file path
-    std::string filePath = httpRequest.getFilePath();
-    char realPath[PATH_MAX];
-    if (realpath(filePath.c_str(), realPath) == nullptr) {
-        std::cerr << "Invalid path or file not found: " << filePath << std::endl;
-        return;
-    }
+//     for (const auto& location : locations) {
+//         if (httpRequest.getUri().rfind(location.first, 0) == 0 && location.first.size() > longestMatch) {
+//             matchedLocation = location.first;
+//             longestMatch = location.first.size();
+//         }
+//     }
 
-    filePath = std::string(realPath);
+//     const auto& locationConfig = locations.at(matchedLocation);
+//     std::string filePath = resolvePath(httpRequest.getUri(), serverBlocks[i], locationConfig);
+//     httpRequest.setFilePath(filePath);
 
-    // If the resolved filePath matches the root directory, append index.html
-    if (filePath == httpRequest.getRootDir()) {
-        filePath += "/index.html";
-        httpRequest.setFilePath(filePath);
-    }
+//     char realPath[PATH_MAX];
+//     if (realpath(filePath.c_str(), realPath) == nullptr) {
+//         // Invalid path or file not found
+//         HttpResponse response(httpRequest, 404, "Not Found");
+//         response.sendResponse(clientSock);
+//         return;
+//     }
 
-    // Open the file and check if it's accessible
-    std::ifstream file(httpRequest.getFilePath());
-    if (!file.good()) {
-        std::cerr << "File not found: " << httpRequest.getFilePath() << std::endl;
-        return;
-    }
+//     filePath = std::string(realPath);
+//     httpRequest.setFilePath(filePath);
 
-    try {
-        // Read the file content
-        std::string content((std::istreambuf_iterator<char>(file)),
-                            std::istreambuf_iterator<char>());
+//     // If filePath == rootDir exactly, append /index.html
+//     if (filePath == httpRequest.getRootDir()) {
+//         filePath += "/index.html";
+//         httpRequest.setFilePath(filePath);
+//     }
 
-        // Determine the content type based on the file extension
-        std::string contentType = getMimeType(httpRequest.getFilePath());
+//     if (!std::ifstream(filePath).good()) {
+//         HttpResponse response(httpRequest, 404, "Not Found");
+//         response.sendResponse(clientSock);
+//         return;
+//     }
 
-        // Send the response
-        std::ostringstream response;
-        response << "HTTP/1.1 200 OK\r\n";
-        response << "Content-Type: " << contentType << "\r\n";
-        response << "Content-Length: " << content.size() << "\r\n";
-        response << "\r\n";
-        response << content;
+//     HttpResponse response(httpRequest);
+//     response.sendResponse(clientSock);
+// }
 
-        std::string responseStr = response.str();
-        write(clientSock, responseStr.c_str(), responseStr.size());
-    } catch (const std::exception& e) {
-        std::cerr << "Error handling GET request: " << e.what() << std::endl;
-        return;
-    }
-	try {
-		std::string content((std::istreambuf_iterator<char>(file)),
-							std::istreambuf_iterator<char>());
-		std::string contentType = getMimeType(filePath);
-	} catch (const std::exception& e) {
-		return;
-	}
-	
-	// httpRequest.debug();
+// // DELETE Handler
+// void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
+//     try {
+//         int i = matchServerBlock(httpRequest);
+//         if (i < 0) {
+//             std::cerr << "[ERROR] No matching server block found.\n";
+//             close(clientSock);
+//             return;
+//         }
 
-	HttpResponse	response(httpRequest);
-	// response.debug();
-	response.sendResponse(clientSock);
-}
+//         const auto& locations = serverBlocks[i].location_blocks;
+//         std::string matchedLocation = "/";
+//         size_t longestMatch = 0;
 
+//         for (const auto& location : locations) {
+//             if (httpRequest.getUri().rfind(location.first, 0) == 0 && location.first.size() > longestMatch) {
+//                 matchedLocation = location.first;
+//                 longestMatch = location.first.size();
+//             }
+//         }
 
+//         const auto& locationConfig = locations.at(matchedLocation);
+//         std::string filePath = resolvePath(httpRequest.getUri(), serverBlocks[i], locationConfig);
 
-void Server::handleDelete(int clientSock, HttpRequest& httpRequest) {
-	if (2) {
-		(void)clientSock; // Suppress unused-variable warnings
-	}
+//         std::ifstream file(filePath);
+//         if (!file.good()) {
+//             // 404 Not Found
+//             HttpResponse response(httpRequest, 404, "Not Found");
+//             response.sendResponse(clientSock);
+//         } else {
+//             file.close();
+//             if (remove(filePath.c_str()) != 0) {
+//                 // Failed to delete -> 500
+//                 HttpResponse response(httpRequest, 500, "Internal Server Error");
+//                 response.sendResponse(clientSock);
+//             } else {
+//                 // Successfully deleted -> 200
+//                 HttpResponse response(httpRequest, 200, "OK");
+//                 response.sendResponse(clientSock);
+//             }
+//         }
+//     } catch (const std::exception& e) {
+//         std::cerr << "Error handling DELETE request: " << e.what() << std::endl;
+//         HttpResponse response(httpRequest, 500, "Internal Server Error");
+//         response.sendResponse(clientSock);
+//     }
+// }
 
-	try {
-		std::string filePath = resolvePath(httpRequest.getUri());
+// // POST Handler
+// void Server::handlePost(int clientSock, HttpRequest& httpRequest) {
+//     auto expectHeader = httpRequest.getHeader("expect");
+//     if (!expectHeader.empty()) {
+//         std::string expectValue = expectHeader;
+//         std::transform(expectValue.begin(), expectValue.end(), expectValue.begin(), ::tolower);
+//         if (expectValue == "100-continue") {
+//             std::string continueResponse = "HTTP/1.1 100 Continue\r\n\r\n";
+//             write(clientSock, continueResponse.c_str(), continueResponse.size());
+//         }
+//     }
 
-		std::ifstream file(filePath);
-		if (!file.good()) {
-		} else {
-			file.close();
-			if (remove(filePath.c_str()) != 0) {
-				throw std::runtime_error("Failed to delete file");
-			}
-		}
-	} catch (const std::exception& e) {
-	}
-}
-
-
-void Server::handlePost(int clientSock, HttpRequest& httpRequest) {
-	if (isCGIRequest(httpRequest.getUri())) {
-		handleCGI(clientSock, httpRequest);
-		return;
-	}
-
-	auto expectHeader = httpRequest.getHeader("expect");
-	if (!expectHeader.empty()) {
-		std::string expectValue = expectHeader;
-		std::transform(expectValue.begin(), expectValue.end(), expectValue.begin(), ::tolower);
-		if (expectValue == "100-continue") {
-			std::string continueResponse = "HTTP/1.1 100 Continue\r\n\r\n";
-			write(clientSock, continueResponse.c_str(), continueResponse.size());
-		}
-	}
-}
+//     HttpResponse response(httpRequest, 200, "OK");
+//     response.sendResponse(clientSock);
+// }

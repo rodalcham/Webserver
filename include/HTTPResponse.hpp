@@ -2,6 +2,7 @@
 
 #include "Webserv.hpp"
 #include "HTTPRequest.hpp"
+#include "ServerBlock.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -11,32 +12,50 @@
  * 
  * A class to  store a response before its ready to send
  * 
- * @param httpVersion The version number
- * @param status_code The retunr code for the response
- * @param headers A map of all the headers contained in the response
- * @param chunking_required ?
- * @param body The body of the response
- * @param file_path ?
+ * @param _http_version The version number
+ * @param _status_code The retunr code for the response
+ * @param _headers A map of all the headers contained in the response
+ * @param _chunking_required ?
+ * @param _body The body of the response
+ * @param _file_path ?
  */
 
 class HttpResponse
 {
 protected:
-	std::string							httpVersion;
-	std::string							status_code;
-	std::map<std::string, std::string>	headers;
-	bool								chunking_required;
-	std::string							body;
-	std::string							file_path;
+	std::string							_http_version;
+	std::string							_status_code;
+	std::map<std::string, std::string>	_headers;
+	bool								_chunking_required;
+	std::string							_body;
+	std::string							_file_path;
+	const std::map<int, std::string>	_error_status_codes = {
+	{200, "200 OK"}, {201, "201 Created"}, {400, "400 Bad Request"}, 
+	{401, "401 Unauthorized"}, {403, "403 Forbidden"}, {404, "404 Not Found"}, 
+	{405, "405 Method Not Allowed"}, {413, "413 Payload Too Large"}, 
+	{415, "415 Unsupported Media Type"}, {500, "500 Internal Server Error"}, 
+	{501, "501 Not Implemented"}, {502, "502 Bad Gateway"}, 
+	{503, "503 Service Unavailable"}, {504, "504 Gateway Timeout"}};
 
 public:
 	HttpResponse();
-	HttpResponse(HttpRequest& request);
+	HttpResponse(const HttpRequest& request);
 	~HttpResponse();
 
-	std::string	getHeaderList();
-	void		sendResponse(int clientSock);
-	// void 		errorResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
+	int 			setFilePath(const HttpRequest& request);
+	std::string		resolvePath(const std::string& uri, const ServerBlock& block, const std::map<std::string, std::string>& locationConfig);
+	void			setStatusCode(const int& status_code_no, HttpRequest request);
+	void			setBody(bool is_first_try, HttpRequest request);
+	void			setHeaders(const int& status_code_no, const HttpRequest& request);
+	void			setErrorFilePath(const int& error_code_no, HttpRequest request);
 
-	void		debug();
+	std::string		makeTimestampStr(std::tm* time);
+	std::string		setDateHeader();
+	std::string		setLastModifiedHeader();
+	std::string		setMimeTypeHeader();
+	std::string		getHeaderList();
+	std::string		getFilePath();
+	std::string		returnResponse();
+	std::string		getFromLocation(const std::string& location, const std::string& data, const HttpRequest& request);
+	void			debug();
 };

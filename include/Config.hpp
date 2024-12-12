@@ -1,22 +1,27 @@
 #pragma once
 
 #include "Webserv.hpp"
-
-class ServerBlock;
+#include "ServerBlock.hpp"
+#include <vector>
+#include <string>
+#include <fstream>
+#include <stdexcept>
 
 /**
  * A class for ?
  */
-class Config
-{
+
+class Config {
+private:
+    const std::string           config_path;
+    std::vector<ServerBlock>    server_blocks;
+
+    void parseConfig(); // Private method to parse the config file
+
 public:
-	const std::string			config_path;
-	// std::vector<ServerBlock>	server_blocks;
+    Config(const std::string& conf_path);
+    ~Config();
 
-	Config(const std::string& conf_path);
-	~Config();
-
-	void	debug(ServerBlock one_block);
+    const std::vector<ServerBlock>& getServerBlocks() const;
+    void debug() const; // Debug all server blocks
 };
-
-	// std::vector<ServerBlock>	server_blocks;

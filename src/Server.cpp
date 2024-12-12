@@ -1,17 +1,7 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/12 09:46:21 by rchavez@stu      ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
+#include "../include/HTTPResponse.hpp"
+#include "../include/Config.hpp"
 #include "../include/Webserv.hpp"
 #include <iostream>
 #include <sstream>
@@ -20,6 +10,7 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <errno.h>
 
 class log;
 

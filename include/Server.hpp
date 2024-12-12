@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/12 09:44:52 by rchavez@stu      ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #pragma once
 
 #include "Webserv.hpp" 
@@ -17,7 +5,9 @@
 #include "HTTPResponse.hpp"
 #include "Client.hpp"
 #include "ServerBlock.hpp"
-
+#include <vector>
+#include <map>
+#include <set>
 
 class HttpRequest; // Forward declaration
 class HttpResponse; // Forward declaration
@@ -63,5 +53,3 @@ private:
 	//Posting events
 	void	postEvent(int clientSock, int mode);
 };
-
-

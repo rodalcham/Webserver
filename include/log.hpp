@@ -2,6 +2,12 @@
 
 #include "Webserv.hpp"
 
+/**
+ * A class used to log events into a file for later analysis
+ * 
+ * @param _log_file_path the path into the file to log, created by the class
+ * @param _file The file fd
+ */
 class Log
 {
 private:

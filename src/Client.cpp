@@ -6,7 +6,7 @@
 /*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 11:34:06 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/10 17:31:13 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/11 18:15:56 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ void	Client::popResponse()
 
 void	Client::popRequest()
 {
-	this->requests.pop_front();
+	this->requests.pop_front();3
 }
 
 bool	&Client::isSending()

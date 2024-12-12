@@ -15,6 +15,18 @@ enum class HttpMethod
 };
 
 // Class to represent an HTTP Request
+/**
+ * HttpRequest:
+ * A class to store a parsed http request before its processed
+ * 
+ * @param method The method being requested
+ * @param uri The requested uri
+ * @param httpVersion The http version
+ * @param headers A map containing all of the headers of the request
+ * @param body The body of the request
+ * @param rootDir ?
+ * @param filePath ?
+ */
 class HttpRequest 
 {
 

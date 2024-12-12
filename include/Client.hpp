@@ -6,7 +6,7 @@
 /*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/06 15:39:23 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/10 17:31:40 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/12 09:42:45 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,12 @@
 /**
  * A class containing client info
  * 
- * @param
+ * @param clienSock The socket id associated with the client
+ * @param requests A FIFO array of all the requests coming from this client
+ * @param responses A FIFO array of all the responses beint sent to this client
+ * @param is_sending A variable to block multiple concurring recvs
+ * @param is_receiving A variable to block multiple concurring sends
+ * 
  */
 class Client
 {

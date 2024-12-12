@@ -4,6 +4,9 @@
 
 class ServerBlock;
 
+/**
+ * A class for ?
+ */
 class Config
 {
 public:

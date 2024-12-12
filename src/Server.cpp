@@ -6,7 +6,7 @@
 /*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:51 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/11 12:37:00 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/12 09:46:21 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,9 @@ Server::~Server() {
 	std::cout << "Server Destroyed\n";
 }
 
+/** 
+ * This is the main server loop, using events to hande different situations and redirecting the program to the correct funtions
+*/
 void Server::run() {
 	while (keepRunning) {
 		struct kevent eventList[1024];

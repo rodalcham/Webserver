@@ -6,13 +6,16 @@
 /*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/06 12:37:14 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/10 17:36:28 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/12 09:47:24 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
 #include <errno.h>
 
+/**
+ * Adds a write event to the kqueue
+ */
 void	Server::enable_write_listen(int	clientSock)
 {
 	struct kevent enable;
@@ -24,6 +27,10 @@ void	Server::enable_write_listen(int	clientSock)
 		throw std::runtime_error("Failed to listen for write readiness");
 	}
 }
+
+/**
+ * Removes the write event form the kqueue
+ */
 void	Server::disable_write_listen(int	clientSock)
 {
 	struct kevent disable;

@@ -4,6 +4,13 @@
 #include <string>
 #include <map>
 
+/**
+ * A class to store the config block for each server
+ * 
+ * @param directive_oairs ?
+ * @param error_pages ?
+ * @param location_blocks ?
+ */
 class ServerBlock
 {
 public:

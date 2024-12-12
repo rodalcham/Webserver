@@ -8,8 +8,10 @@
 /**
  * GetResponse
  * 
+ * A class for ? (
+ * Seriously guys what ara all this classes for)
+ * 
  */
-
 class GetResponse : public HttpResponse
 {
 public:

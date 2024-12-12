@@ -6,7 +6,7 @@
 /*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:31 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/11 12:22:08 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/12 09:44:52 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ class Client;
  * @param serverSock An Integer containing the file descriptor for the server socket.
  * @param kq An integer representing the KQueue.
  * @param clients A map containing all the clients, indexedy their socket fd.
+ * @param serverBlock The config block for this server
  */
 class Server {
 public:

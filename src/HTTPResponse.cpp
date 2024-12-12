@@ -100,17 +100,56 @@ std::string HttpResponse::resolvePath(const std::string& uri, const ServerBlock&
 
 
 
-
-
-
-
-
-
-
-void	HttpResponse::setErrorFilePath(const int& error_code_no)
+std::string get_from_location(const std::string& location, const std::string& data, const HttpRequest& request)
 {
-	this->_file_path = "www/error_pages/" + std::to_string(error_code_no) + ".html";// TODO: make this re-set the file path based on the error
+	// Get the server block from the HttpRequest
+	const ServerBlock& block = request.getRequestBlock();
+
+	// If a specific location is provided
+	if (!location.empty())
+	{
+		const auto& locations = block.location_blocks;
+		if (locations.find(location) == locations.end())
+			throw std::runtime_error("Location '" + location + "' not found in the server block.");
+		const auto& locationConfig = locations.at(location);
+
+		// Extract the requested data from the location
+		if (locationConfig.find(data) != locationConfig.end())
+			return locationConfig.at(data);
+		else
+			throw std::runtime_error("Data '" + data + "' not found in the location '" + location + "'.");
+	}
+
+	// If no specific location is provided, look in the global directives
+	if (block.directive_pairs.find(data) != block.directive_pairs.end())
+		return block.directive_pairs.at(data);
+
+	throw std::runtime_error("Data '" + data + "' not found in the global or location-specific configuration.");
 }
+
+
+
+
+
+
+
+void HttpResponse::setErrorFilePath(const int& error_code_no, HttpRequest request)
+{
+	std::string error_code_str = std::to_string(error_code_no);
+
+	try {
+		// Use get_from_location to fetch the error page configuration
+		std::string errorPagePath = get_from_location("", "error_page", request);
+
+		// Construct the full path to the error page
+		this->_file_path = resolvePath(errorPagePath + "/" + error_code_str + ".html", request.getRequestBlock(), {});
+	} catch (const std::runtime_error& e) {
+		// Log the error for debugging purposes
+		std::cerr << "[ERROR] Error while setting error file path: " << e.what() << "\n";
+
+	}
+}
+
 
 
 

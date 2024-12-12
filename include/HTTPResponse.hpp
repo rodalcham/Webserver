@@ -39,7 +39,7 @@ public:
 	void			setStatusCode(const int& status_code_no);
 	void			setBody(bool is_first_try);
 	void			setHeaders(const int& status_code_no, const HttpRequest& request);
-	void			setErrorFilePath(const int& error_code_no);
+	void			setErrorFilePath(const int& error_code_no, HttpRequest request);
 
 	std::string		getHeaderList();
 	std::string		returnResponse();

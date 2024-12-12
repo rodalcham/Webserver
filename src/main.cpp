@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	debug("Server running in DEBUG mode.");
+	// debug("Server running in DEBUG mode.");
 	setupSignalHandler(); // Set up the signal handler
 
 	try {

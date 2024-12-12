@@ -306,7 +306,7 @@ std::string HttpResponse::setMimeTypeHeader()
 	return "application/octet-stream";
 }
 
-void	HttpResponse::debug()
+void	HttpResponse::rspDebug()
 {
 	std::cout << "\n =============== START LINE ===============\n\n";
 	std::cout << "\n\n" << _http_version << " " << _status_code << "\n\n";

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/11 12:22:27 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/12 14:38:37 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,10 +49,7 @@
 # define DEBUG 0
 #endif
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/event.h>
-#include <iostream>
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <string>

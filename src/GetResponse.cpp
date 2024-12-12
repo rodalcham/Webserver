@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../include/Webserv.hpp"
 #include "../include/HTTPRequest.hpp"
 #include "../include/HTTPResponse.hpp"

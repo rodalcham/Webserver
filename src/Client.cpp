@@ -3,14 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 11:34:06 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/11 18:15:56 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/12 14:53:44 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Client.hpp"
+
+Client::Client() : clientSock(-1)
+{
+
+}
 
 Client::Client(int clientSock) : clientSock(clientSock)
 {
@@ -39,7 +44,7 @@ void	Client::popResponse()
 
 void	Client::popRequest()
 {
-	this->requests.pop_front();3
+	this->requests.pop_front();
 }
 
 bool	&Client::isSending()

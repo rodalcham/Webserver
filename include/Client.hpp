@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
+/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/06 15:39:23 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/12 09:42:45 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/12 14:53:05 by gstronge         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,23 +29,24 @@ class Client
 
 	private :
 
-	int					clientSock;
-	std::deque<string>	requests;
-	std::deque<string>	responses;
-	bool				is_sending = false;
-	bool				is_receiving = false;
+	int						clientSock;
+	std::deque<std::string>	requests;
+	std::deque<std::string>	responses;
+	bool					is_sending = false;
+	bool					is_receiving = false;
 
 	public : 
 
+	Client();
 	Client(int clientSock);
 
-	int		&getSocket();
-	string	&getRequest();
-	string	&getResponse();
-	void	popResponse();
-	void	popRequest();
-	bool	&isSending();
-	bool	&isReceiving();
+	int			&getSocket();
+	std::string	&getRequest();
+	std::string	&getResponse();
+	void		popResponse();
+	void		popRequest();
+	bool		&isSending();
+	bool		&isReceiving();
 
 	size_t	parseRequest(char *buffer, size_t bytesRead);
 };

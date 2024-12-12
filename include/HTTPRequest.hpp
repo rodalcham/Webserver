@@ -49,7 +49,7 @@ public:
 	const ServerBlock&					getRequestBlock() const;
 
 	ServerBlock*						matchServerBlock(std::vector<ServerBlock>& serverBlocks);
-	void								debug() const;
+	void								rqstDebug() const;
 };
 
 // Function to parse an HTTP request string into an HttpRequest object

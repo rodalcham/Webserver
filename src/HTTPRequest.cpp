@@ -5,7 +5,6 @@
 
 HttpRequest::HttpRequest(const std::string& request, std::vector<ServerBlock>& serverBlocks)
 {
-
     // Parse the request
     size_t headerEnd = request.find("\r\n\r\n");
     if (headerEnd == std::string::npos) {
@@ -152,7 +151,7 @@ std::string HttpRequest::getHeaders(const std::string& key) const
 }
 
 // Print the details of the HTTP request
-void HttpRequest::debug() const {
+void HttpRequest::rqstDebug() const {
     std::cout << "Received HTTP Request:\n";
     std::cout << "Header Connection: " << getHeaders("connection") << "\n\n";
     std::cout << "Header accept: " << getHeaders("accept") << "\n\n";

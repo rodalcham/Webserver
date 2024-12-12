@@ -57,5 +57,5 @@ public:
 	std::string		getFilePath();
 	std::string		returnResponse();
 	std::string		getFromLocation(const std::string& location, const std::string& data, const HttpRequest& request);
-	void			debug();
+	void			rspDebug();
 };

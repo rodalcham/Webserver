@@ -29,11 +29,12 @@ void Config::parseConfig() {
     }
 }
 
-const std::vector<ServerBlock>& Config::getServerBlocks() const {
+std::vector<ServerBlock>& Config::getServerBlocks()
+{
     return server_blocks;
 }
 
-void Config::debug() const {
+void Config::confDebug() const {
     for (const auto& block : server_blocks) {
         std::cout << "\n===== SERVER BLOCK =====\n";
 

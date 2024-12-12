@@ -36,8 +36,8 @@ public:
 
 	int 			setFilePath(const HttpRequest& request);
 	std::string		resolvePath(const std::string& uri, const ServerBlock& block, const std::map<std::string, std::string>& locationConfig);
-	void			setStatusCode(const int& status_code_no);
-	void			setBody(bool is_first_try);
+	void			setStatusCode(const int& status_code_no, HttpRequest request);
+	void			setBody(bool is_first_try, HttpRequest request);
 	void			setHeaders(const int& status_code_no, const HttpRequest& request);
 	void			setErrorFilePath(const int& error_code_no, HttpRequest request);
 

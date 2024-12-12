@@ -17,11 +17,11 @@
 
 extern std::atomic<bool> keepRunning;
 
-HttpResponse generateDirectoryListing(const std::string& path) {
+HttpResponse generateDirectoryListing(const std::string& path, HttpRequest request) {
     std::cout << "[DEBUG] Generating directory listing for: " << path << "\n";
     std::string body = "<html><body><h1>Directory Listing for " + path + "</h1></body></html>";
     HttpResponse response;
-    response.setBody(body);
+    response.setBody(body, request);
     response.setHeader("Content-Length", std::to_string(body.size()));
     response.setHeader("Content-Type", "text/html");
     return response;

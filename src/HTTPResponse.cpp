@@ -9,8 +9,8 @@ HttpResponse::HttpResponse(const HttpRequest& request)
 	this->_http_version = request.getHttpVersion();
 	this->_chunking_required = false;
 	int status_code_no = setFilePath(request);
-	setStatusCode(status_code_no);
-	setBody(true);
+	setStatusCode(status_code_no, request);
+	setBody(true, request);
 	setHeaders(status_code_no, request);
 }
 
@@ -154,7 +154,7 @@ void HttpResponse::setErrorFilePath(const int& error_code_no, HttpRequest reques
 
 
 
-void	HttpResponse::setStatusCode(const int& status_code_no)
+void	HttpResponse::setStatusCode(const int& status_code_no, HttpRequest request)
 {
 	auto it = _error_status_codes.find(status_code_no);
 	if (it != _error_status_codes.end())
@@ -162,10 +162,10 @@ void	HttpResponse::setStatusCode(const int& status_code_no)
 	else
 		std::cout << "UNKNOWN STATUS CODE\n";// TODO: need to decide what to do in this situation!!!!!!!!!!!!!!!!!
 	if (status_code_no != 200 && status_code_no != 201)
-		setErrorFilePath(status_code_no);// TODO: do this -----------------------------------
+		setErrorFilePath(status_code_no, request);// TODO: do this -----------------------------------
 }
 
-void	HttpResponse::setBody(bool is_first_try)
+void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
 {
 	std::stringstream	buffer;
 	std::ifstream		file(this->_file_path, std::ios::binary);
@@ -179,8 +179,8 @@ void	HttpResponse::setBody(bool is_first_try)
 	}
 	else if (is_first_try)
 	{
-		setStatusCode(404);
-		setBody(false);
+		setStatusCode(404, request);
+		setBody(false, request);
 	}
 	else
 		this->_body = "404 Not Found"; // TODO: need to complete this with a basic html page

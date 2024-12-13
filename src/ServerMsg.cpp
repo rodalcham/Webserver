@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerMsg.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
+/*   By: rchavez <rchavez@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/06 12:37:14 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/12 09:47:24 by rchavez@stu      ###   ########.fr       */
+/*   Updated: 2024/12/13 12:09:35 by rchavez          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,12 +54,21 @@ void	Server::postEvent(int clientSock, int mode)
 	struct kevent	event;
 	int				ident;
 
-
 	ident = (clientSock * 10) + mode;
-	EV_SET(&event, ident, EVFILT_USER, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+	EV_SET(&event, ident, EVFILT_USER, EV_ADD | EV_ENABLE, NOTE_TRIGGER, 0, nullptr);
 	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
-		perror("Failed to post custom event to kqueue");
+		throw std::runtime_error("Failed to post custom event to kqueue");
 	}
+
+}
+
+void	Server::removeEvent(int eventID)
+{
+	struct kevent	event;
+
+	EV_SET(&event, eventID, EVFILT_USER, EV_DELETE, 0, 0, nullptr);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+		throw std::runtime_error("Failed to remove custom event from kqueue: " + std::string(strerror(errno)));
 }
 
 
@@ -78,7 +87,6 @@ void		Server::msg_send(Client &client, int mode)
 	}
 
 	string	*msg =&client.getResponse();
-
 	while (!msg->empty())
 	{
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);
@@ -123,15 +131,14 @@ void	Server::msg_receive(Client &client, int mode)
 {
 	const size_t bufferSize = 4096;
 	char	buffer[bufferSize];
-	size_t	bytes;
+	int	bytes;
 	size_t	received;
 
 	bytes = recv(client.getSocket(), buffer, bufferSize, 0);
-
 	if (bytes > 0)
 	{
 		received = client.parseRequest(&buffer[0], bytes);
-		for (int i = 0; i < received; i++)
+		for (size_t i = 0; i < received; i++)
 			this->postEvent(client.getSocket(), 1);
 		if (bytes == bufferSize)
 			this->postEvent(client.getSocket(), 0);

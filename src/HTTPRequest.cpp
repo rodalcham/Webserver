@@ -5,7 +5,6 @@
 
 HttpRequest::HttpRequest(const std::string& request, std::vector<ServerBlock>& serverBlocks)
 {
-
     // Parse the request
     size_t headerEnd = request.find("\r\n\r\n");
     if (headerEnd == std::string::npos) {

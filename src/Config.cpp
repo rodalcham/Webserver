@@ -29,7 +29,8 @@ void Config::parseConfig() {
     }
 }
 
-const std::vector<ServerBlock>& Config::getServerBlocks() const {
+std::vector<ServerBlock>& Config::getServerBlocks()
+{
     return server_blocks;
 }
 

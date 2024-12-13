@@ -1,6 +1,7 @@
 #include "../include/Server.hpp"
 #include "../include/HTTPRequest.hpp"
 #include "../include/HTTPResponse.hpp"
+#include "../include/Client.hpp"
 #include "../include/Config.hpp"
 #include "../include/Webserv.hpp"
 #include <iostream>
@@ -16,8 +17,9 @@ class log;
 
 extern std::atomic<bool> keepRunning;
 
-Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
-	int port = std::stoi(serverBlock.directive_pairs["listen"]);
+Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_blocks)
+{
+	int port = std::stoi(server_blocks[0].directive_pairs["listen"]);// TODO: need to make this cycle through all server blocks
 	serverSock = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSock < 0) throw std::runtime_error("Socket creation failed");
 
@@ -49,7 +51,8 @@ Server::Server(ServerBlock& serverBlock) : serverBlock(serverBlock) {
 		throw std::runtime_error("Failed to add server socket to kqueue");
 }
 
-Server::~Server() {
+Server::~Server()
+{
 	close(serverSock);
 	close(kq);
 	std::cout << "Server Destroyed\n";
@@ -58,8 +61,10 @@ Server::~Server() {
 /** 
  * This is the main server loop, using events to hande different situations and redirecting the program to the correct funtions
 */
-void Server::run() {
-	while (keepRunning) {
+void Server::run()
+{
+	while (keepRunning)
+	{
 		struct kevent eventList[1024];
 		int eventCount = kevent(kq, nullptr, 0, eventList, 1024, nullptr);
 
@@ -76,7 +81,9 @@ void Server::run() {
 				if (event == serverSock)
 					acceptClient();
 				else
-					msg_receive(this->clients[event], 0);
+				{
+					msg_receive(this->clients.at(event), 0);
+				}
 			}
 			else if (eventList[i].filter == EVFILT_USER)
 			{
@@ -84,58 +91,61 @@ void Server::run() {
 					msg_receive(this->clients[event/10], 1);
 				else if (event % 10 == 1)
 				{
-					//Process request
+					HttpRequest		request(this->clients[event/10].getRequest(), this->_server_blocks);
+					HttpResponse	response(request);
+					this->clients[event/10].popRequest();
+					this->clients[event/10].queueResponse(response.returnResponse());
+// 					this->clients[event/10].queueResponse("HTTP/1.1 200 OK\r\n"
+// "Content-Type: text/html; charset=UTF-8\r\n"
+// "Content-Length: 13\r\n"
+// "\r\n"
+// "Hello, World!");
+					this->postEvent(event/10, 2);
+					response.rspDebug();
 				}
 				else if (event % 10 == 2)
 					msg_send(this->clients[event/10], 0);
+				this->removeEvent(event);
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
 			{
-				msg_send(this->clients[event], 1);
+				msg_send(this->clients[event], 1);  
 			}
 		}
 	}
 }
 
 void Server::acceptClient() {
-	int clientSock = accept(serverSock, nullptr, nullptr);
-	if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
+    while (true) {
+        int clientSock = accept(serverSock, nullptr, nullptr);
+        if (clientSock < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) 
+                break; // No more connections to accept
+            throw std::runtime_error("Failed to accept new client");
+        }
 
-	struct kevent event;
-	EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		throw std::runtime_error("Failed to add client socket to kqueue");
-		debug("Acepted client: " + std::to_string(clientSock));
-}
+        // Set client socket to non-blocking mode
+        int flags = fcntl(clientSock, F_GETFL, 0);
+        if (flags == -1 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) == -1) {
+            close(clientSock);
+            throw std::runtime_error("Failed to set client socket to non-blocking mode");
+        }
 
-void Server::handleClient(int clientSock) {
-	char buffer[1024];
-	ssize_t bytes = read(clientSock, buffer, sizeof(buffer));
-	if (bytes <= 0) {
-		close(clientSock);
-		return;
-	}
+        // Register the client socket with kqueue
+        struct kevent event;
+        EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+        if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
+            close(clientSock);
+            throw std::runtime_error("Failed to add client socket to kqueue");
+        }
 
-	std::string request(buffer, bytes);
-	try {
-		HttpRequest httpRequest = parseHttpRequest(request);
-
-		std::string rootDir = serverBlock.directive_pairs["root"];
-		std::string resolvedPath = resolvePath(rootDir + httpRequest.get_uri());
-		if (!std::ifstream(resolvedPath).good()) {
-			std::cerr << "404 Not Found: " << resolvedPath << std::endl;
-			return;
-		}
-		debug("Received from client " + std::to_string(clientSock) + ":\n" + request);
-		handleGet(clientSock, httpRequest);
-	} catch (const std::exception& e) {
-		std::cerr << "Error: " << e.what() << std::endl;
-	}
-	close(clientSock);
+        this->clients[clientSock] = Client(clientSock);
+    }
 }
 
 
-std::string Server::readFile(const std::string& filePath) {
+std::string Server::readFile(const std::string& filePath)
+{
 	std::ifstream file(filePath, std::ios::binary);
 	if (!file.is_open()) throw std::runtime_error("File not found");
 
@@ -144,27 +154,8 @@ std::string Server::readFile(const std::string& filePath) {
 	return content.str();
 }
 
-std::string Server::resolvePath(const std::string& uri) {
-	// Root directory from configuration or default macro
-	std::string rootDir = serverBlock.directive_pairs.count("root") ? 
-						serverBlock.directive_pairs["root"] : "www";
-
-	// Combine root directory with the requested URI
-	std::string path = /*rootDir +*/ uri;
-
-	// Sanitize and validate the path to prevent directory traversal
-	if (path.find("..") != std::string::npos) {
-		throw std::runtime_error("Invalid path: Directory traversal attempt");
-	}
-
-	// Debug logging to print the resolved path
-	std::cout << "[DEBUG] Resolved path: " << path << std::endl;
-
-	return path;
-}
-
-
-std::string Server::getMimeType(const std::string& filePath) {
+std::string Server::getMimeType(const std::string& filePath)
+{
 	size_t dotPos = filePath.find_last_of('.');
 	if (dotPos == std::string::npos) return "application/octet-stream";
 

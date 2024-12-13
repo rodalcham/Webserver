@@ -46,6 +46,14 @@ void ServerBlock::parseBlock(std::istream& stream)
 			setErrorPage(value, line);			
 		else
 			throw std::runtime_error("Config file error: Unknown directive: " + key);
+		for (const auto& [location, config] : location_blocks)
+		{
+    		std::cerr << "[DEBUG] Location: " << location << "\n";
+			for (const auto& [key, value] : config)
+			{
+				std::cerr << "  Key: " << key << " | Value: " << value << "\n";
+			}
+		}
 	}
 }
 
@@ -73,46 +81,65 @@ void	ServerBlock::setErrorPage(std::string& error_directive, std::string& line)
 	error_pages.insert({key, value});
 }
 
-void	ServerBlock::setLocationBlock(std::istream& stream, std::string line)
+void ServerBlock::setLocationBlock(std::istream& stream, std::string line)
 {
-	size_t bracket_pos = line.find("{");
-	if (bracket_pos == std::string::npos)
-		throw std::runtime_error("Config file error: Missing { in line: " + line);
+    size_t bracket_pos = line.find("{");
+    if (bracket_pos == std::string::npos)
+        throw std::runtime_error("Config file error: Missing { in line: " + line);
 
-	std::string location = line.substr(0, bracket_pos);
-	location.erase(0, location.find_first_not_of(" \t"));
-	location.erase(location.find_last_not_of(" \t") + 1);
+    std::string location = line.substr(0, bracket_pos);
+    location.erase(0, location.find_first_not_of(" \t"));
+    location.erase(location.find_last_not_of(" \t") + 1);
 
-	while (std::getline(stream, line))
-	{
-		line.erase(0, line.find_first_not_of(" \t"));
-		line.erase(line.find_last_not_of(" \t") + 1);
+    while (std::getline(stream, line))
+    {
+        line.erase(0, line.find_first_not_of(" \t"));
+        line.erase(line.find_last_not_of(" \t") + 1);
 
-		if (line.empty() || line[0] == '#')
-			continue;
-		if (line.find("{") != std::string::npos)
-			continue;
-		if (line.find("}") != std::string::npos)
-			break;
+        if (line.empty() || line[0] == '#')
+            continue;
+        if (line.find("{") != std::string::npos)
+            continue;
+        if (line.find("}") != std::string::npos)
+            break;
 
-		std::string directive = createDirectiveStr(line);
+        std::string directive = createDirectiveStr(line);
 
-		size_t space_pos = directive.find_first_of(" \t");
-		if (space_pos == std::string::npos)
-			throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
+        size_t space_pos = directive.find_first_of(" \t");
+        if (space_pos == std::string::npos)
+            throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
 
-		std::string key = directive.substr(0, space_pos);
-		std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
+        std::string key = directive.substr(0, space_pos);
+        std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
 
-		if (key == "allow_methods" || key == "index" || key == "root" || key == "autoindex" || key == "cgi_pass" || key == "return" || key == "client_max_body_size")
-			location_blocks[location].insert({key, value});
-		// else if (key == "error_page")
-		// 	setErrorPage(value, line);			
-		else
-			throw std::runtime_error("Config file error: Unknown directive: " + key);
-	}
+        if (key == "allow_methods" || key == "index" || key == "root" || key == "autoindex" || key == "cgi_pass" || key == "return" || key == "client_max_body_size")
+        {
+            location_blocks[location].insert({key, value});
+        }
+        else if (key == "error_page")
+        {
+            // Parse the error_page directive (e.g., "404 /custom404.html")
+            std::istringstream iss(value);
+            std::string error_code, error_path;
+            iss >> error_code >> error_path;
+
+            if (error_code.empty() || error_path.empty())
+                throw std::runtime_error("Invalid error_page directive in line: " + line);
+
+            // Store the error_page mapping under a key specific to the error code
+            location_blocks[location].insert({"error_page_" + error_code, error_path});
+
+            std::cerr << "[DEBUG] Parsed error_page for location '" << location
+                      << "' with error_code '" << error_code << "' and path '" << error_path << "'\n";
+        }
+        else
+        {
+            throw std::runtime_error("Config file error: Unknown directive: " + key);
+        }
+
+        std::cerr << "[DEBUG] Parsed location '" << location << "' with key '" << key << "' and value '" << value << "'\n";
+    }
 }
-
 
 
 void ServerBlock::debugPrint() const {

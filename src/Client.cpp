@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 11:34:06 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/12 14:53:44 by gstronge         ###   ########.fr       */
+/*   Updated: 2024/12/12 18:51:33 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Client.hpp"
 
-Client::Client() : clientSock(-1)
+Client::Client() : clientSock(-2)
 {
 
 }
@@ -57,11 +57,11 @@ bool	&Client::isReceiving()
 	return (this->is_receiving);
 }
 
-size_t	Client::parseRequest(char *buffer, size_t bytesRead)
+size_t	Client::parseRequest(char *buffer, int bytesRead)
 {
 	size_t	count = 0;
 	static const string delimiter = "\r\n\r\n"; // HTTP request delimiter
-	size_t i = 0;
+	int i = 0;
 	string	request;
 	while (i < bytesRead)
 	{
@@ -70,7 +70,10 @@ size_t	Client::parseRequest(char *buffer, size_t bytesRead)
 		if (end != string::npos)
 			request = temp.substr(0, end + delimiter.size());
 		else
+		{
 			request = temp.substr(0, bytesRead - i);
+			i = bytesRead;
+		}
 		if (this->is_sending)
 			this->requests.back() += request;
 		else
@@ -96,3 +99,8 @@ size_t	Client::parseRequest(char *buffer, size_t bytesRead)
 	//else create an event to proccess the completed request
 
 	//repeat until the buffer is empty
+
+void   Client::queueResponse(string response)
+{
+	this->responses.push_back(response);
+}

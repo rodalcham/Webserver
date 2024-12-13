@@ -80,7 +80,9 @@ void Server::run()
 				if (event == serverSock)
 					acceptClient();
 				else
-					msg_receive(this->clients[event], 0);
+				{
+					msg_receive(this->clients.at(event), 0);
+				}
 			}
 			else if (eventList[i].filter == EVFILT_USER)
 			{
@@ -114,7 +116,7 @@ void Server::acceptClient()
 	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
 		throw std::runtime_error("Failed to add client socket to kqueue");
 	// debug("Acepted client: " + std::to_string(clientSock));
-	this->clients[serverSock] = Client(serverSock);
+	this->clients[clientSock] = Client(clientSock);
 }
 
 std::string Server::readFile(const std::string& filePath)

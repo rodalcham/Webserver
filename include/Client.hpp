@@ -3,16 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/06 15:39:23 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/12 14:53:05 by gstronge         ###   ########.fr       */
+/*   Updated: 2024/12/12 18:51:08 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "Webserv.hpp"
+
+using std::string;
 
 /**
  * A class containing client info
@@ -48,5 +50,6 @@ class Client
 	bool		&isSending();
 	bool		&isReceiving();
 
-	size_t	parseRequest(char *buffer, size_t bytesRead);
+	size_t	parseRequest(char *buffer, int bytesRead);
+	void	queueResponse(string response);
 };

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerMsg.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: rchavez@student.42heilbronn.de <rchavez    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/06 12:37:14 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/12 14:59:32 by gstronge         ###   ########.fr       */
+/*   Updated: 2024/12/12 18:51:02 by rchavez@stu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ void	Server::msg_receive(Client &client, int mode)
 {
 	const size_t bufferSize = 4096;
 	char	buffer[bufferSize];
-	size_t	bytes;
+	int	bytes;
 	size_t	received;
 
 	bytes = recv(client.getSocket(), buffer, bufferSize, 0);

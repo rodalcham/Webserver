@@ -269,12 +269,13 @@ std::string	HttpResponse::setDateHeader()
 
 std::string	HttpResponse::setLastModifiedHeader()
 {
-	std::filesystem::file_time_type lw_time = std::filesystem::last_write_time(this->_file_path);
+	// std::filesystem::file_time_type lw_time = std::filesystem::last_write_time(this->_file_path);
 
-	std::time_t sctp = decltype(lw_time)::clock::to_time_t(lw_time);
-	std::tm* last_modified_obj = std::localtime(&sctp);
+	// std::time_t sctp = decltype(lw_time)::clock::to_time_t(lw_time);
+	// std::tm* last_modified_obj = std::localtime(&sctp);
 	
-	std::string last_modified_str = makeTimestampStr(last_modified_obj);
+	// std::string last_modified_str = makeTimestampStr(last_modified_obj);
+	std::string last_modified_str = "";
 
 	return (last_modified_str);
 }

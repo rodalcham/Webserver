@@ -36,6 +36,7 @@ int HttpResponse::setFilePath(const HttpRequest& request)
 	}
 	if (locations.find(matchedLocation) == locations.end())
 		return 404;
+	this->_matched_location = matchedLocation;
 	const auto& locationConfig = locations.at(matchedLocation);
 	try {
 		this->_file_path = resolvePath(request.getUri(), block, locationConfig);
@@ -85,6 +86,9 @@ std::string HttpResponse::resolvePath(const std::string& uri, const ServerBlock&
         }
     }
     std::string path = rootDir + strippedUri;
+	std::cerr << "[DEBUG] Resolving path for URI '" << uri << "'\n";
+	std::cerr << "[DEBUG] Resolved path: " << path << "\n";
+
     if (path.find("..") != std::string::npos)
     {
         throw std::runtime_error("[ERROR] Invalid path: Directory traversal attempt");
@@ -93,62 +97,72 @@ std::string HttpResponse::resolvePath(const std::string& uri, const ServerBlock&
     return path;
 }
 
+std::string HttpResponse::getFromLocation(const std::string& location, const std::string& key, const HttpRequest& request) {
+    const ServerBlock& block = request.getRequestBlock();
 
+    // Check for location-specific configuration
+    if (!location.empty() && block.location_blocks.find(location) != block.location_blocks.end()) {
+        const auto& locationConfig = block.location_blocks.at(location);
 
+        // Check for location-specific error_page_<error_code>
+        if (locationConfig.find("error_page_" + key) != locationConfig.end()) {
+            std::cerr << "[DEBUG] Found location-specific error_page for '" << key
+                      << "' in location '" << location << "' with value '"
+                      << locationConfig.at("error_page_" + key) << "'\n";
+            return locationConfig.at("error_page_" + key);
+        }
 
+        // Check for other location-specific directives
+        if (locationConfig.find(key) != locationConfig.end()) {
+            std::cerr << "[DEBUG] Found key '" << key << "' in location '" << location
+                      << "' with value '" << locationConfig.at(key) << "'\n";
+            return locationConfig.at(key);
+        }
+    }
 
+    // Check for global directives
+    if (block.directive_pairs.find(key) != block.directive_pairs.end()) {
+        return block.directive_pairs.at(key);
+    }
 
+    // Check for global error_pages
+    if (block.error_pages.find(key) != block.error_pages.end()) {
+        return block.error_pages.at(key);
+    }
 
+    throw std::runtime_error("Data '" + key + "' not found in the location '" + location + "' or globally.");
+}
 
-std::string HttpResponse::getFromLocation(const std::string& location, const std::string& key, const HttpRequest& request)
-{
-	// Get the server block from the HttpRequest
-	const ServerBlock& block = request.getRequestBlock();
+void HttpResponse::setErrorFilePath(const int& error_code_no, HttpRequest request) {
+    std::string error_code_str = std::to_string(error_code_no);
+    const ServerBlock& block = request.getRequestBlock();
 
-	// If a specific location is provided
-	if (!location.empty())
-	{
-		const auto& locations = block.location_blocks;
-		if (locations.find(location) == locations.end())
-			throw std::runtime_error("Location '" + location + "' not found in the server block.");
-		const auto& locationConfig = locations.at(location);
+    try {
+        std::string errorPagePath;
 
-		// Extract the requested data from the location
-		if (locationConfig.find(key) != locationConfig.end())
-			return locationConfig.at(key);
-		else
-			throw std::runtime_error("Data '" + key + "' not found in the location '" + location + "'.");
-	}
+        // Check for location-specific error_page_<error_code>
+        try {
+            errorPagePath = getFromLocation(this->_matched_location, error_code_str, request);
+            std::cerr << "[DEBUG] Using location-specific error_page: " << errorPagePath << "\n";
+        } catch (const std::runtime_error&) {
+            // Fallback to global error_pages
+            if (block.error_pages.find(error_code_str) != block.error_pages.end()) {
+                errorPagePath = block.error_pages.at(error_code_str);
+                std::cerr << "[DEBUG] Using global error_page: " << errorPagePath << "\n";
+            } else {
+                throw std::runtime_error("No error page found for code: " + error_code_str);
+            }
+        }
 
-	// If no specific location is provided, look in the global directives
-	if (block.directive_pairs.find(key) != block.directive_pairs.end())
-		return block.directive_pairs.at(key);
-
-	throw std::runtime_error("Data '" + key + "' not found in the global or location-specific configuration.");
+        // Resolve path
+        this->_file_path = resolvePath(errorPagePath, block, {});
+        std::cerr << "[DEBUG] Resolved error file path: " << this->_file_path << "\n";
+    } catch (const std::runtime_error& e) {
+        std::cerr << "[ERROR] Error while setting error file path: " << e.what() << "\n";
+    }
 }
 
 
-
-
-
-
-
-void HttpResponse::setErrorFilePath(const int& error_code_no, HttpRequest request)
-{
-	std::string error_code_str = std::to_string(error_code_no);
-
-	try {
-		// Use get_from_location to fetch the error page configuration
-		std::string errorPagePath = getFromLocation(this->_file_path, "error_page", request);
-
-		// Construct the full path to the error page
-		this->_file_path = resolvePath(errorPagePath + "/" + error_code_str + ".html", request.getRequestBlock(), {});
-	} catch (const std::runtime_error& e) {
-		// Log the error for debugging purposes
-		std::cerr << "[ERROR] Error while setting error file path: " << e.what() << "\n";
-
-	}
-}
 
 
 
@@ -307,7 +321,7 @@ std::string HttpResponse::setMimeTypeHeader()
 	return "application/octet-stream";
 }
 
-void	HttpResponse::rspDebug()
+void	HttpResponse::debug()
 {
 	std::cout << "\n =============== START LINE ===============\n\n";
 	std::cout << "\n\n" << _http_version << " " << _status_code << "\n\n";

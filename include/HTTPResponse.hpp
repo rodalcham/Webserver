@@ -29,6 +29,8 @@ protected:
 	bool								_chunking_required;
 	std::string							_body;
 	std::string							_file_path;
+    std::string 						_matched_location;
+
 	const std::map<int, std::string>	_error_status_codes = {
 	{200, "200 OK"}, {201, "201 Created"}, {400, "400 Bad Request"}, 
 	{401, "401 Unauthorized"}, {403, "403 Forbidden"}, {404, "404 Not Found"}, 
@@ -57,5 +59,5 @@ public:
 	std::string		getFilePath();
 	std::string		returnResponse();
 	std::string		getFromLocation(const std::string& location, const std::string& data, const HttpRequest& request);
-	void			rspDebug();
+	void			debug();
 };

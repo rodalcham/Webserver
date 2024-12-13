@@ -23,5 +23,5 @@ public:
     ~Config();
 
     std::vector<ServerBlock>& getServerBlocks();
-    void confDebug() const; // Debug all server blocks
+    void debug() const; // Debug all server blocks
 };

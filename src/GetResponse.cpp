@@ -22,32 +22,32 @@ void GetResponse::makeHeaderList(HttpRequest& request)
 {
 	// this->headers["server"] = "localhost";
 	// this->headers["content-Type"] = request.get_header("accept");
-	this->headers["content-Type"] = "text/html; charset=UTF-8";
-	this->headers["connection"] = request.getHeaders("connection");
+	this->_headers["content-Type"] = "text/html; charset=UTF-8";
+	this->_headers["connection"] = request.getHeaders("connection");
 }
 
 void	GetResponse::parseBody()
 {
 	std::stringstream	buffer;
-	std::ifstream		file(this->file_path, std::ios::binary);
+	std::ifstream		file(this->_file_path, std::ios::binary);
 
 	if (file.is_open())
 	{
 		buffer << file.rdbuf();
 		std::string file_contents = buffer.str();
 		file.close();
-		this->body = file_contents;
+		this->_body = file_contents;
 	}
 	else
 	{
-		this->status_code = "404 Not Found";
+		this->_status_code = "404 Not Found";
 		std::ifstream	file_404("./www/error_pages/404.html", std::ios::binary); // need to get this from the config file
 		if (file.is_open())
 		{
 			buffer << file_404.rdbuf();
 			std::string file_contents = buffer.str();
 			file.close();
-			this->body = file_contents;
+			this->_body = file_contents;
 		}
 	}
 }

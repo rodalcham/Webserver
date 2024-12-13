@@ -34,7 +34,7 @@ std::vector<ServerBlock>& Config::getServerBlocks()
     return server_blocks;
 }
 
-void Config::confDebug() const {
+void Config::debug() const {
     for (const auto& block : server_blocks) {
         std::cout << "\n===== SERVER BLOCK =====\n";
 

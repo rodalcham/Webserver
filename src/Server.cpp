@@ -63,7 +63,8 @@ Server::~Server()
 */
 void Server::run()
 {
-	while (keepRunning) {
+	while (keepRunning)
+	{
 		struct kevent eventList[1024];
 		int eventCount = kevent(kq, nullptr, 0, eventList, 1024, nullptr);
 
@@ -92,11 +93,19 @@ void Server::run()
 				{
 					HttpRequest		request(this->clients[event/10].getRequest(), this->_server_blocks);
 					HttpResponse	response(request);
-
+					this->clients[event/10].popRequest();
+					this->clients[event/10].queueResponse(response.returnResponse());
+// 					this->clients[event/10].queueResponse("HTTP/1.1 200 OK\r\n"
+// "Content-Type: text/html; charset=UTF-8\r\n"
+// "Content-Length: 13\r\n"
+// "\r\n"
+// "Hello, World!");
+					this->postEvent(event/10, 2);
 					response.rspDebug();
 				}
 				else if (event % 10 == 2)
 					msg_send(this->clients[event/10], 0);
+				this->removeEvent(event);
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
 			{
@@ -106,18 +115,34 @@ void Server::run()
 	}
 }
 
-void Server::acceptClient()
-{
-	int clientSock = accept(serverSock, nullptr, nullptr);
-	if (clientSock < 0) throw std::runtime_error("Failed to accept new client");
+void Server::acceptClient() {
+    while (true) {
+        int clientSock = accept(serverSock, nullptr, nullptr);
+        if (clientSock < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) 
+                break; // No more connections to accept
+            throw std::runtime_error("Failed to accept new client");
+        }
 
-	struct kevent event;
-	EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		throw std::runtime_error("Failed to add client socket to kqueue");
-	// debug("Acepted client: " + std::to_string(clientSock));
-	this->clients[clientSock] = Client(clientSock);
+        // Set client socket to non-blocking mode
+        int flags = fcntl(clientSock, F_GETFL, 0);
+        if (flags == -1 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) == -1) {
+            close(clientSock);
+            throw std::runtime_error("Failed to set client socket to non-blocking mode");
+        }
+
+        // Register the client socket with kqueue
+        struct kevent event;
+        EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+        if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
+            close(clientSock);
+            throw std::runtime_error("Failed to add client socket to kqueue");
+        }
+
+        this->clients[clientSock] = Client(clientSock);
+    }
 }
+
 
 std::string Server::readFile(const std::string& filePath)
 {

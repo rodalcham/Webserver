@@ -51,4 +51,5 @@ private:
 
 	//Posting events
 	void	postEvent(int clientSock, int mode);
+	void	removeEvent(int eventID);
 };

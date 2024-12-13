@@ -101,7 +101,7 @@ void Server::run()
 // "\r\n"
 // "Hello, World!");
 					this->postEvent(event/10, 2);
-					response.rspDebug();
+					response.debug();
 				}
 				else if (event % 10 == 2)
 					msg_send(this->clients[event/10], 0);

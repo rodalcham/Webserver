@@ -13,43 +13,28 @@ extern std::atomic<bool> keepRunning;
 
 Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_blocks)
 {
-	int port = std::stoi(server_blocks[0].directive_pairs["listen"]);// TODO: need to make this cycle through all server blocks
-	serverSock = socket(AF_INET, SOCK_STREAM, 0);
-	if (serverSock < 0) throw std::runtime_error("Socket creation failed");
+	this->kq = kqueue();
+	if (kq < 0)
+		throw	std::runtime_error("Failed to create KQUEUE");
 
-	int flags = fcntl(serverSock, F_GETFL, 0);
-	if (flags < 0 || fcntl(serverSock, F_SETFL, flags | O_NONBLOCK) < 0)
-		throw std::runtime_error("Failed to set non-blocking mode");
+	for (const auto	&block : this->_server_blocks)
+	{
+		int	sock = socket(AF_INET, SOCK_STREAM, 0);
+		if (sock < 0)
+			throw std::runtime_error("Socket creation failed");
 
-	int opt = 1;
-	if (setsockopt(this->serverSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-		throw std::runtime_error("Failed to set non-blocking mode");
+		int	flags = fcntl(sock, F_GETFL,0);
+		if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
+			throw std::runtime_error("Failed to set non-blocking mode");
 
-	sockaddr_in serverAddr{};
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(port);
-	serverAddr.sin_addr.s_addr = INADDR_ANY;
-
-	if (bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
-		throw std::runtime_error("Bind failed");
-
-	if (listen(serverSock, 5) < 0)
-		throw std::runtime_error("Listen failed");
-
-	kq = kqueue();
-	if (kq < 0) throw std::runtime_error("kqueue creation failed");
-
-	struct kevent event;
-	EV_SET(&event, serverSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		throw std::runtime_error("Failed to add server socket to kqueue");
+		
+	}
+	
 }
 
 Server::~Server()
 {
-	close(serverSock);
-	close(kq);
-	std::cout << "Server Destroyed\n";
+
 }
 
 /** 
@@ -89,11 +74,6 @@ void Server::run()
 					HttpResponse	response(request);
 					this->clients[event/10].popRequest();
 					this->clients[event/10].queueResponse(response.returnResponse());
-// 					this->clients[event/10].queueResponse("HTTP/1.1 200 OK\r\n"
-// "Content-Type: text/html; charset=UTF-8\r\n"
-// "Content-Length: 13\r\n"
-// "\r\n"
-// "Hello, World!");
 					this->postEvent(event/10, 2);
 					response.debug();
 				}
@@ -109,32 +89,31 @@ void Server::run()
 	}
 }
 
-void Server::acceptClient() {
-    while (true) {
-        int clientSock = accept(serverSock, nullptr, nullptr);
-        if (clientSock < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) 
-                break; // No more connections to accept
-            throw std::runtime_error("Failed to accept new client");
-        }
+void Server::acceptClient()
+{
+	int clientSock = accept(serverSock, nullptr, nullptr);
+	if (clientSock < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) 
+			return; // No more connections to accept
+		throw std::runtime_error("Failed to accept new client");
+	}
 
-        // Set client socket to non-blocking mode
-        int flags = fcntl(clientSock, F_GETFL, 0);
-        if (flags == -1 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) == -1) {
-            close(clientSock);
-            throw std::runtime_error("Failed to set client socket to non-blocking mode");
-        }
+	// Set client socket to non-blocking mode
+	int flags = fcntl(clientSock, F_GETFL, 0);
+	if (flags == -1 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) == -1) {
+		close(clientSock);
+		throw std::runtime_error("Failed to set client socket to non-blocking mode");
+	}
 
-        // Register the client socket with kqueue
-        struct kevent event;
-        EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-        if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
-            close(clientSock);
-            throw std::runtime_error("Failed to add client socket to kqueue");
-        }
+	// Register the client socket with kqueue
+	struct kevent event;
+	EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
+		close(clientSock);
+		throw std::runtime_error("Failed to add client socket to kqueue");
+	}
 
-        this->clients[clientSock] = Client(clientSock);
-    }
+	this->clients[clientSock] = Client(clientSock);
 }
 
 

@@ -22,7 +22,9 @@ class Client;
  * @param serverBlock The config block for this server
  */
 class Server {
-public:
+
+	public:
+
 	// Server();
 	~Server();
 	Server(std::vector<ServerBlock>& server_blocks);
@@ -32,9 +34,11 @@ public:
 	void handleDelete(int clientSock, HttpRequest& httpRequest);
 	// std::string resolvePath(const std::string& uri);
 
-private:
+	private:
+
 	std::vector<ServerBlock> 	_server_blocks;
 	int			 				serverSock;
+	std::map<int, int>			_server_sockets;
 	int 						kq;
 	std::map<int, Client>		clients;
 

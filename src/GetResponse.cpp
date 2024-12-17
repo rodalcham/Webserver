@@ -5,8 +5,6 @@
 #include "../include/HTTPResponse.hpp"
 #include "../include/GetResponse.hpp"
 
-class HttpRequest;
-
 GetResponse::GetResponse(HttpRequest& request) : HttpResponse(request)
 {
 	makeHeaderList(request);

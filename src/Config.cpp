@@ -1,8 +1,6 @@
 #include "../include/Webserv.hpp"
 #include "../include/Config.hpp"
 #include "../include/ServerBlock.hpp"
-#include <iostream>
-#include <stdexcept>
 
 Config::Config(const std::string& conf_path) : config_path(conf_path) {
     parseConfig(); // Call parseConfig during construction

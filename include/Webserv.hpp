@@ -1,21 +1,10 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Webserv.hpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: gstronge <gstronge@student.42heilbronn.    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/05 10:29:37 by rchavez           #+#    #+#             */
-/*   Updated: 2024/12/12 14:38:37 by gstronge         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #pragma once
 
 #include "Server.hpp"
 #include "HTTPRequest.hpp"
 #include "cgi.hpp"
 #include "ServerBlock.hpp"
+
 #include <sys/event.h>
 #include <unistd.h>
 #include <stdexcept>
@@ -35,7 +24,6 @@
 #include <deque>
 
 #define SOCKET_BACKLOG_MAX 10
-// #define PORT 8080
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -43,17 +31,9 @@
 #define BLUE "\033[34m"
 #define RESET "\033[0m"
 
-#define I_AM_THE_BEST true
-
 #ifndef DEBUG
 # define DEBUG 0
 #endif
-
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <string>
-#include <map>
 
 using std::string;
 using std::cout;

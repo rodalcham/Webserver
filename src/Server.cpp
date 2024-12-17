@@ -1,16 +1,10 @@
+#include "../include/Webserv.hpp"
 #include "../include/Server.hpp"
+#include "../include/Config.hpp"
 #include "../include/HTTPRequest.hpp"
 #include "../include/HTTPResponse.hpp"
 #include "../include/Client.hpp"
-#include "../include/Config.hpp"
-#include "../include/Webserv.hpp"
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <stdexcept>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+
 #include <errno.h>
 
 class log;

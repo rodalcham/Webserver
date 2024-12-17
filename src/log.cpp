@@ -1,8 +1,6 @@
 #include "../include/Webserv.hpp"
 #include "../include/log.hpp"
 
-#include <sstream>
-
 Log::Log()
 {
 	_log_file_path = "./logs/" + getTimestamp() + "_logfile.txt";

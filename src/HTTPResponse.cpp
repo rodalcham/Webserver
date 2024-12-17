@@ -2,8 +2,6 @@
 #include "../include/HTTPResponse.hpp"
 #include "../include/ServerBlock.hpp"
 
-class HttpRequest;
-
 HttpResponse::HttpResponse(const HttpRequest& request)
 {
 	this->_http_version = request.getHttpVersion();

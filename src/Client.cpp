@@ -5,7 +5,7 @@ Client::Client() : clientSock(-2)
 
 }
 
-Client::Client(int clientSock) : clientSock(clientSock)
+Client::Client(int clientSock, const ServerBlock *block) : clientSock(clientSock) _block(block)
 {
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Webserv.hpp"
+#include "ServerBlock.hpp"
 
 using std::string;
 
@@ -24,11 +25,12 @@ class Client
 	std::deque<std::string>	responses;
 	bool					is_sending = false;
 	bool					is_receiving = false;
+	const ServerBlock		*_block;
 
 	public : 
 
 	Client();
-	Client(int clientSock);
+	Client(int clientSock, const ServerBlock *block);
 
 	int			&getSocket();
 	std::string	&getRequest();

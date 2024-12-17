@@ -38,11 +38,11 @@ class Server {
 
 	std::vector<ServerBlock> 	_server_blocks;
 	int			 				serverSock;
-	std::map<int, int>			_server_sockets;
+	std::map<int, const ServerBlock*>			_server_sockets;
 	int 						kq;
 	std::map<int, Client>		clients;
 
-	void acceptClient();
+	void acceptClient(int server_sock);
 	// void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 
 	std::string readFile(const std::string& filePath); // Function to read static files

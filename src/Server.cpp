@@ -11,6 +11,8 @@ class log;
 
 extern std::atomic<bool> keepRunning;
 
+uint16_t	ft_htons(uint16_t port);
+
 Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_blocks)
 {
 	this->kq = kqueue();
@@ -27,14 +29,36 @@ Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_
 		if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
 			throw std::runtime_error("Failed to set non-blocking mode");
 
-		
+		int	opt = 1;
+		if (setsockopt(serverSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+			throw std::runtime_error("Failed to set socket options");
+
+		sockaddr_in serverAddr{};
+		serverAddr.sin_family = AF_INET;
+		serverAddr.sin_port = ft_htons(block.getPort());
+		serverAddr.sin_addr.s_addr = INADDR_ANY;
+
+		if (bind(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
+			throw std::runtime_error("Failed to bind socket to port " + std::to_string(block.getPort()));
+
+		if (listen(sock, SOCKET_BACKLOG_MAX) < 0)
+			throw std::runtime_error("Failed to listen on port "+ std::to_string(block.getPort()));
+
+		this->_server_sockets[sock] = &block;
 	}
-	
 }
 
 Server::~Server()
 {
-
+	for (const auto& [sock, block] : this->_server_sockets)
+	{
+		close(sock);
+	}
+	for (const auto& [fd, client] : this->clients)
+	{
+		close(fd);
+	}
+	close(kq);
 }
 
 /** 
@@ -57,8 +81,8 @@ void Server::run()
 			int event = eventList[i].ident;
 			if (eventList[i].filter == EVFILT_READ)
 			{
-				if (event == serverSock)
-					acceptClient();
+				if (this->_server_sockets.find(event) != this->_server_sockets.end())
+					acceptClient(event);
 				else
 				{
 					msg_receive(this->clients.at(event), 0);
@@ -89,9 +113,9 @@ void Server::run()
 	}
 }
 
-void Server::acceptClient()
+void Server::acceptClient(int server_sock)
 {
-	int clientSock = accept(serverSock, nullptr, nullptr);
+	int clientSock = accept(server_sock, nullptr, nullptr);
 	if (clientSock < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) 
 			return; // No more connections to accept
@@ -100,7 +124,7 @@ void Server::acceptClient()
 
 	// Set client socket to non-blocking mode
 	int flags = fcntl(clientSock, F_GETFL, 0);
-	if (flags == -1 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) == -1) {
+	if (flags < 0 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) < 0) {
 		close(clientSock);
 		throw std::runtime_error("Failed to set client socket to non-blocking mode");
 	}
@@ -113,7 +137,10 @@ void Server::acceptClient()
 		throw std::runtime_error("Failed to add client socket to kqueue");
 	}
 
-	this->clients[clientSock] = Client(clientSock);
+	this->clients[clientSock] = Client(clientSock, this->_server_sockets[server_sock]);
+	debug("Client accepted : " + std::to_string(clientSock) + 
+		"\nConnected through port : " + std::to_string(this->_server_sockets[server_sock]->getPort())
+		+ "\nThrough host : " + this->_server_sockets[server_sock]->getHostName());
 }
 
 

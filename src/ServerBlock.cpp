@@ -40,19 +40,20 @@ void ServerBlock::parseBlock(std::istream& stream)
 		std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
 
 
-		if (key == "server_name" || key == "listen" || key == "root" || key == "index" || key == "client_max_body_size")
-			directive_pairs.insert({key, value});
+		if (key == "listen")
+			_port = std::stoi(value);
+		else if (key == "server_name")
+			_host_name = value;
+		else if (key == "root" || key == "index" || key == "client_max_body_size" || key == "allow_methods" || key == "autoindex" || key == "cgi_pass" || key == "return")
+			_directive_pairs.insert({key, value});
 		else if (key == "error_page")
 			setErrorPage(value, line);			
 		else
 			throw std::runtime_error("Config file error: Unknown directive: " + key);
-		for (const auto& [location, config] : location_blocks)
+		for (const auto& [location, config] : _location_blocks)
 		{
-    		// std::cerr << "[DEBUG] Location: " << location << "\n";
 			for (const auto& [key, value] : config)
-			{
 				std::cerr << "  Key: " << key << " | Value: " << value << "\n";
-			}
 		}
 	}
 }
@@ -78,85 +79,74 @@ void	ServerBlock::setErrorPage(std::string& error_directive, std::string& line)
 	std::string key = error_directive.substr(0, space_pos);
 	std::string value = error_directive.substr(space_pos + 1);
 
-	error_pages.insert({key, value});
+	_error_pages.insert({key, value});
 }
 
 void ServerBlock::setLocationBlock(std::istream& stream, std::string line)
 {
-    size_t bracket_pos = line.find("{");
-    if (bracket_pos == std::string::npos)
-        throw std::runtime_error("Config file error: Missing { in line: " + line);
+	size_t bracket_pos = line.find("{");
+	if (bracket_pos == std::string::npos)
+		throw std::runtime_error("Config file error: Missing { in line: " + line);
 
-    std::string location = line.substr(0, bracket_pos);
-    location.erase(0, location.find_first_not_of(" \t"));
-    location.erase(location.find_last_not_of(" \t") + 1);
+	std::string location = line.substr(0, bracket_pos);
+	location.erase(0, location.find_first_not_of(" \t"));
+	location.erase(location.find_last_not_of(" \t") + 1);
 
-    while (std::getline(stream, line))
-    {
-        line.erase(0, line.find_first_not_of(" \t"));
-        line.erase(line.find_last_not_of(" \t") + 1);
+	while (std::getline(stream, line))
+	{
+		line.erase(0, line.find_first_not_of(" \t"));
+		line.erase(line.find_last_not_of(" \t") + 1);
 
-        if (line.empty() || line[0] == '#')
-            continue;
-        if (line.find("{") != std::string::npos)
-            continue;
-        if (line.find("}") != std::string::npos)
-            break;
+		if (line.empty() || line[0] == '#')
+			continue;
+		if (line.find("{") != std::string::npos)
+			continue;
+		if (line.find("}") != std::string::npos)
+			break;
 
-        std::string directive = createDirectiveStr(line);
+		std::string directive = createDirectiveStr(line);
 
-        size_t space_pos = directive.find_first_of(" \t");
-        if (space_pos == std::string::npos)
-            throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
+		size_t space_pos = directive.find_first_of(" \t");
+		if (space_pos == std::string::npos)
+			throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
 
-        std::string key = directive.substr(0, space_pos);
-        std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
+		std::string key = directive.substr(0, space_pos);
+		std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
 
-        if (key == "allow_methods" || key == "index" || key == "root" || key == "autoindex" || key == "cgi_pass" || key == "return" || key == "client_max_body_size")
-        {
-            location_blocks[location].insert({key, value});
-        }
-        else if (key == "error_page")
-        {
-            // Parse the error_page directive (e.g., "404 /custom404.html")
-            std::istringstream iss(value);
-            std::string error_code, error_path;
-            iss >> error_code >> error_path;
+		if (key == "allow_methods" || key == "index" || key == "root" || key == "autoindex" || key == "cgi_pass" || key == "return" || key == "client_max_body_size")
+			_location_blocks[location].insert({key, value});
+		else if (key == "error_page")
+		{
+			std::istringstream iss(value);
+			std::string error_code, error_path;
+			iss >> error_code >> error_path;
 
-            if (error_code.empty() || error_path.empty())
-                throw std::runtime_error("Invalid error_page directive in line: " + line);
+			if (error_code.empty() || error_path.empty())
+				throw std::runtime_error("Invalid error_page directive in line: " + line);
 
-            // Store the error_page mapping under a key specific to the error code
-            location_blocks[location].insert({"error_page_" + error_code, error_path});
-
-            // std::cerr << "[DEBUG] Parsed error_page for location '" << location
-                    //   << "' with error_code '" << error_code << "' and path '" << error_path << "'\n";
-        }
-        else
-        {
-            throw std::runtime_error("Config file error: Unknown directive: " + key);
-        }
-
-        // std::cerr << "[DEBUG] Parsed location '" << location << "' with key '" << key << "' and value '" << value << "'\n";
-    }
+			_location_blocks[location].insert({"error_page_" + error_code, error_path});
+		}
+		else
+			throw std::runtime_error("Config file error: Unknown directive: " + key);
+	}
 }
 
 
-void ServerBlock::debugPrint() const {
+void ServerBlock::serverBlockDebug() const {
 	std::cout << "ServerBlock Details:\n";
 
 	std::cout << "\nDirective Pairs:\n";
-	for (const auto& pair : directive_pairs) {
+	for (const auto& pair : _directive_pairs) {
 		std::cout << "  " << pair.first << ": " << pair.second << "\n";
 	}
 
 	std::cout << "\nError Pages:\n";
-	for (const auto& pair : error_pages) {
+	for (const auto& pair : _error_pages) {
 		std::cout << "  " << pair.first << ": " << pair.second << "\n";
 	}
 
 	std::cout << "\nLocation Blocks:\n";
-	for (const auto& block : location_blocks) {
+	for (const auto& block : _location_blocks) {
 		std::cout << "  Location: " << block.first << "\n";
 		for (const auto& directive : block.second) {
 			std::cout << "    " << directive.first << ": " << directive.second << "\n";
@@ -164,43 +154,112 @@ void ServerBlock::debugPrint() const {
 	}
 }
 
-bool ServerBlock::isRequestAllowed(const HttpRequest& request) const {
-    std::string uri = request.getUri();
-    // std::cerr << "[DEBUG] Checking if request URI: " << uri << " is allowed.\n";
+// bool ServerBlock::isRequestAllowed(const HttpRequest& request) const {
+// 	std::string uri = request.getUri();
+// 	// std::cerr << "[DEBUG] Checking if request URI: " << uri << " is allowed.\n";
 
-    // Match URI against location blocks
-    auto locationIt = location_blocks.end();
-    for (auto it = location_blocks.begin(); it != location_blocks.end(); ++it) {
-        if (uri.compare(0, it->first.length(), it->first) == 0) {
-            locationIt = it; // Found matching location
-            break;
-        }
-    }
+// 	// Match URI against location blocks
+// 	auto locationIt = _location_blocks.end();
+// 	for (auto it = _location_blocks.begin(); it != _location_blocks.end(); ++it) {
+// 		if (uri.compare(0, it->first.length(), it->first) == 0) {
+// 			locationIt = it; // Found matching location
+// 			break;
+// 		}
+// 	}
 
-    if (locationIt == location_blocks.end()) {
-        // std::cerr << "[DEBUG] No matching location block for URI: " << uri << "\n";
-        return false;
-    }
+// 	if (locationIt == _location_blocks.end()) {
+// 		// std::cerr << "[DEBUG] No matching location block for URI: " << uri << "\n";
+// 		return false;
+// 	}
 
-    const auto& locationDirectives = locationIt->second;
+// 	const auto& locationDirectives = locationIt->second;
 
-    // Check allowed methods
-    auto methodIt = locationDirectives.find("allow_methods");
-    if (methodIt != locationDirectives.end()) {
-        std::string allowedMethods = methodIt->second;
-        std::string requestMethod = request.getMethod();
-        if (allowedMethods.find(requestMethod) == std::string::npos) {
-            // std::cerr << "[DEBUG] Request method not allowed: " << requestMethod << "\n";
-            return false;
-        }
-    }
+// 	// Check allowed methods
+// 	auto methodIt = locationDirectives.find("allow_methods");
+// 	if (methodIt != locationDirectives.end()) {
+// 		std::string allowedMethods = methodIt->second;
+// 		std::string requestMethod = request.getMethod();
+// 		if (allowedMethods.find(requestMethod) == std::string::npos) {
+// 			// std::cerr << "[DEBUG] Request method not allowed: " << requestMethod << "\n";
+// 			return false;
+// 		}
+// 	}
 
-    // // Check file accessibility
-    // std::string filePath = request.getFilePath();
-    // if (!std::ifstream(filePath).good()) {
-    //     std::cerr << "[DEBUG] File not accessible: " << filePath << "\n";
-    //     return false;
-    // }
+// 	// // Check file accessibility
+// 	// std::string filePath = request.getFilePath();
+// 	// if (!std::ifstream(filePath).good()) {
+// 	//     std::cerr << "[DEBUG] File not accessible: " << filePath << "\n";
+// 	//     return false;
+// 	// }
 
-    return true;
+// 	return true;
+// }
+
+
+void	ServerBlock::setSocketNo(const int& socket_number) {
+	this->_socket_no = socket_number;
+}
+
+std::string	ServerBlock::getHostName() const {
+	return (_host_name);
+}
+
+int	ServerBlock::getPort() const {
+	return (_port);
+}
+
+std::map<std::string, std::string>	ServerBlock::getDirectivePairs() const {
+	return (_directive_pairs);
+}
+
+std::map<std::string, std::string>	ServerBlock::getErrorPages() const {
+	return (_error_pages);
+}
+
+std::map<std::string, std::map<std::string, std::string>>	ServerBlock::getAllLocationBlocks() const {
+	return (_location_blocks);
+}
+
+std::string	ServerBlock::getDirectiveValue(std::string key) const {
+	for (const auto& pair : _directive_pairs) {
+		if (pair.first == key)
+			return (pair.second);
+	}
+	// debug("[DEBUG] no value found for Directive key: " + key);
+	return ("");
+}
+
+std::string	ServerBlock::getErrorPageValue(std::string key) const {
+	for (const auto& pair : _error_pages) {
+		if (pair.first == key)
+			return (pair.second);
+	}
+	// debug("[DEBUG] no value found for Error Page key: " + key);
+	return ("");
+}
+
+std::map<std::string, std::string>	ServerBlock::getLocationBlock(std::string location) const {
+	for (const auto& loc : _location_blocks) {
+		if ( loc.first == location) {
+				return (loc.second);
+		}
+	}
+	return std::map<std::string, std::string>();
+}
+
+std::string	ServerBlock::getLocationValue(std::string location, std::string key) const {
+	for (const auto& loc : _location_blocks){
+		if ( loc.first == location) {
+			for (const auto& pair : loc.second) {
+				if (pair.first == key)
+				return (pair.second);
+			}
+		}
+	// debug("[DEBUG] no value found in location: " + location + " for key: " + key);
+	}
+	return ("");
+}
+
+int	ServerBlock::getSocketNo() const {
+	return (_socket_no);
 }

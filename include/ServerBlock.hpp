@@ -19,26 +19,29 @@ class ServerBlock
 private:
 	int															_port;
 	std::string													_host_name;
+	int															_socket_no;
 	std::map<std::string, std::string>							_directive_pairs;
 	std::map<std::string, std::string>							_error_pages;
 	std::map<std::string, std::map<std::string, std::string>>	_location_blocks;
 
 public:
-	// ServerBlock();
 	ServerBlock(std::ifstream& config_stream);
 	~ServerBlock();
 
 	void			parseBlock(std::istream& stream);
 	void			setErrorPage(std::string& value, std::string& line);
-	// void			setDirective(std::string& key, std::string& value);
 	std::string		createDirectiveStr(std::string& line);
-	void			setLocationBlock(std::istream& stream, std::string line);
+	// bool			isRequestAllowed(const HttpRequest& request) const;
 	void			serverBlockDebug() const;
-	bool			isRequestAllowed(const HttpRequest& request) const;
 
 	// SETTERS
+	void			setSocketNo(const int& socket_number);
+	void			setLocationBlock(std::istream& stream, std::string line);
+
+	// GETTERS
 	std::string													getHostName() const;
 	int															getPort() const;
+	int															getSocketNo() const;
 	std::map<std::string, std::string>							getDirectivePairs() const;
 	std::map<std::string, std::string>							getErrorPages() const;
 	std::map<std::string, std::map<std::string, std::string>>	getAllLocationBlocks() const;

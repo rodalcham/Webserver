@@ -48,7 +48,7 @@ void ServerBlock::parseBlock(std::istream& stream)
 			throw std::runtime_error("Config file error: Unknown directive: " + key);
 		for (const auto& [location, config] : location_blocks)
 		{
-    		std::cerr << "[DEBUG] Location: " << location << "\n";
+    		// std::cerr << "[DEBUG] Location: " << location << "\n";
 			for (const auto& [key, value] : config)
 			{
 				std::cerr << "  Key: " << key << " | Value: " << value << "\n";
@@ -129,15 +129,15 @@ void ServerBlock::setLocationBlock(std::istream& stream, std::string line)
             // Store the error_page mapping under a key specific to the error code
             location_blocks[location].insert({"error_page_" + error_code, error_path});
 
-            std::cerr << "[DEBUG] Parsed error_page for location '" << location
-                      << "' with error_code '" << error_code << "' and path '" << error_path << "'\n";
+            // std::cerr << "[DEBUG] Parsed error_page for location '" << location
+                    //   << "' with error_code '" << error_code << "' and path '" << error_path << "'\n";
         }
         else
         {
             throw std::runtime_error("Config file error: Unknown directive: " + key);
         }
 
-        std::cerr << "[DEBUG] Parsed location '" << location << "' with key '" << key << "' and value '" << value << "'\n";
+        // std::cerr << "[DEBUG] Parsed location '" << location << "' with key '" << key << "' and value '" << value << "'\n";
     }
 }
 
@@ -166,7 +166,7 @@ void ServerBlock::debugPrint() const {
 
 bool ServerBlock::isRequestAllowed(const HttpRequest& request) const {
     std::string uri = request.getUri();
-    std::cerr << "[DEBUG] Checking if request URI: " << uri << " is allowed.\n";
+    // std::cerr << "[DEBUG] Checking if request URI: " << uri << " is allowed.\n";
 
     // Match URI against location blocks
     auto locationIt = location_blocks.end();
@@ -178,7 +178,7 @@ bool ServerBlock::isRequestAllowed(const HttpRequest& request) const {
     }
 
     if (locationIt == location_blocks.end()) {
-        std::cerr << "[DEBUG] No matching location block for URI: " << uri << "\n";
+        // std::cerr << "[DEBUG] No matching location block for URI: " << uri << "\n";
         return false;
     }
 
@@ -190,7 +190,7 @@ bool ServerBlock::isRequestAllowed(const HttpRequest& request) const {
         std::string allowedMethods = methodIt->second;
         std::string requestMethod = request.getMethod();
         if (allowedMethods.find(requestMethod) == std::string::npos) {
-            std::cerr << "[DEBUG] Request method not allowed: " << requestMethod << "\n";
+            // std::cerr << "[DEBUG] Request method not allowed: " << requestMethod << "\n";
             return false;
         }
     }

@@ -37,3 +37,5 @@
 
 using std::string;
 using std::cout;
+
+void	debug(string message);

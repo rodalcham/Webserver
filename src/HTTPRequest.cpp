@@ -51,12 +51,12 @@ HttpRequest::~HttpRequest()
 
 ServerBlock* HttpRequest::matchServerBlock(std::vector<ServerBlock>& serverBlocks) {
     std::string host = this->getHeader("host");
-    std::cout << "[DEBUG] Matching server block for host: " << host << "\n";
+    // std::cout << "[DEBUG] Matching server block for host: " << host << "\n";
 
     for (auto& block : serverBlocks) {
         auto it = block.directive_pairs.find("server_name");
         if (it != block.directive_pairs.end() && it->second == host) {
-            std::cout << "[DEBUG] Matched server block for host: " << host << "\n";
+            // std::cout << "[DEBUG] Matched server block for host: " << host << "\n";
             return (&block); // Return a non-const reference
         }
     }

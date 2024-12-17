@@ -84,14 +84,14 @@ std::string HttpResponse::resolvePath(const std::string& uri, const ServerBlock&
         }
     }
     std::string path = rootDir + strippedUri;
-	std::cerr << "[DEBUG] Resolving path for URI '" << uri << "'\n";
-	std::cerr << "[DEBUG] Resolved path: " << path << "\n";
+	// std::cerr << "[DEBUG] Resolving path for URI '" << uri << "'\n";
+	// std::cerr << "[DEBUG] Resolved path: " << path << "\n";
 
     if (path.find("..") != std::string::npos)
     {
         throw std::runtime_error("[ERROR] Invalid path: Directory traversal attempt");
     }
-    std::cerr << "[DEBUG] Resolved path for URI " << uri << " | " << path << "\n";
+    // std::cerr << "[DEBUG] Resolved path for URI " << uri << " | " << path << "\n";
     return path;
 }
 
@@ -104,16 +104,16 @@ std::string HttpResponse::getFromLocation(const std::string& location, const std
 
         // Check for location-specific error_page_<error_code>
         if (locationConfig.find("error_page_" + key) != locationConfig.end()) {
-            std::cerr << "[DEBUG] Found location-specific error_page for '" << key
-                      << "' in location '" << location << "' with value '"
-                      << locationConfig.at("error_page_" + key) << "'\n";
+            // std::cerr << "[DEBUG] Found location-specific error_page for '" << key
+                    //   << "' in location '" << location << "' with value '"
+                    //   << locationConfig.at("error_page_" + key) << "'\n";
             return locationConfig.at("error_page_" + key);
         }
 
         // Check for other location-specific directives
         if (locationConfig.find(key) != locationConfig.end()) {
-            std::cerr << "[DEBUG] Found key '" << key << "' in location '" << location
-                      << "' with value '" << locationConfig.at(key) << "'\n";
+            // std::cerr << "[DEBUG] Found key '" << key << "' in location '" << location
+                    //   << "' with value '" << locationConfig.at(key) << "'\n";
             return locationConfig.at(key);
         }
     }
@@ -141,12 +141,12 @@ void HttpResponse::setErrorFilePath(const int& error_code_no, HttpRequest reques
         // Check for location-specific error_page_<error_code>
         try {
             errorPagePath = getFromLocation(this->_matched_location, error_code_str, request);
-            std::cerr << "[DEBUG] Using location-specific error_page: " << errorPagePath << "\n";
+            // std::cerr << "[DEBUG] Using location-specific error_page: " << errorPagePath << "\n";
         } catch (const std::runtime_error&) {
             // Fallback to global error_pages
             if (block.error_pages.find(error_code_str) != block.error_pages.end()) {
                 errorPagePath = block.error_pages.at(error_code_str);
-                std::cerr << "[DEBUG] Using global error_page: " << errorPagePath << "\n";
+                // std::cerr << "[DEBUG] Using global error_page: " << errorPagePath << "\n";
             } else {
                 throw std::runtime_error("No error page found for code: " + error_code_str);
             }
@@ -154,7 +154,7 @@ void HttpResponse::setErrorFilePath(const int& error_code_no, HttpRequest reques
 
         // Resolve path
         this->_file_path = resolvePath(errorPagePath, block, {});
-        std::cerr << "[DEBUG] Resolved error file path: " << this->_file_path << "\n";
+        // std::cerr << "[DEBUG] Resolved error file path: " << this->_file_path << "\n";
     } catch (const std::runtime_error& e) {
         std::cerr << "[ERROR] Error while setting error file path: " << e.what() << "\n";
     }

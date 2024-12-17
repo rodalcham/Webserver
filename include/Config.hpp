@@ -13,8 +13,8 @@
 
 class Config {
 private:
-    const std::string           config_path;
-    std::vector<ServerBlock>    server_blocks;
+    const std::string           _config_path;
+    std::vector<ServerBlock>    _server_blocks;
 
     void parseConfig(); // Private method to parse the config file
 
@@ -23,5 +23,5 @@ public:
     ~Config();
 
     std::vector<ServerBlock>& getServerBlocks();
-    void debug() const; // Debug all server blocks
+    void configDebug() const; // Debug all server blocks
 };

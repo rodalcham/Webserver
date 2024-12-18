@@ -171,3 +171,45 @@ std::string Server::getMimeType(const std::string& filePath)
 
 	return "application/octet-stream";
 }
+void Server::handleIncomingData(Client &client)
+{
+	ssize_t	sent;
+
+	msg_receive(client, 0);
+	if (client.hasPartialRequest())
+	{
+		HttpRequest &request = client.getPartialRequest();
+		if (request.getStatusCode() == 100)
+		{
+			std::string response = request.getContinueResponse();
+			sent = send(client.getSocket(), response.c_str(), response.size(),
+					0);
+			if (sent < 0)
+			{
+				std::cerr << "[ERROR] Failed to send 100 Continue: " << strerror(errno) << "\n";
+			}
+			else
+			{
+				std::cerr << "[DEBUG] Sent 100 Continue response to client.\n";
+			}
+			request.setStatusCode(200); // Mark that we've handled the expect
+			return ;                     // Return now,
+				wait for more data to arrive
+		}
+		// Outside of the if (request.getStatusCode() == 100) block:
+		if (client.hasPartialRequest())
+		{
+			HttpRequest &request = client.getPartialRequest();
+			if (client.headersParsed())
+			{
+				request.parseBody(client, _server_blocks);
+				if (request.getStatusCode() == 201)
+				{
+					std::string resp = "HTTP/1.1 201 Created\r\nContent-Length:0\r\n\r\n";
+					send(client.getSocket(), resp.c_str(), resp.size(), 0);
+					client.clearPartialRequest();
+				}
+			}
+		}
+	}
+}

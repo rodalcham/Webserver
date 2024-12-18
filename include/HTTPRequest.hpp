@@ -25,6 +25,7 @@ public:
 	// CONSTRUCTORS
 	HttpRequest();
 	HttpRequest(Client &client);
+	HttpRequest(const std::string& request, const ServerBlock *requestBlock);
 	~HttpRequest();
 
 	// GETTERS

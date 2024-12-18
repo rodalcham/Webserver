@@ -48,7 +48,7 @@ bool	&Client::isReceiving()
 }
 
 
-void   Client::queueResponse(string response)
+void    Client::queueResponse(const std::string& response)
 {
 	this->responses.push_back(response);
 }

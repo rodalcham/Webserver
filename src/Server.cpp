@@ -30,7 +30,7 @@ Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_
 			throw std::runtime_error("Failed to set non-blocking mode");
 
 		int	opt = 1;
-		if (setsockopt(serverSock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 			throw std::runtime_error("Failed to set socket options");
 
 		sockaddr_in serverAddr{};

@@ -81,6 +81,72 @@ HttpRequest::HttpRequest(Client &client)
 	finalizeRequest();
 }
 
+HttpRequest::HttpRequest(const std::string& request, const ServerBlock *requestBlock)
+    : _stat_code_no(200), _filename(""), _request_block(requestBlock)
+{
+	size_t headerEnd = request.find("\r\n\r\n");
+	if (headerEnd == std::string::npos) {
+		_stat_code_no = 400; // Bad Request
+		throw std::runtime_error("Invalid HTTP request: Missing headers or body");
+	}
+
+	std::string headerPart = request.substr(0, headerEnd);
+	_body = request.substr(headerEnd + 4); // The remainder is considered the body
+
+	std::istringstream requestStream(headerPart);
+	std::string requestLine;
+	std::getline(requestStream, requestLine);
+	if (!requestLine.empty() && requestLine.back() == '\r') {
+		requestLine.pop_back();
+	}
+
+	size_t methodEnd = requestLine.find(' ');
+	if (methodEnd == std::string::npos) {
+		_stat_code_no = 400;
+		throw std::runtime_error("Invalid HTTP request line: Missing method");
+	}
+	_method = parseHttpMethod(requestLine.substr(0, methodEnd));
+
+	size_t uriEnd = requestLine.find(' ', methodEnd + 1);
+	if (uriEnd == std::string::npos) {
+		_stat_code_no = 400;
+		std::cerr << "[DEBUG] Missing URI in the request line\n";
+		throw std::runtime_error("Invalid HTTP request line: Missing URI");
+	}
+	_uri = requestLine.substr(methodEnd + 1, uriEnd - methodEnd - 1);
+	_http_version = requestLine.substr(uriEnd + 1);
+
+	// Parse headers
+	_headers = parseHeaders(requestStream);
+	headersGood(); 
+	if (_stat_code_no == 100)
+	{
+		return;
+	}
+
+	// If _stat_code_no != 200 and method != POST, just return (likely error or non-body method)
+	if (_stat_code_no != 200 && _method != "POST")
+	{
+		return;
+	}
+
+	// If POST and status is 200, we can try processing the body if already available
+	if (_method == "POST" && _stat_code_no == 200) {
+		if (!_body.empty()) {
+			try {
+				processBody(_body);
+				if (_stat_code_no == 200)
+					_stat_code_no = 201;
+			} catch (const std::runtime_error& e) {
+				std::cerr << "[DEBUG] Error processing body: " << e.what() << "\n";
+				return;
+			}
+		}
+	}
+
+	finalizeRequest();
+}
+
 // Destructor
 HttpRequest::~HttpRequest()
 {

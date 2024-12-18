@@ -68,7 +68,7 @@ void	Server::removeEvent(int eventID)
 void		Server::msg_send(Client &client, int mode)
 {
 	size_t	bytes;
-
+	debug("Is receiving is :" + std::to_string(client.isReceiving()));
 	if (!mode && client.isReceiving())
 	{
 		this->postEvent(client.getSocket(), 2);
@@ -76,6 +76,7 @@ void		Server::msg_send(Client &client, int mode)
 	}
 
 	string	*msg =&client.getResponse();
+	debug("Sending message to client : " + std::to_string(client.getSocket()) + "\n" + *msg);
 	while (!msg->empty())
 	{
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);
@@ -156,7 +157,7 @@ void Server::msg_receive(Client& client, int flag) {
 
         try {
             // Parse headers by creating a temporary HttpRequest
-            HttpRequest tempReq(headerData, _server_blocks);
+            HttpRequest tempReq(headerData, client.getServerBlock());
             request = tempReq; // Overwrite partial request with parsed headers
 
             // Remove the parsed headers from partialBody

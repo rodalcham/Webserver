@@ -100,7 +100,7 @@ std::string HttpResponse::getFromLocation(const std::string& location, const std
 
     // Check for location-specific configuration
     if (!location.empty() && block.getAllLocationBlocks().find(location) != block.getAllLocationBlocks().end()) {
-        const auto& locationConfig = block.getAllLocationBlocks().at(location);
+        const auto& locationConfig = block.getLocationBlock(location);
 
         // Check for location-specific error_page_<error_code>
         if (locationConfig.find("error_page_" + key) != locationConfig.end()) {

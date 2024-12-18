@@ -22,7 +22,7 @@ int HttpResponse::setFilePath(const HttpRequest& request)
 	int status_code_no = 200;// TODO: make sure it is checking all subfolders and not just e.g. if you have /test/folder/uploads/ rather than /uploads/
 
 	const ServerBlock& block = request.getRequestBlock();
-	const std::map<std::string, std::map<std::string, std::string>>& locations = block.location_blocks;
+	const std::map<std::string, std::map<std::string, std::string>>& locations = block.getAllLocationBlocks();
 	std::string matchedLocation = "/";
 	size_t longestMatch = 0;
 	for (const auto& location : locations)
@@ -70,8 +70,8 @@ std::string HttpResponse::resolvePath(const std::string& uri, const ServerBlock&
     std::string rootDir;
     if (locationConfig.find("root") != locationConfig.end())
         rootDir = locationConfig.at("root");
-    else if (block.directive_pairs.find("root") != block.directive_pairs.end())
-        rootDir = block.directive_pairs.at("root");
+    else if (block.getDirectivePairs().find("root") != block.getDirectivePairs().end())
+        rootDir = block.getDirectivePairs().at("root");
     else
         throw std::runtime_error("[ERROR] No root defined for the request.");
     std::string strippedUri = uri;
@@ -99,8 +99,8 @@ std::string HttpResponse::getFromLocation(const std::string& location, const std
     const ServerBlock& block = request.getRequestBlock();
 
     // Check for location-specific configuration
-    if (!location.empty() && block.location_blocks.find(location) != block.location_blocks.end()) {
-        const auto& locationConfig = block.location_blocks.at(location);
+    if (!location.empty() && block.getAllLocationBlocks().find(location) != block.getAllLocationBlocks().end()) {
+        const auto& locationConfig = block.getAllLocationBlocks().at(location);
 
         // Check for location-specific error_page_<error_code>
         if (locationConfig.find("error_page_" + key) != locationConfig.end()) {
@@ -119,13 +119,13 @@ std::string HttpResponse::getFromLocation(const std::string& location, const std
     }
 
     // Check for global directives
-    if (block.directive_pairs.find(key) != block.directive_pairs.end()) {
-        return block.directive_pairs.at(key);
+    if (block.getDirectivePairs().find(key) != block.getDirectivePairs().end()) {
+        return block.getDirectivePairs().at(key);
     }
 
-    // Check for global error_pages
-    if (block.error_pages.find(key) != block.error_pages.end()) {
-        return block.error_pages.at(key);
+    // Check for global _error_pages
+    if (block.getErrorPages().find(key) != block.getErrorPages().end()) {
+        return block.getErrorPages().at(key);
     }
 
     throw std::runtime_error("Data '" + key + "' not found in the location '" + location + "' or globally.");
@@ -143,9 +143,9 @@ void HttpResponse::setErrorFilePath(const int& error_code_no, HttpRequest reques
             errorPagePath = getFromLocation(this->_matched_location, error_code_str, request);
             // std::cerr << "[DEBUG] Using location-specific error_page: " << errorPagePath << "\n";
         } catch (const std::runtime_error&) {
-            // Fallback to global error_pages
-            if (block.error_pages.find(error_code_str) != block.error_pages.end()) {
-                errorPagePath = block.error_pages.at(error_code_str);
+            // Fallback to global _error_pages
+            if (block.getErrorPages().find(error_code_str) != block.getErrorPages().end()) {
+                errorPagePath = block.getErrorPages().at(error_code_str);
                 // std::cerr << "[DEBUG] Using global error_page: " << errorPagePath << "\n";
             } else {
                 throw std::runtime_error("No error page found for code: " + error_code_str);

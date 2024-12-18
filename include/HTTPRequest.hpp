@@ -17,14 +17,14 @@ private:
 	std::map<std::string, std::string> 	_headers;
 	std::string 						_body;
 	std::string 						_filename;
-	ServerBlock* 						_request_block;
+	const ServerBlock* 						_request_block;
 	std::string 						_continue_response; // Store the "100 Continue" response if needed
 	std::string _file_content;
 
 public:
 	// CONSTRUCTORS
 	HttpRequest();
-	HttpRequest(const std::string& request, ServerBlock* matchedBlock);
+	HttpRequest(Client &client);
 	~HttpRequest();
 
 	// GETTERS

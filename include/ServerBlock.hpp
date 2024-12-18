@@ -9,9 +9,9 @@ class HttpRequest;
 /**
  * A class to store the config block for each server
  * 
- * @param directive_pairs ?
- * @param error_pages ?
- * @param location_blocks ?
+ * @param _directive_pairs ?
+ * @param _error_pages ?
+ * @param _location_blocks ?
  */
 
 class ServerBlock

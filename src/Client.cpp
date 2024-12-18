@@ -175,3 +175,8 @@ void Client::queueRequest(const std::string& request) {
     requests.push_back(request);
     is_sending = true;
 }
+
+const ServerBlock *Client::getServerBlock()
+{
+    return (this->_block);
+}

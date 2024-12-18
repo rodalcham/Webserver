@@ -39,14 +39,15 @@ class Client
 	Client();
 	Client(int clientSock, const ServerBlock *block);
 
-	int			&getSocket();
-	std::string	&getRequest();
-	std::string	&getResponse();
-	void		popResponse();
-	void		popRequest();
-	bool		&isSending();
-	bool		&isReceiving();
-	size_t		parseRequest(char *buffer, int bytesRead);
+	int					&getSocket();
+	std::string			&getRequest();
+	std::string			&getResponse();
+	const ServerBlock	*getServerBlock();
+	void				popResponse();
+	void				popRequest();
+	bool				&isSending();
+	bool				&isReceiving();
+	size_t				parseRequest(char *buffer, int bytesRead);
 
 // PREVIOUS 
 	// Partial Request Management

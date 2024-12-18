@@ -92,7 +92,7 @@ void Server::run()
 			{
 				if (event % 10 == 1)
 				{
-					HttpRequest		request(this->clients[event/10].getRequest(), this->_server_blocks);
+					HttpRequest		request(this->clients[event/10]);
 					HttpResponse	response(request);
 					this->clients[event/10].popRequest();
 					this->clients[event/10].queueResponse(response.returnResponse());
@@ -171,13 +171,11 @@ std::string Server::getMimeType(const std::string& filePath)
 }
 void Server::handleIncomingData(Client &client)
 {
-	ssize_t	sent;
-
 	msg_receive(client, 0);
 	if (client.hasPartialRequest())
 	{
 		HttpRequest &request = client.getPartialRequest();
-		if (request.getStatusCode() == 100)
+		if (request.getStatusCode()== 100) 
 		{
 			client.queueResponse(request.getContinueResponse());
 			this->postEvent(client.getSocket(), 2);
@@ -191,7 +189,7 @@ void Server::handleIncomingData(Client &client)
 			HttpRequest &request = client.getPartialRequest();
 			if (client.headersParsed())
 			{
-				// request.parseBody(client, this->_server_blocks);
+				request.parseBody(client);
 				if (request.getStatusCode() == 201)
 				{
 					std::string resp = "HTTP/1.1 201 Created\r\nContent-Length:0\r\n\r\n"; // FIX

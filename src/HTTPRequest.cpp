@@ -13,9 +13,11 @@ HttpRequest::HttpRequest()
 }
 
 // Parameterized Constructor with Pre-Matched ServerBlock
-HttpRequest::HttpRequest(const std::string& request, ServerBlock* matchedBlock)
-	: _stat_code_no(200), _filename(""), _request_block(matchedBlock)
+HttpRequest::HttpRequest(Client &client)
+	: _stat_code_no(200), _filename(""), _request_block(client.getServerBlock())
 {
+	string	request = client.getRequest();
+
 	size_t headerEnd = request.find("\r\n\r\n");
 	if (headerEnd == std::string::npos) {
 		_stat_code_no = 400; // Bad Request

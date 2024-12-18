@@ -100,11 +100,12 @@ void Server::run()
 				if (event % 10 == 1)
 				{
 					HttpRequest		request(this->clients[event/10]);
+
 					HttpResponse	response(request);
 					this->clients[event/10].popRequest();
 					this->clients[event/10].queueResponse(response.returnResponse());
 					this->postEvent(event/10, 2);
-					response.debug();
+					response.respDebug();
 				}
 				else if (event % 10 == 2)
 					msg_send(this->clients[event/10], 0);
@@ -182,6 +183,7 @@ void Server::handleIncomingData(Client &client)
 	msg_receive(client, 0);
 	if (client.hasPartialRequest())
 	{
+		cout << "Anything\n";
 		HttpRequest &request = client.getPartialRequest();
 		debug("Request built, status code :" + std::to_string(request.getStatusCode()));
 		if (request.getStatusCode()== 100) 
@@ -206,7 +208,32 @@ void Server::handleIncomingData(Client &client)
 					this->postEvent(client.getSocket(), 2);
 					client.clearPartialRequest();
 				}
+				else
+				{
+					HttpResponse	response(request);
+
+					response.respDebug();
+
+
+					client.queueResponse((response.returnResponse()));
+					this->postEvent(client.getSocket(), 2);
+				}
 			}
 		}
+		else
+		{
+			HttpResponse	response(request);
+			client.queueResponse((response.returnResponse()));
+			this->postEvent(client.getSocket(), 2);
+		}
+
+	}
+	else
+	{
+		HttpRequest request(client);
+		cout << "Request :  " + client.getRequest() + "\n";
+		HttpResponse	response(request);
+		client.queueResponse((response.returnResponse()));
+		this->postEvent(client.getSocket(), 2);
 	}
 }

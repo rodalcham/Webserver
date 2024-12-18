@@ -121,7 +121,7 @@ void Server::msg_receive(Client& client, int flag) {
 
     char buffer[4096];
     ssize_t bytesRead = recv(client.getSocket(), buffer, sizeof(buffer), 0);
-    if (bytesRead <= 0) {
+    if (bytesRead <= 0) { // NO EWOULDBLOCK
         std::cerr << "[DEBUG] Connection closed or read error\n";
         client.closeConnection();
         clients.erase(client.getSocket());

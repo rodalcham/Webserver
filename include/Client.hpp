@@ -47,7 +47,6 @@ class Client
 	bool		&isSending();
 	bool		&isReceiving();
 	size_t		parseRequest(char *buffer, int bytesRead);
-	void		queueResponse(string response);
 
 // PREVIOUS 
 	// Partial Request Management
@@ -59,7 +58,6 @@ class Client
 	void 			clearPartialRequest();
 	void 			handleRequest();
 	void 			closeConnection();
-	size_t 			parseRequest(char* buffer, int bytesRead);
 	void 			queueResponse(const std::string& response);
 	void 			queueRequest(const std::string& request);
 	bool 			headersParsed() const;

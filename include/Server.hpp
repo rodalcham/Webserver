@@ -29,9 +29,7 @@ class Server {
 	~Server();
 	Server(std::vector<ServerBlock>& server_blocks);
 	void run();
-	void handleGet(int clientSock, HttpRequest& httpRequest);
-	void handlePost(int clientSock, HttpRequest& httpRequest);
-	void handleDelete(int clientSock, HttpRequest& httpRequest);
+	void handleIncomingData(Client &client);
 	// std::string resolvePath(const std::string& uri);
 
 	private:

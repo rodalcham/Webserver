@@ -7,7 +7,7 @@
 
 // Default Constructor
 HttpRequest::HttpRequest() 
-	: _stat_code_no(200), _filename(""), _request_block(NULL), _port(0)
+	: _stat_code_no(200), _filename(""), _request_block(NULL)
 {
 	// Default initialized request
 }

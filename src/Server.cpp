@@ -85,14 +85,12 @@ void Server::run()
 					acceptClient(event);
 				else
 				{
-					msg_receive(this->clients.at(event), 0);
+					handleIncomingData(this->clients[event]);
 				}
 			}
 			else if (eventList[i].filter == EVFILT_USER)
 			{
-				if (event % 10 == 0)
-					msg_receive(this->clients[event/10], 1);
-				else if (event % 10 == 1)
+				if (event % 10 == 1)
 				{
 					HttpRequest		request(this->clients[event/10].getRequest(), this->_server_blocks);
 					HttpResponse	response(request);
@@ -181,20 +179,11 @@ void Server::handleIncomingData(Client &client)
 		HttpRequest &request = client.getPartialRequest();
 		if (request.getStatusCode() == 100)
 		{
-			std::string response = request.getContinueResponse();
-			sent = send(client.getSocket(), response.c_str(), response.size(),
-					0);
-			if (sent < 0)
-			{
-				std::cerr << "[ERROR] Failed to send 100 Continue: " << strerror(errno) << "\n";
-			}
-			else
-			{
-				std::cerr << "[DEBUG] Sent 100 Continue response to client.\n";
-			}
+			client.queueResponse(request.getContinueResponse());
+			this->postEvent(client.getSocket(), 2);
 			request.setStatusCode(200); // Mark that we've handled the expect
 			return ;                     // Return now,
-				wait for more data to arrive
+				//wait for more data to arrive
 		}
 		// Outside of the if (request.getStatusCode() == 100) block:
 		if (client.hasPartialRequest())
@@ -202,11 +191,12 @@ void Server::handleIncomingData(Client &client)
 			HttpRequest &request = client.getPartialRequest();
 			if (client.headersParsed())
 			{
-				request.parseBody(client, _server_blocks);
+				// request.parseBody(client, this->_server_blocks);
 				if (request.getStatusCode() == 201)
 				{
-					std::string resp = "HTTP/1.1 201 Created\r\nContent-Length:0\r\n\r\n";
-					send(client.getSocket(), resp.c_str(), resp.size(), 0);
+					std::string resp = "HTTP/1.1 201 Created\r\nContent-Length:0\r\n\r\n"; // FIX
+					client.queueResponse(resp);
+					this->postEvent(client.getSocket(), 2);
 					client.clearPartialRequest();
 				}
 			}

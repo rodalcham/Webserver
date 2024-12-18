@@ -171,10 +171,6 @@ size_t Client::parseRequest(char* buffer, int bytesRead)
         headers_parsed = parsed;
     }
 
-	void Client::queueResponse(const std::string& response) {
-    responses.push_back(response);
-}
-
 void Client::queueRequest(const std::string& request) {
     requests.push_back(request);
     is_sending = true;

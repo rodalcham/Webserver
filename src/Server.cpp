@@ -24,6 +24,7 @@ Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_
 		int	sock = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock < 0)
 			throw std::runtime_error("Socket creation failed");
+		this->_server_sockets[sock] = &block;
 
 		int	flags = fcntl(sock, F_GETFL,0);
 		if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
@@ -44,7 +45,11 @@ Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_
 		if (listen(sock, SOCKET_BACKLOG_MAX) < 0)
 			throw std::runtime_error("Failed to listen on port "+ std::to_string(block.getPort()));
 
-		this->_server_sockets[sock] = &block;
+		struct kevent event;
+		EV_SET(&event, sock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+			throw std::runtime_error("Failed to add server socket to kqueue");
+
 	}
 }
 
@@ -81,6 +86,7 @@ void Server::run()
 			int event = eventList[i].ident;
 			if (eventList[i].filter == EVFILT_READ)
 			{
+				debug("Read Event");
 				if (this->_server_sockets.find(event) != this->_server_sockets.end())
 					acceptClient(event);
 				else
@@ -90,6 +96,7 @@ void Server::run()
 			}
 			else if (eventList[i].filter == EVFILT_USER)
 			{
+				debug("Custom Event");
 				if (event % 10 == 1)
 				{
 					HttpRequest		request(this->clients[event/10]);
@@ -105,6 +112,7 @@ void Server::run()
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
 			{
+				debug("Write Event");
 				msg_send(this->clients[event], 1);  
 			}
 		}
@@ -175,6 +183,7 @@ void Server::handleIncomingData(Client &client)
 	if (client.hasPartialRequest())
 	{
 		HttpRequest &request = client.getPartialRequest();
+		debug("Request built, status code :" + std::to_string(request.getStatusCode()));
 		if (request.getStatusCode()== 100) 
 		{
 			client.queueResponse(request.getContinueResponse());

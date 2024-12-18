@@ -68,7 +68,6 @@ void	Server::removeEvent(int eventID)
 void		Server::msg_send(Client &client, int mode)
 {
 	size_t	bytes;
-	debug("Is receiving is :" + std::to_string(client.isReceiving()));
 	if (!mode && client.isReceiving())
 	{
 		this->postEvent(client.getSocket(), 2);

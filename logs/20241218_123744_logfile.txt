@@ -1,0 +1,4 @@
+[20241218_123744] Server running in DEBUG mode.
+[20241218_123744] Server started
+[20241218_123744] Server running...
+[20241218_124246] Event detected

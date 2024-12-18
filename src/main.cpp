@@ -30,11 +30,11 @@ int main(int argc, char** argv) {
 	setupSignalHandler(); // Set up the signal handler
 
 	debug("Server running in DEBUG mode.");
-	debug("Server started");
 	try {
 		Config config(argv[1]); // Load and validate configuration
 
 		Server server(config.getServerBlocks());
+		debug("Server started");
 		server.run();
 		std::cout << "Server shutting down...\n";
 	} catch (const std::exception& e) {

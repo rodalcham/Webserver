@@ -266,7 +266,7 @@ void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
 	std::ifstream		file(this->_file_path, std::ios::binary);
 
 
-	std::cout << _file_path << "<<<<<<<<<<<<<<<<<<<<<<<<-----file path\n";
+	// std::cout << _file_path << "<<<<<<<<<<<<<<<<<<<<<<<<-----file path\n";
 
 	if (file.is_open())
 	{

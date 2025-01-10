@@ -121,7 +121,8 @@ void Server::msg_receive(Client& client, int flag) {
 
     char buffer[4096];
     ssize_t bytesRead = recv(client.getSocket(), buffer, sizeof(buffer), 0);
-    if (bytesRead <= 0) { // NO EWOULDBLOCK
+    if (bytesRead <= 0)
+	{
         std::cerr << "[DEBUG] Connection closed or read error\n";
         client.closeConnection();
         clients.erase(client.getSocket());
@@ -129,8 +130,9 @@ void Server::msg_receive(Client& client, int flag) {
     }
 
     // If we have no partial request yet, create one
-    if (!client.hasPartialRequest()) {
-        HttpRequest* newRequest = new HttpRequest();
+    if (!client.hasPartialRequest())
+	{
+        HttpRequest* newRequest = new HttpRequest(); //No malloc protection
         client.setPartialRequest(newRequest);
         client.setHeadersParsed(false); // Initially, headers not parsed
         std::cerr << "[DEBUG] Initialized new partial HttpRequest\n";
@@ -170,7 +172,7 @@ void Server::msg_receive(Client& client, int flag) {
         } catch (const std::exception& e) {
             std::cerr << "[DEBUG] Error parsing headers: " << e.what() << "\n";
             std::string resp = "HTTP/1.1 400 Bad Request\r\nContent-Length:0\r\n\r\n";
-            send(client.getSocket(), resp.c_str(), resp.size(), 0);
+            send(client.getSocket(), resp.c_str(), resp.size(), 0); //WRONG!
             client.clearPartialRequest();
         }
     }

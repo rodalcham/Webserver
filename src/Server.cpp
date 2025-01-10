@@ -76,8 +76,10 @@ void Server::run()
 		struct kevent eventList[1024];
 		int eventCount = kevent(kq, nullptr, 0, eventList, 1024, nullptr);
 
-		if (eventCount < 0) {
-			if (errno == EINTR) continue;
+		if (eventCount < 0)
+		{
+			if (errno == EINTR)
+				continue;
 			throw std::runtime_error("kevent() failed");
 		}
 
@@ -183,7 +185,6 @@ void Server::handleIncomingData(Client &client)
 	msg_receive(client, 0);
 	if (client.hasPartialRequest())
 	{
-		cout << "Anything\n";
 		HttpRequest &request = client.getPartialRequest();
 		debug("Request built, status code :" + std::to_string(request.getStatusCode()));
 		if (request.getStatusCode()== 100) 

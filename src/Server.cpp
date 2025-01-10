@@ -159,7 +159,7 @@ std::string Server::readFile(const std::string& filePath)
 	if (!file.is_open()) throw std::runtime_error("File not found");
 
 	std::ostringstream content;
-	content << file.rdbuf();
+	content << file.rdbuf(); //WRONG??
 	return content.str();
 }
 
@@ -221,12 +221,12 @@ void Server::handleIncomingData(Client &client)
 				}
 			}
 		}
-		else
-		{
-			HttpResponse	response(request);
-			client.queueResponse((response.returnResponse()));
-			this->postEvent(client.getSocket(), 2);
-		}
+		// else
+		// {
+		// 	HttpResponse	response(request);
+		// 	client.queueResponse((response.returnResponse()));
+		// 	this->postEvent(client.getSocket(), 2);
+		// }
 
 	}
 	else

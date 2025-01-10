@@ -307,6 +307,8 @@ void HttpRequest::processBody(const std::string& body)
 // Parse Multipart Filename
 void HttpRequest::parseMultipartFilename()
 {
+	cout << "DEBUG BODY : \n" << this->_body;
+
 	if (_headers.find("content-type") == _headers.end() ||
 		_headers["content-type"].find("multipart/form-data") == std::string::npos)
 	{
@@ -321,7 +323,7 @@ void HttpRequest::parseMultipartFilename()
 	std::string boundary = "--" + _headers["content-type"].substr(boundary_pos + 9);
 	boundary.erase(boundary.find_last_not_of(" \t\r\n") + 1); // Trim whitespace
 
-	size_t boundaryPos = _body.find(boundary);
+	size_t boundaryPos = this->_body.find(boundary);
 	if (boundaryPos == std::string::npos)
 	{
 		throw std::runtime_error("Boundary not found in multipart body");
@@ -476,7 +478,7 @@ void HttpRequest::parseBody(Client& client)
 			}
 			else
 			{
-				outFile.write(_file_content.data(), _file_content.size());
+				outFile.write(_file_content.data(), _file_content.size()); //WRONG???
 				if (outFile.fail()) {
 					std::cerr << "[DEBUG] Failed to write data to file: " << filePath << "\n";
 					_stat_code_no = 500; // Internal Server Error
@@ -495,12 +497,12 @@ void HttpRequest::parseBody(Client& client)
 			if (_stat_code_no == 201)
 			{
 				std::string resp = "HTTP/1.1 201 Created\r\nContent-Length:0\r\n\r\n";
-				ssize_t sent = send(client.getSocket(), resp.c_str(), resp.size(), 0);
-				if (sent < 0) {
-					std::cerr << "[ERROR] Failed to send 201 Created response: " << strerror(errno) << "\n";
-				} else {
-					std::cerr << "[DEBUG] Sent 201 Created response. Clearing request.\n";
-				}
+				// ssize_t sent = send(client.getSocket(), resp.c_str(), resp.size(), 0);
+				// if (sent < 0) {
+					// std::cerr << "[ERROR] Failed to send 201 Created response: " << strerror(errno) << "\n";
+				// } else {
+					// std::cerr << "[DEBUG] Sent 201 Created response. Clearing request.\n";
+				// }
 				client.clearPartialRequest();
 			}
 			else
@@ -509,15 +511,15 @@ void HttpRequest::parseBody(Client& client)
 				if (_stat_code_no == 500)
 				{
 					std::string resp = "HTTP/1.1 500 Internal Server Error\r\nContent-Length:0\r\n\r\n";
-					ssize_t sent = send(client.getSocket(), resp.c_str(), resp.size(), 0);
-					if (sent < 0)
-					{
-						std::cerr << "[ERROR] Failed to send 500 Internal Server Error response: " << strerror(errno) << "\n";
-					}
-					else
-					{
-						std::cerr << "[DEBUG] Sent 500 Internal Server Error response. Clearing request.\n";
-					}
+					// ssize_t sent = send(client.getSocket(), resp.c_str(), resp.size(), 0);
+					// if (sent < 0)
+					// {
+					// 	std::cerr << "[ERROR] Failed to send 500 Internal Server Error response: " << strerror(errno) << "\n";
+					// }
+					// else
+					// {
+					// 	std::cerr << "[DEBUG] Sent 500 Internal Server Error response. Clearing request.\n";
+					// }
 					client.clearPartialRequest();
 				}
 			}

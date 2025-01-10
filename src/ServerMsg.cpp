@@ -75,6 +75,7 @@ void		Server::msg_send(Client &client, int mode)
 	}
 
 	string	*msg =&client.getResponse();
+	cout << "SENDING : " << *msg << "\n";
 	debug("Sending message to client : " + std::to_string(client.getSocket()) + "\n" + *msg);
 	while (!msg->empty())
 	{

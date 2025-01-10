@@ -116,7 +116,7 @@ void Client::handleRequest()
         while (partialRequestBody.size() < expectedLength)
 		{
             char buffer[4096];
-            ssize_t bytesRead = recv(clientSock, buffer, sizeof(buffer), 0);
+            ssize_t bytesRead = recv(clientSock, buffer, sizeof(buffer), 0); // WRONG
             if (bytesRead <= 0)
 			{
                 std::cerr << "[DEBUG] Connection closed or read error\n";

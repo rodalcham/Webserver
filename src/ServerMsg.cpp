@@ -172,7 +172,8 @@ void Server::msg_receive(Client& client, int flag) {
         } catch (const std::exception& e) {
             std::cerr << "[DEBUG] Error parsing headers: " << e.what() << "\n";
             std::string resp = "HTTP/1.1 400 Bad Request\r\nContent-Length:0\r\n\r\n";
-            send(client.getSocket(), resp.c_str(), resp.size(), 0); //WRONG!
+			client.queueResponse(resp);
+			this->postEvent(client.getSocket(), 2);
             client.clearPartialRequest();
         }
     }

@@ -107,7 +107,7 @@ void Server::run()
 					this->clients[event/10].popRequest();
 					this->clients[event/10].queueResponse(response.returnResponse());
 					this->postEvent(event/10, 2);
-					response.respDebug();
+					// response.respDebug();
 				}
 				else if (event % 10 == 2)
 					msg_send(this->clients[event/10], 0);
@@ -213,7 +213,7 @@ void Server::handleIncomingData(Client &client)
 				{
 					HttpResponse	response(request);
 
-					response.respDebug();
+					// response.respDebug();
 
 
 					client.queueResponse((response.returnResponse()));

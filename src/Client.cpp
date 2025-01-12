@@ -183,7 +183,40 @@ void	Client::appendRequest(string request)
 
 bool	Client::isLastComplete()
 {
-	string	*req = &this->requests.back();
+	if (requests.empty())
+	{
+		return false; // No requests to check
+	}
+	std::string& req = requests.back();
+	if (req.find("HTTP") != std::string::npos)
+	{
+		size_t headerEnd = req.find("\r\n\r\n");
+		if (headerEnd == std::string::npos)
+		{
+			return false;
+		}
+		std::regex contentLengthRegex("Content-Length: (\\d+)", std::regex::icase);
+		std::smatch match;
+		if (std::regex_search(req, match, contentLengthRegex))
+		{
+			size_t contentLength = std::stoul(match[1].str());
+			size_t bodyStart = headerEnd + 4;
+			if (req.size() >= bodyStart + contentLength)
+				return true;
+			else
+				return false;
+		}
+		else
+			return true;
+	}
+	else
+	{
+		std::string boundary = "--END--";
+		if (req.size() >= boundary.size() && req.compare(req.size() - boundary.size(), boundary.size(), boundary) == 0)
+			return true;
+		else
+			return false;
+	}
 
 	/*
 		if (is HTTP request)

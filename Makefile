@@ -12,7 +12,7 @@ SRC_DIR		= src
 OBJ_DIR		= obj
 
 # Debug Flags
-DEBUG = -DDEBUG=1
+DEBUG=-DDEBUG=1 -g -fsanitize=address
 
 # Source files
 SRCS		=	$(SRC_DIR)/Config.cpp \

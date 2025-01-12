@@ -42,6 +42,7 @@ class Client
 
 	int					&getSocket();
 	std::string			&getRequest();
+	bool				hasRequest();
 	std::string			&getResponse();
 	const ServerBlock	*getServerBlock();
 	void				popResponse();
@@ -61,7 +62,9 @@ class Client
 	void 			handleRequest();
 	void 			closeConnection();
 	void 			queueResponse(const std::string& response);
-	void 			queueRequest(const std::string& request);
+	void 			queueRequest(string request);
+	void 			appendRequest(string request);
+	bool			isLastComplete();
 	bool 			headersParsed() const;
 	void 			setHeadersParsed(bool parsed);
 

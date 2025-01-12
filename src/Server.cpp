@@ -182,59 +182,83 @@ std::string Server::getMimeType(const std::string& filePath)
 }
 void Server::handleIncomingData(Client &client)
 {
-	msg_receive(client, 0);
-	if (client.hasPartialRequest())
-	{
-		HttpRequest &request = client.getPartialRequest();
-		debug("Request built, status code :" + std::to_string(request.getStatusCode()));
-		if (request.getStatusCode()== 100) 
-		{
-			client.queueResponse(request.getContinueResponse());
-			this->postEvent(client.getSocket(), 2);
-			request.setStatusCode(200); // Mark that we've handled the expect
-			return ;                     // Return now,
-				//wait for more data to arrive
-		}
-		// Outside of the if (request.getStatusCode() == 100) block:
-		if (client.hasPartialRequest())
-		{
-			HttpRequest &request = client.getPartialRequest();
-			if (client.headersParsed())
-			{
-				request.parseBody(client);
-				if (request.getStatusCode() == 201)
-				{
-					std::string resp = "HTTP/1.1 201 Created\r\nContent-Length:0\r\n\r\n"; // FIX
-					client.queueResponse(resp);
-					this->postEvent(client.getSocket(), 2);
-					client.clearPartialRequest();
-				}
-				else
-				{
-					HttpResponse	response(request);
-
-					// response.respDebug();
-
-
-					client.queueResponse((response.returnResponse()));
-					this->postEvent(client.getSocket(), 2);
-				}
-			}
-		}
-		// else
-		// {
-		// 	HttpResponse	response(request);
-		// 	client.queueResponse((response.returnResponse()));
-		// 	this->postEvent(client.getSocket(), 2);
-		// }
-
-	}
-	else
-	{
-		HttpRequest request(client);
-		cout << "Request :  " + client.getRequest() + "\n";
-		HttpResponse	response(request);
-		client.queueResponse((response.returnResponse()));
-		this->postEvent(client.getSocket(), 2);
-	}
+	msg_receive(client);
 }
+
+void Server::removeClient(Client &client)
+{
+	struct kevent event;
+
+	EV_SET(&event, client.getSocket(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	kevent(this->kq, &event, 1, NULL, 0, NULL);
+	if (client.isReceiving())
+	{
+		disable_write_listen(client.getSocket());
+	}
+	if (client.isSending())
+	{
+		//close and delete the file being sent
+	}
+	this->clients.erase(client.getSocket());
+	close(client.getSocket());
+}
+
+
+// void Server::handleIncomingData(Client &client)
+// {
+// 	msg_receive(client, 0);
+// 	if (client.hasPartialRequest())
+// 	{
+// 		HttpRequest &request = client.getPartialRequest();
+// 		debug("Request built, status code :" + std::to_string(request.getStatusCode()));
+// 		if (request.getStatusCode()== 100) 
+// 		{
+// 			client.queueResponse(request.getContinueResponse());
+// 			this->postEvent(client.getSocket(), 2);
+// 			request.setStatusCode(200); // Mark that we've handled the expect
+// 			return ;                     // Return now,
+// 				//wait for more data to arrive
+// 		}
+// 		// Outside of the if (request.getStatusCode() == 100) block:
+// 		if (client.hasPartialRequest())
+// 		{
+// 			HttpRequest &request = client.getPartialRequest();
+// 			if (client.headersParsed())
+// 			{
+// 				request.parseBody(client);
+// 				if (request.getStatusCode() == 201)
+// 				{
+// 					std::string resp = "HTTP/1.1 201 Created\r\nContent-Length:0\r\n\r\n"; // FIX
+// 					client.queueResponse(resp);
+// 					this->postEvent(client.getSocket(), 2);
+// 					client.clearPartialRequest();
+// 				}
+// 				else
+// 				{
+// 					HttpResponse	response(request);
+
+// 					// response.respDebug();
+
+
+// 					client.queueResponse((response.returnResponse()));
+// 					this->postEvent(client.getSocket(), 2);
+// 				}
+// 			}
+// 		}
+// 		// else
+// 		// {
+// 		// 	HttpResponse	response(request);
+// 		// 	client.queueResponse((response.returnResponse()));
+// 		// 	this->postEvent(client.getSocket(), 2);
+// 		// }
+
+// 	}
+// 	else
+// 	{
+// 		HttpRequest request(client);
+// 		cout << "Request :  " + client.getRequest() + "\n";
+// 		HttpResponse	response(request);
+// 		client.queueResponse((response.returnResponse()));
+// 		this->postEvent(client.getSocket(), 2);
+// 	}
+// }

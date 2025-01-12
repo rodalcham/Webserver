@@ -41,6 +41,7 @@ class Server {
 	std::map<int, Client>		clients;
 
 	void acceptClient(int server_sock);
+	void removeClient(Client &client);
 	// void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 
 	std::string readFile(const std::string& filePath); // Function to read static files
@@ -49,7 +50,7 @@ class Server {
 	void	enable_write_listen(int clientSock);
 	void	disable_write_listen(int clientSock);
 	void	msg_send(Client &client, int mode);
-	void	msg_receive(Client &client, int mode);
+	void	msg_receive(Client &client);
 
 	//Posting events
 	void	postEvent(int clientSock, int mode);

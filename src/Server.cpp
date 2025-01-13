@@ -128,7 +128,7 @@ void	Server::processRequest(Client &client)
 			string filename = request.getHeader("Filename");
 			if (filename.empty())
 				request.setStatusCode(200); // Check
-			client.get_outFile().open(filename, std::ios::binary);
+			client.get_outFile().open("./www/uploads/monica.jpg", std::ios::binary);//temp
 			if (!client.get_outFile().is_open())
 				request.setStatusCode(500); // Check
 			string contentType = request.getHeader("Content-Type");
@@ -136,7 +136,7 @@ void	Server::processRequest(Client &client)
 			std::smatch match;
 			if (std::regex_search(contentType, match, boundaryRegex) && match.size() > 1)
 			{
-				client.get_boundary() = "--" + match[1].str();
+				client.get_boundary() = match[1].str();
 			}
 			else
 				request.setStatusCode(500); // Check
@@ -144,8 +144,11 @@ void	Server::processRequest(Client &client)
 		}
 
 		HttpResponse	response(request);
-
-		client.queueResponse(response.returnResponse());
+		
+		if (request.getMethod()=="POST") //temp
+			client.queueResponse(request.getContinueResponse());
+		else
+			client.queueResponse(response.returnResponse());
 		this->postEvent(client.getSocket(), 2);
 	}
 	else

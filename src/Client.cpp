@@ -173,13 +173,15 @@ size_t Client::parseRequest(char* buffer, int bytesRead)
 
 void	Client::queueRequest(string request)
 {
-	debug("New Request added to client, currently holding : " +std::to_string(this->requests.size()));
+	debug("New Request added to client : ");
+	debug(request);
 	this->requests.push_back(request);
 }
 
 void	Client::appendRequest(string request)
 {
 	debug("Line appended to previous request");
+	debug(request);
 	this->requests.back().append(request);
 }
 
@@ -204,6 +206,8 @@ int	Client::processFile()
 
 	string	content = req->substr(boundaryPrefix.length(), req->length() - endBoundary.length());
 
+	content = content.substr(content.find("\r\n\r\n") + 4);
+
 	if (!this->_outFile || !this->_outFile.is_open())
 		return -1;
 	debug("Writing into file...");
@@ -214,10 +218,10 @@ int	Client::processFile()
 	if (endBoundary == boundarySufix)
 		return 1;
 	
-	if (this->requests.size() > 1)
-		this->requests.at(1) = boundaryPrefix + this->requests.at(1);
-	else
-		this->requests.push_back(boundaryPrefix);
+	// if (this->requests.size() > 1)
+	// 	this->requests.at(1) = boundaryPrefix + this->requests.at(1);
+	// else
+	// this->requests.push_back(boundaryPrefix);
 
 	return (0);
 }
@@ -290,7 +294,11 @@ bool	Client::isLastComplete()
 		else if (req.substr(0, boundaryPrefix.length()) == boundaryPrefix &&
 				(req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix ||
 				req.substr(req.length() - boundarySufix.length()) == boundarySufix))
+		{
+			if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
+				this->queueRequest(boundaryPrefix);
 			return true;
+		}
 		else
 			return false;
 	}

@@ -173,21 +173,91 @@ size_t Client::parseRequest(char* buffer, int bytesRead)
 
 void	Client::queueRequest(string request)
 {
+	debug("New Request added to client, currently holding : " +std::to_string(this->requests.size()));
 	this->requests.push_back(request);
 }
 
 void	Client::appendRequest(string request)
 {
+	debug("Line appended to previous request");
 	this->requests.back().append(request);
 }
 
+int	Client::processFile()
+{
+	string	*req = &this->requests.front();
+
+	string	boundaryPrefix = "--" + this->_boundary + "\r\n";
+	string	boundarySufix = "--" + this->_boundary + "--\r\n";
+
+	string	endBoundary;
+
+	if (req->substr(0, boundaryPrefix.length()) != boundaryPrefix)
+		return -1;
+
+	if (req->substr(req->length() - boundaryPrefix.length()) == boundaryPrefix)
+		endBoundary = boundaryPrefix;
+	else if (req->substr(req->length() - boundarySufix.length()) == boundarySufix)
+		endBoundary = boundarySufix;
+	else
+		return -1;
+
+	string	content = req->substr(boundaryPrefix.length(), req->length() - endBoundary.length());
+
+	if (!this->_outFile || !this->_outFile.is_open())
+		return -1;
+	debug("Writing into file...");
+	this->_outFile << content;
+	if (!this->_outFile)
+		return -1;
+
+	if (endBoundary == boundarySufix)
+		return 1;
+	
+	if (this->requests.size() > 1)
+		this->requests.at(1) = boundaryPrefix + this->requests.at(1);
+	else
+		this->requests.push_back(boundaryPrefix);
+
+	return (0);
+}
+
+
+/*
+	if (is HTTP request)
+	{
+		if (headers are complete)
+		{
+			if (has content-length)
+			{
+				if (body is complete)
+					return true
+				else
+					return false
+			}
+			else
+				return true
+		}
+		else
+		{
+			return false
+		}
+	}
+	else
+	{
+		if (boundary at the end)
+			return true
+		else
+			return false
+	}
+*/
 bool	Client::isLastComplete()
 {
 	if (requests.empty())
 	{
-		return false; // No requests to check
+		return true; // No requests to check
 	}
-	std::string& req = requests.back();
+	string& req = requests.back();
 	if (req.find("HTTP") != std::string::npos)
 	{
 		size_t headerEnd = req.find("\r\n\r\n");
@@ -195,6 +265,8 @@ bool	Client::isLastComplete()
 		{
 			return false;
 		}
+		if (req.find("POST") != std::string::npos)
+			return true;
 		std::regex contentLengthRegex("Content-Length: (\\d+)", std::regex::icase);
 		std::smatch match;
 		if (std::regex_search(req, match, contentLengthRegex))
@@ -211,44 +283,35 @@ bool	Client::isLastComplete()
 	}
 	else
 	{
-		std::string boundary = "--END--";
-		if (req.size() >= boundary.size() && req.compare(req.size() - boundary.size(), boundary.size(), boundary) == 0)
+		string boundaryPrefix = "--" + this->_boundary + "\r\n";
+    	string boundarySufix = "--" + this->_boundary + "--\r\n";
+		if (req.length() < boundaryPrefix.length() + boundarySufix.length())
+			return false;
+		else if (req.substr(0, boundaryPrefix.length()) == boundaryPrefix &&
+				(req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix ||
+				req.substr(req.length() - boundarySufix.length()) == boundarySufix))
 			return true;
 		else
 			return false;
 	}
-
-	/*
-		if (is HTTP request)
-		{
-			if (headers are complete)
-			{
-				if (has content-length)
-				{
-					if (body is complete)
-						return true
-					else
-						return false
-				}
-				else
-					return true
-			}
-			else
-			{
-				return false
-			}
-		}
-		else
-		{
-			if (boundary at the end)
-				return true
-			else
-				return false
-		}
-	*/
 }
 
 const ServerBlock *Client::getServerBlock()
 {
 	return (this->_block);
+}
+
+std::ofstream	&Client::get_outFile()
+{
+	return this->_outFile;
+}
+
+string	&Client::get_boundary()
+{
+	return this->_boundary;
+}
+
+bool	Client::hasRequest()
+{
+	return (!this->requests.empty());
 }

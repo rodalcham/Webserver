@@ -31,6 +31,7 @@ void	Server::disable_write_listen(int	clientSock)
 		throw std::runtime_error("Failed disable listen for write readiness");
 	}
 }
+
 /**
  * Posts custom events,
  * 
@@ -75,7 +76,7 @@ void		Server::msg_send(Client &client, int mode)
 	}
 
 	string	*msg =&client.getResponse();
-	cout << "SENDING : " << *msg << "\n";
+	// cout << "SENDING : " << *msg << "\n";
 	debug("Sending message to client : " + std::to_string(client.getSocket()) + "\n" + *msg);
 	while (!msg->empty())
 	{
@@ -123,11 +124,6 @@ string	extractLine(char buffer[], size_t bufferSize)
 		}
 	}
 	return std::string(buffer, bufferSize);
-}
-
-bool	isComplete(string &request)
-{
-
 }
 
 void Server::msg_receive(Client& client)

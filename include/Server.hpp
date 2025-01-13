@@ -28,8 +28,8 @@ class Server {
 	// Server();
 	~Server();
 	Server(std::vector<ServerBlock>& server_blocks);
-	void run();
-	void handleIncomingData(Client &client);
+	void	run();
+	void	processRequest(Client &client);
 	// std::string resolvePath(const std::string& uri);
 
 	private:

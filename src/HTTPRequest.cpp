@@ -65,18 +65,19 @@ HttpRequest::HttpRequest(Client &client)
 	}
 
 	// If POST and status is 200, we can try processing the body if already available
-	if (_method == "POST" && _stat_code_no == 200) {
-		if (!_body.empty()) {
-			try {
-				processBody(_body);
-				if (_stat_code_no == 200)
-					_stat_code_no = 201;
-			} catch (const std::runtime_error& e) {
-				std::cerr << "[DEBUG] Error processing body: " << e.what() << "\n";
-				return;
-			}
-		}
-	}
+	// if (_method == "POST" && _stat_code_no == 200)
+	// {
+	// 	if (!_body.empty()) {
+	// 		try {
+	// 			processBody(_body);
+	// 			if (_stat_code_no == 200)
+	// 				_stat_code_no = 201;
+	// 		} catch (const std::runtime_error& e) {
+	// 			std::cerr << "[DEBUG] Error processing body: " << e.what() << "\n";
+	// 			return;
+	// 		}
+	// 	}
+	// }
 
 	finalizeRequest();
 }
@@ -131,18 +132,18 @@ HttpRequest::HttpRequest(const std::string& request, const ServerBlock *requestB
 	}
 
 	// If POST and status is 200, we can try processing the body if already available
-	if (_method == "POST" && _stat_code_no == 200) {
-		if (!_body.empty()) {
-			try {
-				processBody(_body);
-				if (_stat_code_no == 200)
-					_stat_code_no = 201;
-			} catch (const std::runtime_error& e) {
-				std::cerr << "[DEBUG] Error processing body: " << e.what() << "\n";
-				return;
-			}
-		}
-	}
+	// if (_method == "POST" && _stat_code_no == 200) {
+	// 	if (!_body.empty()) {
+	// 		try {
+	// 			processBody(_body);
+	// 			if (_stat_code_no == 200)
+	// 				_stat_code_no = 201;
+	// 		} catch (const std::runtime_error& e) {
+	// 			std::cerr << "[DEBUG] Error processing body: " << e.what() << "\n";
+	// 			return;
+	// 		}
+	// 	}
+	// }
 
 	finalizeRequest();
 }

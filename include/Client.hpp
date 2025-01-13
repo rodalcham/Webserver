@@ -4,6 +4,7 @@
 #include "ServerBlock.hpp"
 #include <deque>
 #include <regex>
+#include <fstream>
 
 
 using std::string;
@@ -30,6 +31,8 @@ class Client
 	bool					is_receiving = false;
 	const ServerBlock		*_block;
 
+	string					_boundary;
+	std::ofstream			_outFile;
 
 	// PREVIOUS 
 	bool headers_parsed = false;
@@ -69,6 +72,9 @@ class Client
 	bool			isLastComplete();
 	bool 			headersParsed() const;
 	void 			setHeadersParsed(bool parsed);
+	int				processFile();
+	std::ofstream	&get_outFile();
+	string			&get_boundary();
 
 
 };

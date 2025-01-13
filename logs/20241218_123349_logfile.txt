@@ -1,2 +1,0 @@
-[20241218_123349] Server running in DEBUG mode.
-[20241218_123349] Server started

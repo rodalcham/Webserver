@@ -69,7 +69,7 @@ Server::~Server()
 /** 
  * This is the main server loop, using events to hande different situations and redirecting the program to the correct funtions
 */
-void Server::run()
+void	Server::run()
 {
 	while (keepRunning)
 	{
@@ -93,7 +93,7 @@ void Server::run()
 					acceptClient(event);
 				else
 				{
-					handleIncomingData(this->clients[event]);
+					msg_receive(this->clients[event]);
 				}
 			}
 			else if (eventList[i].filter == EVFILT_USER)
@@ -101,13 +101,7 @@ void Server::run()
 				debug("Custom Event");
 				if (event % 10 == 1)
 				{
-					HttpRequest		request(this->clients[event/10]);
-
-					HttpResponse	response(request);
-					this->clients[event/10].popRequest();
-					this->clients[event/10].queueResponse(response.returnResponse());
-					this->postEvent(event/10, 2);
-					// response.respDebug();
+					processRequest(this->clients[event/10]);
 				}
 				else if (event % 10 == 2)
 					msg_send(this->clients[event/10], 0);
@@ -122,7 +116,61 @@ void Server::run()
 	}
 }
 
-void Server::acceptClient(int server_sock)
+void	Server::processRequest(Client &client)
+{
+	string&	req = client.getRequest();
+	if (req.find("HTTP") != std::string::npos)
+	{
+		HttpRequest		request(client);
+
+		if (request.getMethod() == "POST")
+		{
+			string filename = request.getHeader("Filename");
+			if (filename.empty())
+				request.setStatusCode(200); // Check
+			client.get_outFile().open(filename, std::ios::binary);
+			if (!client.get_outFile().is_open())
+				request.setStatusCode(500); // Check
+			string contentType = request.getHeader("Content-Type");
+			std::regex boundaryRegex("boundary=([a-zA-Z0-9'-]+)");
+			std::smatch match;
+			if (std::regex_search(contentType, match, boundaryRegex) && match.size() > 1)
+			{
+				client.get_boundary() = "--" + match[1].str();
+			}
+			else
+				request.setStatusCode(500); // Check
+			client.isSending() = true; // Used?
+		}
+
+		HttpResponse	response(request);
+
+		client.queueResponse(response.returnResponse());
+		this->postEvent(client.getSocket(), 2);
+	}
+	else
+	{
+		int status = client.processFile();
+		if (status)
+		{
+			client.isSending() = false;
+			string response;
+			client.get_outFile().close();
+			if (!client.get_outFile() || status < 0)
+			{
+				//create upload failed response
+				response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 15\r\n\r\nUpload failed.\r\n";
+			}
+			//create upload complete response
+			response = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 20\r\n\r\nUpload successful.\r\n";
+			client.queueResponse(response);
+			this->postEvent(client.getSocket(), 2);
+		}
+	}
+	client.popRequest();
+}
+
+void	Server::acceptClient(int server_sock)
 {
 	int clientSock = accept(server_sock, nullptr, nullptr);
 	if (clientSock < 0) {
@@ -180,27 +228,20 @@ std::string Server::getMimeType(const std::string& filePath)
 
 	return "application/octet-stream";
 }
-void Server::handleIncomingData(Client &client)
-{
-	msg_receive(client);
-}
 
 void Server::removeClient(Client &client)
 {
 	struct kevent event;
 
+	debug("Removing Client " + std::to_string(client.getSocket()));
 	EV_SET(&event, client.getSocket(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	kevent(this->kq, &event, 1, NULL, 0, NULL);
 	if (client.isReceiving())
 	{
 		disable_write_listen(client.getSocket());
 	}
-	if (client.isSending())
-	{
-		//close and delete the file being sent
-	}
-	this->clients.erase(client.getSocket());
 	close(client.getSocket());
+	this->clients.erase(client.getSocket());
 }
 
 

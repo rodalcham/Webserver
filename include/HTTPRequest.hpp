@@ -25,7 +25,6 @@ public:
 	// CONSTRUCTORS
 	HttpRequest();
 	HttpRequest(Client &client);
-	HttpRequest(const std::string& request, const ServerBlock *requestBlock);
 	~HttpRequest();
 
 	// GETTERS
@@ -51,11 +50,6 @@ public:
 	std::string							parseHttpMethod(const std::string& methodStr);
 	std::map<std::string, std::string>	parseHeaders(std::istringstream& requestStream);
 	void 								headersGood();
-	void 								parseMultipartFilename();
-	// void 								validateHeaders();
-	void 								processBody(const std::string& body);
-	void 								finalizeRequest();
-	std::string 						unchunkBody(const std::string& body);
-	void 								parseBody(Client& client);
+
 
 };

@@ -98,13 +98,16 @@ void	Server::run()
 			}
 			else if (eventList[i].filter == EVFILT_USER)
 			{
-				debug("Custom Event");
 				if (event % 10 == 1)
 				{
+					debug("Process Event");
 					processRequest(this->clients[event/10]);
 				}
 				else if (event % 10 == 2)
+				{
+					debug("Send Event");
 					msg_send(this->clients[event/10], 0);
+				}
 				this->removeEvent(event);
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
@@ -118,6 +121,8 @@ void	Server::run()
 
 void	Server::processRequest(Client &client)
 {
+	if (!client.hasRequest())
+		return;
 	string&	req = client.getRequest();
 	if (req.find("HTTP") != std::string::npos)
 	{
@@ -146,10 +151,17 @@ void	Server::processRequest(Client &client)
 		HttpResponse	response(request);
 		
 		if (request.getMethod()=="POST") //temp
-			client.queueResponse(request.getContinueResponse());
+		{
+			// debug("Sending 100 CONTINUE");
+			// client.queueResponse(request.getContinueResponse());
+		}
 		else
+		{
 			client.queueResponse(response.returnResponse());
-		this->postEvent(client.getSocket(), 2);
+			this->postEvent(client.getSocket(), 2); //TEMP
+
+		}
+		// this->postEvent(client.getSocket(), 2);
 	}
 	else
 	{
@@ -162,13 +174,19 @@ void	Server::processRequest(Client &client)
 			if (!client.get_outFile() || status < 0)
 			{
 				//create upload failed response
-				response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 15\r\n\r\nUpload failed.\r\n";
+				response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n";
 			}
 			//create upload complete response
-			response = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 20\r\n\r\nUpload successful.\r\n";
+			response = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\nUpload successful.\r\n";
 			client.queueResponse(response);
 			this->postEvent(client.getSocket(), 2);
 		}
+		// else
+		// {
+		// 	string	response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 4\r\n\r\nOK\r\n";
+		// 	client.queueResponse(response);
+		// 	this->postEvent(client.getSocket(), 2);
+		// }
 	}
 	client.popRequest();
 }

@@ -173,58 +173,117 @@ size_t Client::parseRequest(char* buffer, int bytesRead)
 
 void	Client::queueRequest(string request)
 {
-	debug("New Request added to client : ");
-	debug(request);
 	this->requests.push_back(request);
 }
 
 void	Client::appendRequest(string request)
 {
-	debug("Line appended to previous request");
-	debug(request);
 	this->requests.back().append(request);
 }
 
-int	Client::processFile()
-{
-	string	*req = &this->requests.front();
+// int	Client::processFile()
+// {
+// 	string	*req = &this->requests.front();
 
-	string	boundaryPrefix = "--" + this->_boundary + "\r\n";
-	string	boundarySufix = "--" + this->_boundary + "--\r\n";
+// 	debug("CHUNK : ");
+// 	debug(*req);
 
-	string	endBoundary;
+// 	string	boundaryPrefix = "--" + this->_boundary + "\r\n";
+// 	string	boundarySufix = "--" + this->_boundary + "--\r\n";
 
-	if (req->substr(0, boundaryPrefix.length()) != boundaryPrefix)
-		return -1;
+// 	string	endBoundary;
 
-	if (req->substr(req->length() - boundaryPrefix.length()) == boundaryPrefix)
-		endBoundary = boundaryPrefix;
-	else if (req->substr(req->length() - boundarySufix.length()) == boundarySufix)
-		endBoundary = boundarySufix;
-	else
-		return -1;
+// 	if (req->substr(0, boundaryPrefix.length()) != boundaryPrefix)
+// 		return -1;
 
-	string	content = req->substr(boundaryPrefix.length(), req->length() - endBoundary.length());
+// 	if (req->substr(req->length() - boundaryPrefix.length()) == boundaryPrefix)
+// 		endBoundary = boundaryPrefix;
+// 	else if (req->substr(req->length() - boundarySufix.length()) == boundarySufix)
+// 		endBoundary = boundarySufix;
+// 	else
+// 		return -1;
 
-	content = content.substr(content.find("\r\n\r\n") + 4);
+// 	string	content = req->substr(boundaryPrefix.length(), req->length() - endBoundary.length());
 
-	if (!this->_outFile || !this->_outFile.is_open())
-		return -1;
-	debug("Writing into file...");
-	this->_outFile << content;
-	if (!this->_outFile)
-		return -1;
+// 	// debug(content);
+// 	content = content.substr(content.find("\r\n\r\n") + 4);
 
-	if (endBoundary == boundarySufix)
-		return 1;
+// 	if (!this->_outFile || !this->_outFile.is_open())
+// 		return -1;
+// 	debug("Writing into file...");
+// 	this->_outFile << content;
+// 	if (!this->_outFile)
+// 		return -1;
+
+// 	if (endBoundary == boundarySufix)
+// 		return 1;
 	
-	// if (this->requests.size() > 1)
-	// 	this->requests.at(1) = boundaryPrefix + this->requests.at(1);
-	// else
-	// this->requests.push_back(boundaryPrefix);
+// 	// if (this->requests.size() > 1)
+// 	// 	this->requests.at(1) = boundaryPrefix + this->requests.at(1);
+// 	// else
+// 	// this->requests.push_back(boundaryPrefix);
 
-	return (0);
+// 	return (0);
+// }
+
+int Client::processFile()
+{
+    string *req = &this->requests.front();
+
+    // debug("CHUNK : ");
+    // debug(*req);
+
+    string boundaryPrefix = "--" + this->_boundary + "\r\n";
+    string boundarySuffix = "--" + this->_boundary + "--\r\n";
+    string *endBoundary;
+
+    // Ensure that the chunk begins with the correct boundary prefix
+    if (req->substr(0, boundaryPrefix.length()) != boundaryPrefix)
+        return -1;
+
+    // Check if the chunk ends with a boundary prefix or suffix
+    if (req->substr(req->length() - boundaryPrefix.length()) == boundaryPrefix)
+        endBoundary = &boundaryPrefix;
+    else if (req->substr(req->length() - boundarySuffix.length()) == boundarySuffix)
+	{
+		debug("LAST CHUNK RECEIVED");
+        endBoundary = &boundarySuffix;
+	}
+    else
+        return -1;
+
+    // Extract the content of the chunk, excluding the boundary markers
+    string content = req->substr(boundaryPrefix.length(), req->length());
+	content = content.substr(0, content.length() - endBoundary->length());
+	content = content.substr(0, content.length() - 2);
+
+    // Remove the multipart headers (if they exist)
+    size_t headerEndPos = content.find("\r\n\r\n");
+    if (headerEndPos != string::npos) {
+        content = content.substr(headerEndPos + 4); // Skip past the headers
+    }
+
+    // Open the file for writing if it's not already open
+    if (!this->_outFile || !this->_outFile.is_open())
+        return -1;
+
+    debug("Writing into file...");
+
+    // Write the extracted content (this is the file data) into the file
+	// debug(content);
+    this->_outFile << content;
+
+    // Check if the file was successfully written
+    if (!this->_outFile)
+        return -1;
+
+    // If the chunk ends with the final boundary, return 1 to signal completion
+    if (*endBoundary == boundarySuffix)
+        return 1;
+
+    return 0;
 }
+
 
 
 /*
@@ -297,6 +356,8 @@ bool	Client::isLastComplete()
 		{
 			if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
 				this->queueRequest(boundaryPrefix);
+			else
+				debug("LAST CHUNK RECEIVED");
 			return true;
 		}
 		else

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -124,9 +124,9 @@
         });
     </script>
 </body>
-</html>
+</html> -->
 
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -165,15 +165,11 @@
   </div>
   <button onclick="addComment()">Submit Comment</button>
   <h2>Upload File (Chunked)</h2>
-  <!--
-       We keep a "form-like" structure for user convenience, but we will NOT use
-       the default submit. Instead, we'll handle the chunked upload via JavaScript.
-  -->
+  We keep a "form-like" structure for user convenience, but we will NOT use the default submit. Instead, we'll handle the chunked upload via JavaScript.
   <div>
     <input type="file" id="fileInput" name="file" />
     <button onclick="uploadFileChunked()">Upload in Chunks</button>
   </div>
-  <!-- Progress/Status area (optional) -->
   <div id="uploadStatus"></div>
   <h2>Comments</h2>
   <div id="commentsContainer" class="comment-section"></div>
@@ -222,68 +218,76 @@
       sessionStorage.setItem('comments', JSON.stringify(comments));
       window.location.href = 'log.html';
     }
+
     // ------------------------------
     //   CHUNKED UPLOAD FUNCTION
     // ------------------------------
-    // Change this endpoint to the actual server route that handles chunked uploads.
-    const uploadEndpoint = "/upload-chunk";
-    // Adjust this chunk size to suit your needs (e.g., 1MB = 1024*1024)
-    const CHUNK_SIZE = 1024 * 512; // 512 KB for demo
+    const uploadEndpoint = "/upload-chunk"; // Adjust this to your actual server endpoint
+    const CHUNK_SIZE = 1024 * 256; // 512 KB for demo
+    let offset = 0;
+    let file;
+    let totalSize;
+    let fileName;
+
     function uploadFileChunked() {
-      const fileInput = document.getElementById('fileInput');
+      const fileInput = document.getElementById("fileInput");
       if (!fileInput.files.length) {
         alert("Please select a file before uploading.");
         return;
       }
-      const file = fileInput.files[0];
-      let offset = 0;
-      const totalSize = file.size;
-      const statusDiv = document.getElementById('uploadStatus');
-      statusDiv.innerHTML = `Uploading "${file.name}" in chunks...`;
-      // Read and upload the next chunk:
-      function uploadNextChunk() {
-        const chunk = file.slice(offset, offset + CHUNK_SIZE);
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          try {
-            const chunkData = e.target.result; // ArrayBuffer
-            // Prepare form data
-            const formData = new FormData();
-            // We'll include chunk number, file name, etc.
-            formData.append('fileChunk', new Blob([chunkData]), file.name);
-            formData.append('chunkStart', offset);
-            formData.append('chunkEnd', offset + CHUNK_SIZE);
-            formData.append('totalSize', totalSize);
-            formData.append('fileName', file.name);
-            // Send the chunk to the server
-            const response = await fetch(uploadEndpoint, {
-              method: "POST",
-              body: formData
-            });
-            if (!response.ok) {
-              throw new Error(`Server error: ${response.statusText}`);
-            }
-            // Move on to the next chunk
-            offset += CHUNK_SIZE;
-            const percent = Math.min(((offset / totalSize) * 100).toFixed(2), 100);
-            statusDiv.innerHTML = `Uploading "${file.name}"... ${percent}%`;
-            // If there's still more file left, continue uploading
-            if (offset < totalSize) {
-              uploadNextChunk();
-            } else {
-              statusDiv.innerHTML = `Upload complete for "${file.name}"!`;
-            }
-          } catch (error) {
-            console.error("Chunk upload error:", error);
-            statusDiv.innerHTML = `Error uploading file: ${error.message}`;
-          }
-        };
-        // Read the chunk as an ArrayBuffer
-        reader.readAsArrayBuffer(chunk);
+
+      file = fileInput.files[0];
+      totalSize = file.size;
+      fileName = file.name;
+      const statusDiv = document.getElementById("uploadStatus");
+      statusDiv.innerHTML = `Preparing to upload "${file.name}"...`;
+
+      offset = 0; // Reset offset for each new upload
+
+      // Send a single POST request with all chunks
+      sendChunks();
+    }
+
+    // Function to send all chunks in one request
+    async function sendChunks() {
+      const statusDiv = document.getElementById("uploadStatus");
+      const formData = new FormData();
+      const headers = new Headers();
+
+      // Add metadata to headers
+      headers.append("fileName", fileName);
+      headers.append("totalSize", totalSize);
+
+      // Loop through file and append chunks to FormData
+      while (offset < totalSize) {
+        const start = offset;
+        const end = Math.min(start + CHUNK_SIZE, totalSize);
+        const chunk = file.slice(start, end);
+
+        if (chunk.size > 0) { // Only append file chunks that contain data
+          formData.append("fileChunk", chunk, file.name);
+        }
+
+        offset += CHUNK_SIZE; // Update offset for the next chunk
       }
-      // Start the upload
-      uploadNextChunk();
+
+      // Send the entire file and its chunks in a single POST request
+      try {
+        const response = await fetch(uploadEndpoint, {
+          method: "POST",
+          headers: headers, // Metadata in headers
+          body: formData,   // All file chunks in the body
+        });
+
+        if (response.ok) {
+          statusDiv.innerHTML = `Upload complete for "${file.name}"!`;
+        } else {
+          statusDiv.innerHTML = `Failed to upload: ${response.statusText}`;
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `Error uploading file: ${error.message}`;
+      }
     }
   </script>
 </body>
-</html> -->
+</html>

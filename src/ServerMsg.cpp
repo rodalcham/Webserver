@@ -77,7 +77,7 @@ void		Server::msg_send(Client &client, int mode)
 
 	string	*msg =&client.getResponse();
 	// cout << "SENDING : " << *msg << "\n";
-	debug("Sending message to client : " + std::to_string(client.getSocket()) + "\n" + *msg);
+	debug("Sending message to client : " + *msg);
 	while (!msg->empty())
 	{
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);
@@ -128,7 +128,7 @@ string	extractLine(char buffer[], size_t bufferSize)
 
 void Server::msg_receive(Client& client)
 {
-	char	buffer[4096];
+	char	buffer[40960];
 	size_t	bytes_read = recv(client.getSocket(), buffer, sizeof(buffer), 0);
 	size_t	pos;
 	string	temp;
@@ -148,6 +148,7 @@ void Server::msg_receive(Client& client)
 	while (pos < bytes_read)
 	{
 		temp = extractLine(buffer + pos, bytes_read - pos);
+		// debug("Received : " + temp);
 		pos += temp.length();
 		if (!client.hasRequest())
 		{
@@ -166,7 +167,7 @@ void Server::msg_receive(Client& client)
 		}
 		if (client.isLastComplete())
 		{
-			debug("Request Added Succesfully from Client " + std::to_string(client.getSocket()));
+			// debug("Request Added Succesfully from Client " + std::to_string(client.getSocket()));
 			this->postEvent(client.getSocket(), 1);
 		}
 	}

@@ -313,12 +313,12 @@ void Server::executeCGI(Client &client, const std::string &cgiPath, const HttpRe
 		throw std::runtime_error("Failed to create pipes for CGI");
 	}
 
-	pid_t pid = fork();
-	if (pid < 0) {
+	client.setPid(fork());
+	if (client.getPid() < 0) {
 		throw std::runtime_error("Failed to fork CGI process");
 	}
 
-	if (pid == 0) { // Child process
+	if (client.getPid() == 0) { // Child process
 		close(cgiInput[1]); // Close unused write end
 		close(cgiOutput[0]); // Close unused read end
 

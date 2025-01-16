@@ -33,6 +33,7 @@ class Client
 
 	string					_boundary;
 	std::ofstream			_outFile;
+	pid_t				pid;
 
 	// PREVIOUS 
 	bool headers_parsed = false;
@@ -61,6 +62,9 @@ class Client
 
     int getCGIInputFd() const;
     int getCGIOutputFd() const;
+	pid_t getPid() const;
+	void setPid(pid_t newPid);
+
 
 // PREVIOUS 
 	// Partial Request Management

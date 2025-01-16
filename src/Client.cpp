@@ -318,3 +318,13 @@ void Client::setCGIPipes(int inputFd, int outputFd) {
 
 int Client::getCGIInputFd() const { return cgiInputFd; }
 int Client::getCGIOutputFd() const { return cgiOutputFd; }
+
+// Getter
+pid_t Client::getPid() const {
+    return pid;
+}
+
+// Setter
+void Client::setPid(pid_t newPid) {
+    pid = newPid;
+}

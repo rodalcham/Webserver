@@ -77,7 +77,7 @@ void		Server::msg_send(Client &client, int mode)
 
 	string	*msg =&client.getResponse();
 	// cout << "SENDING : " << *msg << "\n";
-	debug("Sending message to client : " + *msg);
+	// debug("Sending message to client : " + *msg);
 	while (!msg->empty())
 	{
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);
@@ -148,7 +148,7 @@ void Server::msg_receive(Client& client)
 	while (pos < bytes_read)
 	{
 		temp = extractLine(buffer + pos, bytes_read - pos);
-		// debug("Received : " + temp);
+		debug("Received : " + temp);
 		pos += temp.length();
 		if (!client.hasRequest())
 		{

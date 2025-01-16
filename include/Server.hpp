@@ -40,9 +40,10 @@ class Server {
 	int 						kq;
 	std::map<int, Client>		clients;
 
-	void acceptClient(int server_sock);
-	void removeClient(Client &client);
-	void executeCGI(Client &client, const std::string &cgiPath, const HttpRequest &request);
+	void	acceptClient(int server_sock);
+	void	removeClient(Client &client);
+	void	executeCGI(Client &client, const std::string &cgiPath, const HttpRequest &request);
+	void	sendCGIOutput(Client &client);
  
 	// void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 

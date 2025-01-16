@@ -76,8 +76,8 @@ void		Server::msg_send(Client &client, int mode)
 	}
 
 	string	*msg =&client.getResponse();
-	// cout << "SENDING : " << *msg << "\n";
-	// debug("Sending message to client : " + *msg);
+	debug("Sending message to client : " + *msg);
+	// debug("Size : " + std::to_string(msg->size()));
 	while (!msg->empty())
 	{
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);
@@ -86,12 +86,14 @@ void		Server::msg_send(Client &client, int mode)
 			msg->erase(0, bytes);
 			if (msg->empty())
 			{
+				// debug("Message now empty");
 				client.popResponse();
 				if (mode)
 				{
 					disable_write_listen(client.getSocket());
 					client.isReceiving() = false;
 				}
+				return;
 			}
 		}
 		else if (errno == EAGAIN || errno == EWOULDBLOCK) //WRONG !!!!!!!!!

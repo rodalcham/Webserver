@@ -98,7 +98,7 @@ void	Server::run()
 				else
 				{
 					Client& client = *reinterpret_cast<Client*>(eventList[i].udata);
-					debug("Here we would send the response to client : " + std::to_string(client.getSocket()));
+					sendCGIOutput(client);
 				}
 			}
 			else if (eventList[i].filter == EVFILT_USER)
@@ -342,3 +342,75 @@ void Server::executeCGI(Client &client, const std::string &cgiPath, const HttpRe
 		client.setCGIPipes(cgiInput[1], cgiOutput[0]);
 	}
 }
+
+void Server::sendCGIOutput(Client &client)
+{
+	int status;
+	pid_t ret;
+
+	ret = waitpid(client.getPid(), &status, WNOHANG);
+	if (ret == 0)
+	{
+		return; // CGI process is still running
+	}
+	else if (ret == client.getPid())
+	{
+		struct kevent event;
+		
+		// Remove the event from the kqueue
+		EV_SET(&event, client.getCGIOutputFd(), EVFILT_READ, EV_DELETE, 0, 0, nullptr);
+		if (kevent(this->kq, &event, 1, nullptr, 0, nullptr) < 0)
+		{
+			throw std::runtime_error("Failed to remove CGI output from kqueue");
+		}
+		if (WIFEXITED(status))
+		{
+			std::string response;
+			char buffer[2048];
+			ssize_t bytesRead = read(client.getCGIOutputFd(), buffer, sizeof(buffer));
+			
+			// Check for read error or empty output
+			if (bytesRead < 0)
+			{
+				throw std::runtime_error("Failed to read CGI output");
+			}
+
+			// If there was no data, it's a failure
+			std::string output;
+			if (bytesRead > 0)
+			{
+				output.append(buffer, bytesRead); // Append the output from the pipe
+			}
+
+			// Build the HTTP response
+			if (output.empty())
+			{
+				response = "HTTP/1.1 500 Internal Server Error\r\n";
+			}
+			else
+			{
+				response = "HTTP/1.1 200 OK\r\n";
+				response += "Content-Length: " + std::to_string(output.size()) + "\r\n";
+				response += "\r\n"; // End of headers
+				response.append(output); // Append the CGI output
+				response.append("\r\n");
+			}
+			response.append("\0");
+			client.queueResponse(response);
+			this->postEvent(client.getSocket(), 2);
+
+			// Close the pipes after processing the output
+			close(client.getCGIInputFd());
+			close(client.getCGIOutputFd());
+		}
+		else
+		{
+			throw std::runtime_error("Child Process Failed");
+		}
+	}
+	else
+	{
+		throw std::runtime_error("Failed Waitpid");
+	}
+}
+

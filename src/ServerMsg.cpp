@@ -114,23 +114,27 @@ void		Server::msg_send(Client &client, int mode)
 	}
 }
 
-string	extractLine(char buffer[], size_t bufferSize)
+
+string extractLine(char buffer[], ssize_t bufferSize)
 {
-	for (size_t i = 0; i < bufferSize; i++)
-	{
-		if (buffer[i] == '\n')
-		{
-			return std::string(buffer, i + 1);
-		}
-	}
-	return std::string(buffer, bufferSize);
+    for (ssize_t i = 0; i < bufferSize; i++)
+    {
+        if (buffer[i] == '\n')
+        {
+            return std::string(buffer, i + 1);  // Ensures the string ends with the newline
+        }
+    }
+    // If no newline found, return the whole buffer up to the size
+    return std::string(buffer, bufferSize);  
 }
 
 void Server::msg_receive(Client& client)
 {
 	char	buffer[40960];
-	size_t	bytes_read = recv(client.getSocket(), buffer, sizeof(buffer), 0);
-	size_t	pos;
+	memset(buffer, 0, sizeof(buffer));
+	ssize_t	bytes_read = recv(client.getSocket(), buffer, sizeof(buffer), 0);
+	debug("Bytes read: " + std::to_string(bytes_read));
+	ssize_t	pos;
 	string	temp;
 	
 	if (bytes_read < 0)
@@ -148,7 +152,7 @@ void Server::msg_receive(Client& client)
 	while (pos < bytes_read)
 	{
 		temp = extractLine(buffer + pos, bytes_read - pos);
-		debug("Received : " + temp);
+		// debug("Received : " + temp);
 		pos += temp.length();
 		if (!client.hasRequest())
 		{

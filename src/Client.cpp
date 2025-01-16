@@ -1,6 +1,6 @@
 #include "../include/Client.hpp"
 
-Client::Client() : clientSock(-2)
+Client::Client() : clientSock(-3)
 {
 
 }

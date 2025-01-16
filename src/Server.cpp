@@ -91,9 +91,14 @@ void	Server::run()
 				debug("Read Event");
 				if (this->_server_sockets.find(event) != this->_server_sockets.end())
 					acceptClient(event);
-				else
+				else if(this->clients.find(event) != this->clients.end())
 				{
 					msg_receive(this->clients[event]);
+				}
+				else
+				{
+					Client& client = *reinterpret_cast<Client*>(eventList[i].udata);
+					debug("Here we would send the response to client : " + std::to_string(client.getSocket()));
 				}
 			}
 			else if (eventList[i].filter == EVFILT_USER)
@@ -118,48 +123,38 @@ void	Server::run()
 		}
 	}
 }
+
 bool isCGIRequest(const HttpRequest &request) {
-    // Define CGI-related paths
-    const std::vector<std::string> cgiPaths = {"/cgi/", "/cgi-bin/"};
+	// Define CGI-related paths
+	const std::vector<std::string> cgiPaths = {"/cgi/", "/cgi-bin/"};
 
-    // Get the URI from the request
-    const std::string &uri = request.getUri();
+	// Get the URI from the request
+	const std::string &uri = request.getUri();
 
-    // Check if the URI matches any CGI path
-    for (const std::string &cgiPath : cgiPaths) {
-        if (uri.find(cgiPath) == 0) { // Starts with the CGI path
-            return true;
-        }
-    }
+	// Check if the URI matches any CGI path
+	for (const std::string &cgiPath : cgiPaths) {
+		if (uri.find(cgiPath) == 0) { // Starts with the CGI path
+			return true;
+		}
+	}
 
-    return false;
+	return false;
 }
 
 std::string resolveCGIPath(const std::string &uri) {
-    // Define CGI root directories
-    const std::string cgiRoot = "www/cgi";
-    const std::string cgiBinRoot = "www/cgi-bin";
+	const std::string cgiRoot = "www/cgi/";
+	const std::string cgiBinRoot = "www/cgi-bin/";
 
-    // Remove query parameters from URI, if any
-    size_t queryPos = uri.find('?');
-    std::string cleanUri = (queryPos != std::string::npos) ? uri.substr(0, queryPos) : uri;
+	size_t queryPos = uri.find('?');
+	std::string cleanUri = (queryPos != std::string::npos) ? uri.substr(0, queryPos) : uri;
 
-    // Map URI to file path
-    std::string cgiPath;
-    if (cleanUri.find("/cgi/") == 0) {
-        cgiPath = cgiRoot + cleanUri.substr(4); // Remove "/cgi/" prefix
-    } else if (cleanUri.find("/cgi-bin/") == 0) {
-        cgiPath = cgiBinRoot + cleanUri.substr(9); // Remove "/cgi-bin/" prefix
-    } else {
-        throw std::runtime_error("Invalid CGI path: " + uri);
-    }
-
-    // Validate the existence of the file
-    if (access(cgiPath.c_str(), F_OK) != 0) {
-        throw std::runtime_error("CGI script not found: " + cgiPath);
-    }
-
-    return cgiPath;
+	if (cleanUri.find("/cgi/") == 0) {
+		return cgiRoot + cleanUri.substr(5);  // Remove "/cgi/" prefix
+	} else if (cleanUri.find("/cgi-bin/") == 0) {
+		return cgiBinRoot + cleanUri.substr(9);  // Remove "/cgi-bin/" prefix
+	} else {
+		throw std::runtime_error("Invalid CGI path: " + uri);
+	}
 }
 
 
@@ -171,12 +166,12 @@ void	Server::processRequest(Client &client)
 	if (req.find("HTTP") != std::string::npos)
 	{
 		HttpRequest		request(client);
-    	if (isCGIRequest(request))
+		if (isCGIRequest(request))
 		{
 			executeCGI(client, resolveCGIPath(request.getUri()), request);
-        	return;
-    	}
-		if (request.getMethod() == "POST")
+			return;
+		}
+		else if (request.getMethod() == "POST")
 		{
 			string filename = request.getHeader("filename");
 			if (filename.empty())
@@ -269,7 +264,6 @@ void	Server::acceptClient(int server_sock)
 		+ "\nThrough host : " + this->_server_sockets[server_sock]->getHostName());
 }
 
-
 std::string Server::readFile(const std::string& filePath)
 {
 	std::ifstream file(filePath, std::ios::binary);
@@ -313,38 +307,38 @@ void Server::removeClient(Client &client)
 	this->clients.erase(client.getSocket());
 }
 void Server::executeCGI(Client &client, const std::string &cgiPath, const HttpRequest &request) {
-    (void)request;
+	(void)request;
 	int cgiInput[2], cgiOutput[2];
-    if (pipe(cgiInput) < 0 || pipe(cgiOutput) < 0) {
-        throw std::runtime_error("Failed to create pipes for CGI");
-    }
+	if (pipe(cgiInput) < 0 || pipe(cgiOutput) < 0) {
+		throw std::runtime_error("Failed to create pipes for CGI");
+	}
 
-    pid_t pid = fork();
-    if (pid < 0) {
-        throw std::runtime_error("Failed to fork CGI process");
-    }
+	pid_t pid = fork();
+	if (pid < 0) {
+		throw std::runtime_error("Failed to fork CGI process");
+	}
 
-    if (pid == 0) { // Child process
-        close(cgiInput[1]); // Close unused write end
-        close(cgiOutput[0]); // Close unused read end
+	if (pid == 0) { // Child process
+		close(cgiInput[1]); // Close unused write end
+		close(cgiOutput[0]); // Close unused read end
 
-        dup2(cgiInput[0], STDIN_FILENO);  // Redirect CGI input
-        dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
+		dup2(cgiInput[0], STDIN_FILENO);  // Redirect CGI input
+		dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
 
-        execl(cgiPath.c_str(), cgiPath.c_str(), NULL); // Execute CGI script
-        _exit(1); // If exec fails
-    } else { // Parent process
-        close(cgiInput[0]);  // Close unused read end
-        close(cgiOutput[1]); // Close unused write end
+		execl(cgiPath.c_str(), cgiPath.c_str(), NULL); // Execute CGI script
+		_exit(1); // If exec fails
+	} else { // Parent process
+		close(cgiInput[0]);  // Close unused read end
+		close(cgiOutput[1]); // Close unused write end
 
-        // Add the output pipe to the kqueue
-        struct kevent event;
-        EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
-        if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
-            throw std::runtime_error("Failed to add CGI output to kqueue");
-        }
+		// Add the output pipe to the kqueue
+		struct kevent event;
+		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
+		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
+			throw std::runtime_error("Failed to add CGI output to kqueue");
+		}
 
-        // Store CGI-related file descriptors in the client
-        client.setCGIPipes(cgiInput[1], cgiOutput[0]);
-    }
+		// Store CGI-related file descriptors in the client
+		client.setCGIPipes(cgiInput[1], cgiOutput[0]);
+	}
 }

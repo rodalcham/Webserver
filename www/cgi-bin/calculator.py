@@ -44,7 +44,7 @@ else:
     result = calculate(num1, num2, operator)
 
     # Return the result as an HTML response
-    print("<html><body>")
-    print("<h1>Calculator Result</h1>")
-    print(f"<p>{num1} {operator} {num2} = {result}</p>")
-    print("</body></html>")
+    print("<html><body>\r\n")
+    print("<h1>Calculator Result</h1>\r\n")
+    print(f"<p>{num1} {operator} {num2} = {result}</p>\r\n")
+    print("</body></html>\r\n\r\n\0")

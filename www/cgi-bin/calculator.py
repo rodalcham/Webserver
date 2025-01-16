@@ -3,25 +3,28 @@
 import cgi
 import cgitb
 
+# Enable debugging
+cgitb.enable()
+
 def calculate(num1, num2, operator):
     try:
         num1 = float(num1)
         num2 = float(num2)
 
         if operator == '+':
-            return num1 + num2
+            return f"{num1 + num2}\0"
         elif operator == '-':
-            return num1 - num2
+            return f"{num1 - num2}\0"
         elif operator == '*':
-            return num1 * num2
+            return f"{num1 * num2}\0"
         elif operator == '/':
             if num2 == 0:
-                return "Error: Division by zero"
-            return num1 / num2
+                return "Error: Division by zero\0"
+            return f"{num1 / num2}\0"
         else:
-            return "Error: Unsupported operator"
+            return "Error: Unsupported operator\0"
     except ValueError:
-        return "Error: Invalid input"
+        return "Error: Invalid input\0"
 
 # Output HTTP headers
 print("Content-Type: text/html")

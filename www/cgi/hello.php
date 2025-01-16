@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 echo "Content-Type: text/html\n\n";
 

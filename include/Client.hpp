@@ -30,8 +30,6 @@ class Client
 	bool					is_sending = false;
 	bool					is_receiving = false;
 	const ServerBlock		*_block;
-	int cgiInputFd;   // For writing to CGI process
-    int cgiOutputFd;  // For reading from CGI process
 
 	string					_boundary;
 	std::ofstream			_outFile;
@@ -44,6 +42,8 @@ class Client
 	std::string partialRequestBody;        // Body for partial requests
 	public : 
 
+	int cgiInputFd;   // For writing to CGI process
+    int cgiOutputFd;  // For reading from CGI process
 	Client();
 	Client(int clientSock, const ServerBlock *block);
 

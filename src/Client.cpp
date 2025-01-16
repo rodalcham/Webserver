@@ -181,51 +181,6 @@ void	Client::appendRequest(string request)
 	this->requests.back().append(request);
 }
 
-// int	Client::processFile()
-// {
-// 	string	*req = &this->requests.front();
-
-// 	debug("CHUNK : ");
-// 	debug(*req);
-
-// 	string	boundaryPrefix = "--" + this->_boundary + "\r\n";
-// 	string	boundarySufix = "--" + this->_boundary + "--\r\n";
-
-// 	string	endBoundary;
-
-// 	if (req->substr(0, boundaryPrefix.length()) != boundaryPrefix)
-// 		return -1;
-
-// 	if (req->substr(req->length() - boundaryPrefix.length()) == boundaryPrefix)
-// 		endBoundary = boundaryPrefix;
-// 	else if (req->substr(req->length() - boundarySufix.length()) == boundarySufix)
-// 		endBoundary = boundarySufix;
-// 	else
-// 		return -1;
-
-// 	string	content = req->substr(boundaryPrefix.length(), req->length() - endBoundary.length());
-
-// 	// debug(content);
-// 	content = content.substr(content.find("\r\n\r\n") + 4);
-
-// 	if (!this->_outFile || !this->_outFile.is_open())
-// 		return -1;
-// 	debug("Writing into file...");
-// 	this->_outFile << content;
-// 	if (!this->_outFile)
-// 		return -1;
-
-// 	if (endBoundary == boundarySufix)
-// 		return 1;
-	
-// 	// if (this->requests.size() > 1)
-// 	// 	this->requests.at(1) = boundaryPrefix + this->requests.at(1);
-// 	// else
-// 	// this->requests.push_back(boundaryPrefix);
-
-// 	return (0);
-// }
-
 int Client::processFile()
 {
     string *req = &this->requests.front();
@@ -285,35 +240,6 @@ int Client::processFile()
 }
 
 
-
-/*
-	if (is HTTP request)
-	{
-		if (headers are complete)
-		{
-			if (has content-length)
-			{
-				if (body is complete)
-					return true
-				else
-					return false
-			}
-			else
-				return true
-		}
-		else
-		{
-			return false
-		}
-	}
-	else
-	{
-		if (boundary at the end)
-			return true
-		else
-			return false
-	}
-*/
 bool	Client::isLastComplete()
 {
 	if (requests.empty())
@@ -384,3 +310,11 @@ bool	Client::hasRequest()
 {
 	return (!this->requests.empty());
 }
+
+void Client::setCGIPipes(int inputFd, int outputFd) {
+        cgiInputFd = inputFd;
+        cgiOutputFd = outputFd;
+    }
+
+int Client::getCGIInputFd() const { return cgiInputFd; }
+int Client::getCGIOutputFd() const { return cgiOutputFd; }

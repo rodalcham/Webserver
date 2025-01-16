@@ -30,6 +30,8 @@ class Client
 	bool					is_sending = false;
 	bool					is_receiving = false;
 	const ServerBlock		*_block;
+	int cgiInputFd;   // For writing to CGI process
+    int cgiOutputFd;  // For reading from CGI process
 
 	string					_boundary;
 	std::ofstream			_outFile;
@@ -55,6 +57,10 @@ class Client
 	bool				&isSending();
 	bool				&isReceiving();
 	size_t				parseRequest(char *buffer, int bytesRead);
+	void setCGIPipes(int inputFd, int outputFd);
+
+    int getCGIInputFd() const;
+    int getCGIOutputFd() const;
 
 // PREVIOUS 
 	// Partial Request Management

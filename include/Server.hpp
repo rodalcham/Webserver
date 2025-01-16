@@ -42,6 +42,8 @@ class Server {
 
 	void acceptClient(int server_sock);
 	void removeClient(Client &client);
+	void executeCGI(Client &client, const std::string &cgiPath, const HttpRequest &request);
+ 
 	// void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 
 	std::string readFile(const std::string& filePath); // Function to read static files

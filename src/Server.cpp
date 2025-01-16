@@ -118,6 +118,50 @@ void	Server::run()
 		}
 	}
 }
+bool isCGIRequest(const HttpRequest &request) {
+    // Define CGI-related paths
+    const std::vector<std::string> cgiPaths = {"/cgi/", "/cgi-bin/"};
+
+    // Get the URI from the request
+    const std::string &uri = request.getUri();
+
+    // Check if the URI matches any CGI path
+    for (const std::string &cgiPath : cgiPaths) {
+        if (uri.find(cgiPath) == 0) { // Starts with the CGI path
+            return true;
+        }
+    }
+
+    return false;
+}
+
+std::string resolveCGIPath(const std::string &uri) {
+    // Define CGI root directories
+    const std::string cgiRoot = "www/cgi";
+    const std::string cgiBinRoot = "www/cgi-bin";
+
+    // Remove query parameters from URI, if any
+    size_t queryPos = uri.find('?');
+    std::string cleanUri = (queryPos != std::string::npos) ? uri.substr(0, queryPos) : uri;
+
+    // Map URI to file path
+    std::string cgiPath;
+    if (cleanUri.find("/cgi/") == 0) {
+        cgiPath = cgiRoot + cleanUri.substr(4); // Remove "/cgi/" prefix
+    } else if (cleanUri.find("/cgi-bin/") == 0) {
+        cgiPath = cgiBinRoot + cleanUri.substr(9); // Remove "/cgi-bin/" prefix
+    } else {
+        throw std::runtime_error("Invalid CGI path: " + uri);
+    }
+
+    // Validate the existence of the file
+    if (access(cgiPath.c_str(), F_OK) != 0) {
+        throw std::runtime_error("CGI script not found: " + cgiPath);
+    }
+
+    return cgiPath;
+}
+
 
 void	Server::processRequest(Client &client)
 {
@@ -127,7 +171,11 @@ void	Server::processRequest(Client &client)
 	if (req.find("HTTP") != std::string::npos)
 	{
 		HttpRequest		request(client);
-
+    	if (isCGIRequest(request))
+		{
+			executeCGI(client, resolveCGIPath(request.getUri()), request);
+        	return;
+    	}
 		if (request.getMethod() == "POST")
 		{
 			string filename = request.getHeader("filename");
@@ -264,63 +312,39 @@ void Server::removeClient(Client &client)
 	close(client.getSocket());
 	this->clients.erase(client.getSocket());
 }
+void Server::executeCGI(Client &client, const std::string &cgiPath, const HttpRequest &request) {
+    (void)request;
+	int cgiInput[2], cgiOutput[2];
+    if (pipe(cgiInput) < 0 || pipe(cgiOutput) < 0) {
+        throw std::runtime_error("Failed to create pipes for CGI");
+    }
 
+    pid_t pid = fork();
+    if (pid < 0) {
+        throw std::runtime_error("Failed to fork CGI process");
+    }
 
-// void Server::handleIncomingData(Client &client)
-// {
-// 	msg_receive(client, 0);
-// 	if (client.hasPartialRequest())
-// 	{
-// 		HttpRequest &request = client.getPartialRequest();
-// 		debug("Request built, status code :" + std::to_string(request.getStatusCode()));
-// 		if (request.getStatusCode()== 100) 
-// 		{
-// 			client.queueResponse(request.getContinueResponse());
-// 			this->postEvent(client.getSocket(), 2);
-// 			request.setStatusCode(200); // Mark that we've handled the expect
-// 			return ;                     // Return now,
-// 				//wait for more data to arrive
-// 		}
-// 		// Outside of the if (request.getStatusCode() == 100) block:
-// 		if (client.hasPartialRequest())
-// 		{
-// 			HttpRequest &request = client.getPartialRequest();
-// 			if (client.headersParsed())
-// 			{
-// 				request.parseBody(client);
-// 				if (request.getStatusCode() == 201)
-// 				{
-// 					std::string resp = "HTTP/1.1 201 Created\r\nContent-Length:0\r\n\r\n"; // FIX
-// 					client.queueResponse(resp);
-// 					this->postEvent(client.getSocket(), 2);
-// 					client.clearPartialRequest();
-// 				}
-// 				else
-// 				{
-// 					HttpResponse	response(request);
+    if (pid == 0) { // Child process
+        close(cgiInput[1]); // Close unused write end
+        close(cgiOutput[0]); // Close unused read end
 
-// 					// response.respDebug();
+        dup2(cgiInput[0], STDIN_FILENO);  // Redirect CGI input
+        dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
 
+        execl(cgiPath.c_str(), cgiPath.c_str(), NULL); // Execute CGI script
+        _exit(1); // If exec fails
+    } else { // Parent process
+        close(cgiInput[0]);  // Close unused read end
+        close(cgiOutput[1]); // Close unused write end
 
-// 					client.queueResponse((response.returnResponse()));
-// 					this->postEvent(client.getSocket(), 2);
-// 				}
-// 			}
-// 		}
-// 		// else
-// 		// {
-// 		// 	HttpResponse	response(request);
-// 		// 	client.queueResponse((response.returnResponse()));
-// 		// 	this->postEvent(client.getSocket(), 2);
-// 		// }
+        // Add the output pipe to the kqueue
+        struct kevent event;
+        EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
+        if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
+            throw std::runtime_error("Failed to add CGI output to kqueue");
+        }
 
-// 	}
-// 	else
-// 	{
-// 		HttpRequest request(client);
-// 		cout << "Request :  " + client.getRequest() + "\n";
-// 		HttpResponse	response(request);
-// 		client.queueResponse((response.returnResponse()));
-// 		this->postEvent(client.getSocket(), 2);
-// 	}
-// }
+        // Store CGI-related file descriptors in the client
+        client.setCGIPipes(cgiInput[1], cgiOutput[0]);
+    }
+}

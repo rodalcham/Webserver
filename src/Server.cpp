@@ -130,10 +130,10 @@ void	Server::processRequest(Client &client)
 
 		if (request.getMethod() == "POST")
 		{
-			string filename = request.getHeader("Filename");
+			string filename = request.getHeader("filename");
 			if (filename.empty())
-				request.setStatusCode(200); // Check
-			client.get_outFile().open("./www/uploads/monica.jpg", std::ios::binary);//temp
+				request.setStatusCode(500); // Check
+			client.get_outFile().open("./www/uploads/" + filename, std::ios::binary);//temp
 			if (!client.get_outFile().is_open())
 				request.setStatusCode(500); // Check
 			string contentType = request.getHeader("Content-Type");

@@ -1,17 +1,24 @@
 #!/usr/bin/python3
+import sys
 import os
 import cgi
 import cgitb
-import sys
 
-# Enable debugging
+# Enable debugging to see tracebacks in the browser
 cgitb.enable()
+
 def parse_headers_and_body(input_data):
     """
-    Parses input data containing headers and body.
-    Extracts headers into environment variables and determines the body content.
+    Parses the input_data containing headers and body.
+    Extracts headers into environment variables and returns the body.
     """
-    headers, body = input_data.split("\r\n\r\n", 1)
+    # Split once on the blank line (\r\n\r\n) between headers and body
+    try:
+        headers, body = input_data.split("\r\n\r\n", 1)
+    except ValueError:
+        return "Error: Invalid input format (no blank line separating headers and body)"
+    
+    # Process headers if necessary (not required for body parsing)
     for line in headers.split("\r\n"):
         if ": " in line:
             key, value = line.split(": ", 1)
@@ -27,7 +34,9 @@ def parse_headers_and_body(input_data):
                 path = uri
                 os.environ["QUERY_STRING"] = ""
             os.environ["SCRIPT_NAME"] = path
+    
     return body
+
 def calculate(num1, num2, operator):
     try:
         num1 = float(num1)
@@ -46,34 +55,42 @@ def calculate(num1, num2, operator):
             return "Error: Unsupported operator"
     except ValueError:
         return "Error: Invalid input"
+
 def handle_request(input_data):
     """
     Processes the input data and returns the calculation result.
     """
-    body = parse_headers_and_body(input_data)
+    body = parse_headers_and_body(input_data)  # Get the body from the HTTP request
     method = os.environ.get("REQUEST_METHOD", "")
     if method == "GET":
         query_string = os.environ.get("QUERY_STRING", "")
         form = cgi.parse_qs(query_string)
     elif method == "POST":
+        # For POST, the body should contain the form data
+        print(repr(body));
         form = cgi.parse_qs(body)
+        print("here");
     else:
         return "Error: Unsupported method"
+    
+    # Extract the values from the form data
     num1 = form.get("num1", [None])[0]
     num2 = form.get("num2", [None])[0]
     operator = form.get("op", [None])[0]
+    
     if num1 is None or num2 is None or operator is None:
         return "Error: Missing parameters"
+    
     # Perform the calculation
-    result = calculate(num1, num2, operator)
-    return result
-# Example usage
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Error: Missing input data")
-        sys.exit(1)
+    return calculate(num1, num2, operator)
 
-    input_data = sys.argv[1]  # Read the input string from argv[1]
-    print(repr(input_data))
-    response = handle_request(input_data)
-    print(response)
+if __name__ == "__main__":
+    # 1) Read the entire raw HTTP request from STDIN
+    input_data = sys.argv[1]
+    
+    # 2) Handle the request
+    result = handle_request(input_data)
+    
+    # 3) Output minimal CGI headers + result
+    print("Content-Type: text/plain\r\n\r\n", end="")
+    print(result)

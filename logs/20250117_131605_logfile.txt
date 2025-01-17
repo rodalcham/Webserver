@@ -1,0 +1,2483 @@
+[20250117_131605] Server running in DEBUG mode.
+[20250117_131605] Server started
+[20250117_131610] Read Event
+[20250117_131610] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250117_131610] Read Event
+[20250117_131610] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250117_131610] Read Event
+[20250117_131610] Bytes read: 696
+[20250117_131610] Process Event
+[20250117_131610] Send Event
+[20250117_131610] Sending message to client : HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: text/html
+Date: Fri, 17 Jan 2025 13:16:10 CET
+Last-Modified: 
+Server: webserv/42.0
+Content-Length: 7587
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Main Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    .comment-section {
+      margin-top: 20px;
+    }
+    .comment {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    .comment button {
+      margin-top: 10px;
+      padding: 5px 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to the Main Page</h1>
+  <div>
+    <label for="name">Name:</label>
+    <input type="text" id="name" placeholder="Enter your name" />
+  </div>
+  <div>
+    <label for="comment">Comment:</label>
+    <textarea id="comment" placeholder="Leave a comment"></textarea>
+  </div>
+  <button onclick="addComment()">Submit Comment</button>
+  <h2>Upload File (Chunked)</h2>
+  We keep a "form-like" structure for user convenience, but we will NOT use the default submit. Instead, we'll handle the chunked upload via JavaScript.
+  <div>
+    <input type="file" id="fileInput" name="file" />
+    <button onclick="uploadFileChunked()">Upload in Chunks</button>
+  </div>
+  <div id="uploadStatus"></div>
+  <h2>CGI Interactions</h2>
+  <div class="button-section">
+    <label for="calcInput">Calculator Input:</label>
+    <input type="text" id="calcInput" placeholder="e.g., 2+2" />
+    <button onclick="callCalculatorCGI()">Calculate</button>
+    <label for="helloInput">Hello Input:</label>
+    <input type="text" id="helloInput" placeholder="Enter your name" />
+    <button onclick="callHelloCGI()">Say Hello</button>
+  </div>
+  <h2>Comments</h2>
+  <div id="commentsContainer" class="comment-section"></div>
+  <button onclick="goToLogPage()">Go to Log Page</button>
+  <script>
+    // ------------------------------
+    //   COMMENT FUNCTIONS
+    // ------------------------------
+    const comments = [];
+    function addComment() {
+      const name = document.getElementById('name').value.trim();
+      const comment = document.getElementById('comment').value.trim();
+      if (!name || !comment) {
+        alert("Please provide both name and comment.");
+        return;
+      }
+      const commentObject = { name, comment };
+      comments.push(commentObject);
+      displayComments();
+      clearInputFields();
+    }
+    function displayComments() {
+      const commentsContainer = document.getElementById('commentsContainer');
+      commentsContainer.innerHTML = '';
+      comments.forEach((comment, index) => {
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment';
+        commentDiv.innerHTML = `
+          <strong>${comment.name}</strong>
+          <p>${comment.comment}</p>
+          <button onclick="deleteComment(${index})">Delete</button>
+        `;
+        commentsContainer.appendChild(commentDiv);
+      });
+    }
+    function deleteComment(index) {
+      comments.splice(index, 1);
+      displayComments();
+    }
+    function clearInputFields() {
+      document.getElementById('name').value = '';
+      document.getElementById('comment').value = '';
+    }
+    function goToLogPage() {
+      // Store comments in session storage for the log page
+      sessionStorage.setItem('comments', JSON.stringify(comments));
+      window.location.href = 'log.html';
+    }
+    // ------------------------------
+    //   CHUNKED UPLOAD FUNCTION
+    // ------------------------------
+    const uploadEndpoint = "/upload-chunk"; // Adjust this to your actual server endpoint
+    const CHUNK_SIZE = 1024 * 256; // 512 KB for demo
+    let offset = 0;
+    let file;
+    let totalSize;
+    let fileName;
+    function uploadFileChunked() {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) {
+        alert("Please select a file before uploading.");
+        return;
+      }
+      file = fileInput.files[0];
+      totalSize = file.size;
+      fileName = file.name;
+      const statusDiv = document.getElementById("uploadStatus");
+      statusDiv.innerHTML = `Preparing to upload "${file.name}"...`;
+      offset = 0; // Reset offset for each new upload
+      // Send a single POST request with all chunks
+      sendChunks();
+    }
+    // Function to send all chunks in one request
+    async function sendChunks() {
+      const statusDiv = document.getElementById("uploadStatus");
+      const formData = new FormData();
+      const headers = new Headers();
+      // Add metadata to headers
+      headers.append("fileName", fileName);
+      headers.append("totalSize", totalSize);
+      // Loop through file and append chunks to FormData
+      while (offset < totalSize) {
+        const start = offset;
+        const end = Math.min(start + CHUNK_SIZE, totalSize);
+        const chunk = file.slice(start, end);
+        if (chunk.size > 0) { // Only append file chunks that contain data
+          formData.append("fileChunk", chunk, file.name);
+        }
+        offset += CHUNK_SIZE; // Update offset for the next chunk
+      }
+      // Send the entire file and its chunks in a single POST request
+      try {
+        const response = await fetch(uploadEndpoint, {
+          method: "POST",
+          headers: headers, // Metadata in headers
+          body: formData,   // All file chunks in the body
+        });
+        if (response.ok) {
+          statusDiv.innerHTML = `Upload complete for "${file.name}"!`;
+        } else {
+          statusDiv.innerHTML = `Failed to upload: ${response.statusText}`;
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `Error uploading file: ${error.message}`;
+      }
+    }
+    // ------------------------------
+    //   CGI FUNCTIONS
+    // ------------------------------
+    async function callCalculatorCGI() {
+      const input = document.getElementById('calcInput').value.trim();
+      if (!input) {
+        alert('Please provide input for the calculator.');
+        return;
+      }
+      const [num1, op, num2] = parseCalculationInput(input);
+      if (!num1 || !op || !num2) {
+        alert('Invalid input format. Use the format: num1 op num2 (e.g., 2+2).');
+        return;
+      }
+      try {
+        const response = await fetch(`http://localhost:8080/cgi-bin/calculator.py`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `num1=${num1}&num2=${num2}&op=${encodeURIComponent(op)}`
+        });
+        const text = await response.text();
+        document.getElementById('uploadStatus').innerHTML = text;
+      } catch (error) {
+        document.getElementById('uploadStatus').innerHTML = `Error: ${error.message}`;
+      }
+    }
+    function parseCalculationInput(input) {
+      const match = input.match(/(\d+)([+\-*/])(\d+)/);
+      return match ? [match[1], match[2], match[3]] : [];
+    }
+    async function callHelloCGI() {
+      const name = document.getElementById('helloInput').value.trim();
+      if (!name) {
+        alert('Please provide a name for the Hello CGI.');
+        return;
+      }
+      try {
+        const response = await fetch('http://localhost:8080/cgi/hello.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `name=${encodeURIComponent(name)}\r\n`
+        });
+        const text = await response.text();
+        document.getElementById('uploadStatus').innerHTML = text;
+      } catch (error) {
+        document.getElementById('uploadStatus').innerHTML = `Error: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
+
+
+[20250117_131610] Read Event
+[20250117_131610] Bytes read: 0
+[20250117_131610] Client Closed Connection
+[20250117_131610] Removing Client 7
+[20250117_131610] Read Event
+[20250117_131610] Bytes read: 622
+[20250117_131610] Process Event
+[20250117_131610] Send Event
+[20250117_131610] Sending message to client : HTTP/1.1 404 Not Found
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Fri, 17 Jan 2025 13:16:10 CET
+Server: webserv/42.0
+Content-Length: 206
+
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>
+
+
+[20250117_131610] Read Event
+[20250117_131610] Bytes read: 0
+[20250117_131610] Client Closed Connection
+[20250117_131610] Removing Client 8
+[20250117_131615] Read Event
+[20250117_131615] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250117_131615] Read Event
+[20250117_131615] Bytes read: 689
+[20250117_131615] Process Event
+[20250117_131615] executin child with parameter:
+POST /cgi-bin/calculator.py HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Content-Length: 20
+sec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"
+Content-Type: application/x-www-form-urlencoded
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36
+sec-ch-ua-platform: "macOS"
+Accept: */*
+Origin: http://localhost:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8080/index.html
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7
+
+num1=1&num2=1&op=%2B
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] CGI still running
+[20250117_131617] Read Event
+[20250117_131617] Send Event
+[20250117_131617] Sending message to client : HTTP/1.1 200 OK
+Content-Length: 2048
+
+'POST /cgi-bin/calculator.py HTTP/1.1\r\nHost: localhost:8080\r\nConnection: keep-alive\r\nContent-Length: 20\r\nsec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"\r\nContent-Type: application/x-www-form-urlencoded\r\nsec-ch-ua-mobile: ?0\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36\r\nsec-ch-ua-platform: "macOS"\r\nAccept: */*\r\nOrigin: http://localhost:8080\r\nSec-Fetch-Site: same-origin\r\nSec-Fetch-Mode: cors\r\nSec-Fetch-Dest: empty\r\nReferer: http://localhost:8080/index.html\r\nAccept-Encoding: gzip, deflate, br, zstd\r\nAccept-Language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7\r\n\r\nnum1=1&num2=1&op=%2B'
+<!--: spam
+Content-Type: text/html
+
+<body bgcolor="#f0f0f8"><font color="#f0f0f8" size="-5"> -->
+<body bgcolor="#f0f0f8"><font color="#f0f0f8" size="-5"> --> -->
+</font> </font> </font> </script> </object> </blockquote> </pre>
+</table> </table> </table> </table> </table> </font> </font> </font><body bgcolor="#f0f0f8">
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#6622aa">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>AttributeError</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial">Python 3.8.2: /Applications/Xcode.app/Contents/Developer/usr/bin/python3<br>Fri Jan 17 13:16:17 2025</font></td></tr></table>
+    
+<p>A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.</p>
+<table width="100%" cellspacing=0 cellpadding=0 border=0>
+<tr><td bgcolor="#d8bbff"><big>&nbsp;</big><a href="file:///Users/rchavez/Desktop/Webserver/www/cgi-bin/calculator.py">/Users/rchavez/Desktop/Webserver/www/cgi-bin/calculator.py</a> in <strong>&lt;module&gt;</strong></td></tr>
+<tr><td><font color="#909090"><tt>&nbsp;&nbsp;<small>&nbsp;&nbsp;&nbsp;75</small>&nbsp;<br>
+</tt></font></td></tr>
+<tr
+
+[20250117_131617] Read Event
+[20250117_131617] Bytes read: 0
+[20250117_131617] Client Closed Connection
+[20250117_131617] Removing Client 7

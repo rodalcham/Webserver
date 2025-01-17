@@ -142,7 +142,7 @@ bool	Client::isLastComplete()
 		{
 			return false;
 		}
-		if (req.find("POST") != std::string::npos)
+		if (req.find("POST") != std::string::npos && req.find("cgi") == string::npos)
 			return true;
 		std::regex contentLengthRegex("Content-Length: (\\d+)", std::regex::icase);
 		std::smatch match;

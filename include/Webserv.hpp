@@ -2,7 +2,6 @@
 
 #include "Server.hpp"
 #include "HTTPRequest.hpp"
-#include "cgi.hpp"
 #include "ServerBlock.hpp"
 
 #include <sys/event.h>

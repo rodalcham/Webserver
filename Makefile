@@ -21,7 +21,6 @@ SRCS		=	$(SRC_DIR)/Config.cpp \
 				$(SRC_DIR)/HTTPResponse.cpp \
 				$(SRC_DIR)/Server.cpp \
 				$(SRC_DIR)/main.cpp \
-				$(SRC_DIR)/cgi.cpp \
 				$(SRC_DIR)/log.cpp \
 				$(SRC_DIR)/ServerMsg.cpp \
 				$(SRC_DIR)/Client.cpp \

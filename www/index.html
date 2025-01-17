@@ -175,7 +175,7 @@
         const response = await fetch(`http://localhost:8080/cgi-bin/calculator.py`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `num1=${num1}&num2=${num2}&op=${encodeURIComponent(op)}\r\n`
+          body: `num1=${num1}&num2=${num2}&op=${encodeURIComponent(op)}`
         });
         const text = await response.text();
         document.getElementById('uploadStatus').innerHTML = text;

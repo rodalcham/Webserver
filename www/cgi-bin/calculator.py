@@ -2,6 +2,8 @@
 import os
 import cgi
 import cgitb
+import sys
+
 # Enable debugging
 cgitb.enable()
 def parse_headers_and_body(input_data):
@@ -67,7 +69,11 @@ def handle_request(input_data):
     return result
 # Example usage
 if __name__ == "__main__":
-    import sys
-    input_data = sys.stdin.read()  # Read the input string from stdin
+    if len(sys.argv) < 2:
+        print("Error: Missing input data")
+        sys.exit(1)
+
+    input_data = sys.argv[1]  # Read the input string from argv[1]
+    print(repr(input_data))
     response = handle_request(input_data)
-    print(response)  # Output the result as a plain string
+    print(response)

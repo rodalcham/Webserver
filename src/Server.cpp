@@ -324,8 +324,9 @@ void Server::executeCGI(Client &client, const std::string &cgiPath, string &requ
 	{ // Child process
 		close(cgiOutput[0]); // Close unused read end
 		dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
+		close(cgiOutput[1]);
 
-		const char* python = "/usr/bin/php";
+		const char* python = "/usr/bin/python3";
 		char* const args[] = {const_cast<char*>(python), const_cast<char*>(cgiPath.c_str()), const_cast<char*>(request.c_str()), nullptr};
 
 		if (execve(python, args, nullptr) == -1)
@@ -360,6 +361,7 @@ void Server::sendCGIOutput(Client &client)
 	ret = waitpid(client.getPid(), &status, WNOHANG);
 	if (ret == 0)
 	{
+		debug("CGI still running");
 		return; // CGI process is still running
 	}
 	else if (ret == client.getPid())

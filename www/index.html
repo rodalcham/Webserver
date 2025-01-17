@@ -27,6 +27,7 @@
 </head>
 <body>
   <h1>Welcome to the Main Page</h1>
+
   <div>
     <label for="name">Name:</label>
     <input type="text" id="name" placeholder="Enter your name" />
@@ -36,13 +37,15 @@
     <textarea id="comment" placeholder="Leave a comment"></textarea>
   </div>
   <button onclick="addComment()">Submit Comment</button>
+
   <h2>Upload File (Chunked)</h2>
-  We keep a "form-like" structure for user convenience, but we will NOT use the default submit. Instead, we'll handle the chunked upload via JavaScript.
+  <p>We keep a "form-like" structure for user convenience, but we will NOT use the default submit. Instead, we'll handle the chunked upload via JavaScript.</p>
   <div>
     <input type="file" id="fileInput" name="file" />
     <button onclick="uploadFileChunked()">Upload in Chunks</button>
   </div>
   <div id="uploadStatus"></div>
+
   <h2>CGI Interactions</h2>
   <div class="button-section">
     <label for="calcInput">Calculator Input:</label>
@@ -52,9 +55,11 @@
     <input type="text" id="helloInput" placeholder="Enter your name" />
     <button onclick="callHelloCGI()">Say Hello</button>
   </div>
+
   <h2>Comments</h2>
   <div id="commentsContainer" class="comment-section"></div>
   <button onclick="goToLogPage()">Go to Log Page</button>
+
   <script>
     // ------------------------------
     //   COMMENT FUNCTIONS
@@ -95,10 +100,10 @@
       document.getElementById('comment').value = '';
     }
     function goToLogPage() {
-      // Store comments in session storage for the log page
       sessionStorage.setItem('comments', JSON.stringify(comments));
       window.location.href = 'log.html';
     }
+
     // ------------------------------
     //   CHUNKED UPLOAD FUNCTION
     // ------------------------------
@@ -119,34 +124,29 @@
       fileName = file.name;
       const statusDiv = document.getElementById("uploadStatus");
       statusDiv.innerHTML = `Preparing to upload "${file.name}"...`;
-      offset = 0; // Reset offset for each new upload
-      // Send a single POST request with all chunks
+      offset = 0;
       sendChunks();
     }
-    // Function to send all chunks in one request
     async function sendChunks() {
       const statusDiv = document.getElementById("uploadStatus");
       const formData = new FormData();
       const headers = new Headers();
-      // Add metadata to headers
       headers.append("fileName", fileName);
       headers.append("totalSize", totalSize);
-      // Loop through file and append chunks to FormData
       while (offset < totalSize) {
         const start = offset;
         const end = Math.min(start + CHUNK_SIZE, totalSize);
         const chunk = file.slice(start, end);
-        if (chunk.size > 0) { // Only append file chunks that contain data
+        if (chunk.size > 0) {
           formData.append("fileChunk", chunk, file.name);
         }
-        offset += CHUNK_SIZE; // Update offset for the next chunk
+        offset += CHUNK_SIZE;
       }
-      // Send the entire file and its chunks in a single POST request
       try {
         const response = await fetch(uploadEndpoint, {
           method: "POST",
-          headers: headers, // Metadata in headers
-          body: formData,   // All file chunks in the body
+          headers: headers,
+          body: formData,
         });
         if (response.ok) {
           statusDiv.innerHTML = `Upload complete for "${file.name}"!`;
@@ -157,6 +157,7 @@
         statusDiv.innerHTML = `Error uploading file: ${error.message}`;
       }
     }
+
     // ------------------------------
     //   CGI FUNCTIONS
     // ------------------------------
@@ -166,27 +167,26 @@
         alert('Please provide input for the calculator.');
         return;
       }
-      const [num1, op, num2] = parseCalculationInput(input);
-      if (!num1 || !op || !num2) {
-        alert('Invalid input format. Use the format: num1 op num2 (e.g., 2+2).');
-        return;
-      }
       try {
-        const response = await fetch(`http://localhost:8080/cgi-bin/calculator.py`, {
+        const response = await fetch('http://localhost:8080/cgi-bin/calculator.py', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `num1=${num1}&num2=${num2}&op=${encodeURIComponent(op)}`
+          headers: {
+            'Content-Type': 'text/plain' // Sending raw text as the body
+          },
+          body: input // Sending the input directly (e.g., "2+2")
         });
-        const text = await response.text();
-        document.getElementById('uploadStatus').innerHTML = text;
+
+        if (!response.ok) {
+          throw new Error(`Server returned status ${response.status}`);
+        }
+
+        const result = await response.text();
+        alert(`Result: ${result}`);
       } catch (error) {
-        document.getElementById('uploadStatus').innerHTML = `Error: ${error.message}`;
+        alert(`Error: ${error.message}`);
       }
     }
-    function parseCalculationInput(input) {
-      const match = input.match(/(\d+)([+\-*/])(\d+)/);
-      return match ? [match[1], match[2], match[3]] : [];
-    }
+
     async function callHelloCGI() {
       const name = document.getElementById('helloInput').value.trim();
       if (!name) {
@@ -197,12 +197,12 @@
         const response = await fetch('http://localhost:8080/cgi/hello.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `name=${encodeURIComponent(name)}\r\n`
+          body: `name=${encodeURIComponent(name)}`
         });
         const text = await response.text();
-        document.getElementById('uploadStatus').innerHTML = text;
+        alert(text);
       } catch (error) {
-        document.getElementById('uploadStatus').innerHTML = `Error: ${error.message}`;
+        alert(`Error: ${error.message}`);
       }
     }
   </script>

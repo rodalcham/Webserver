@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import sys
 import os
-import cgi
 import cgitb
 
 # Enable debugging to see tracebacks in the browser
@@ -12,13 +11,12 @@ def parse_headers_and_body(input_data):
     Parses the input_data containing headers and body.
     Extracts headers into environment variables and returns the body.
     """
-    # Split once on the blank line (\r\n\r\n) between headers and body
     try:
         headers, body = input_data.split("\r\n\r\n", 1)
     except ValueError:
-        return "Error: Invalid input format (no blank line separating headers and body)"
+        return None, "Error: Invalid input format (no blank line separating headers and body)"
     
-    # Process headers if necessary (not required for body parsing)
+    # Process headers (optional for this script)
     for line in headers.split("\r\n"):
         if ": " in line:
             key, value = line.split(": ", 1)
@@ -35,9 +33,24 @@ def parse_headers_and_body(input_data):
                 os.environ["QUERY_STRING"] = ""
             os.environ["SCRIPT_NAME"] = path
     
-    return body
+    return body, None
+
+def parse_calculation_body(body):
+    """
+    Parses a raw body string like '2+2' into num1, operator, and num2.
+    """
+    # Match a format like `2+2`, `10-5`, etc.
+    import re
+    match = re.match(r"(\d+)([+\-*/])(\d+)", body.strip())
+    if not match:
+        return None, None, None, "Error: Invalid calculation format. Use the format num1+num2 (e.g., 2+2)."
+    num1, operator, num2 = match.groups()
+    return num1, operator, num2, None
 
 def calculate(num1, num2, operator):
+    """
+    Performs the calculation based on the given operator and operands.
+    """
     try:
         num1 = float(num1)
         num2 = float(num2)
@@ -60,26 +73,18 @@ def handle_request(input_data):
     """
     Processes the input data and returns the calculation result.
     """
-    body = parse_headers_and_body(input_data)  # Get the body from the HTTP request
+    body, error = parse_headers_and_body(input_data)
+    if error:
+        return error
+    
     method = os.environ.get("REQUEST_METHOD", "")
-    if method == "GET":
-        query_string = os.environ.get("QUERY_STRING", "")
-        form = cgi.parse_qs(query_string)
-    elif method == "POST":
-        # For POST, the body should contain the form data
-        print(repr(body));
-        form = cgi.parse_qs(body)
-        print("here");
-    else:
-        return "Error: Unsupported method"
-    
-    # Extract the values from the form data
-    num1 = form.get("num1", [None])[0]
-    num2 = form.get("num2", [None])[0]
-    operator = form.get("op", [None])[0]
-    
-    if num1 is None or num2 is None or operator is None:
-        return "Error: Missing parameters"
+    if method != "POST":
+        return "Error: Only POST method is supported"
+
+    # Parse the calculation directly from the body (raw text)
+    num1, operator, num2, parse_error = parse_calculation_body(body)
+    if parse_error:
+        return parse_error
     
     # Perform the calculation
     return calculate(num1, num2, operator)
@@ -94,3 +99,4 @@ if __name__ == "__main__":
     # 3) Output minimal CGI headers + result
     print("Content-Type: text/plain\r\n\r\n", end="")
     print(result)
+

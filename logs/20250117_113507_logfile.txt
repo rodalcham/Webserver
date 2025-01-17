@@ -1,0 +1,29 @@
+[20250117_113507] Server running in DEBUG mode.
+[20250117_113507] Server started
+[20250117_113510] Read Event
+[20250117_113510] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250117_113510] Read Event
+[20250117_113510] Bytes read: 691
+[20250117_113510] Process Event
+[20250117_113510] executin child with parameter:
+POST /cgi-bin/calculator.py HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Content-Length: 22
+sec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"
+Content-Type: application/x-www-form-urlencoded
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36
+sec-ch-ua-platform: "macOS"
+Accept: */*
+Origin: http://localhost:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8080/index.html
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7
+
+

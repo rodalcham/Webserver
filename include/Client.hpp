@@ -34,17 +34,12 @@ class Client
 	string					_boundary;
 	std::ofstream			_outFile;
 	pid_t				pid;
+    int cgiOutputFd;  // For reading from CGI process
 
-	// PREVIOUS 
-	bool headers_parsed = false;
 
-	// Partial request data
-	HttpRequest* partialRequest = nullptr; // Pointer to partial request object
-	std::string partialRequestBody;        // Body for partial requests
+
 	public : 
 
-	int cgiInputFd;   // For writing to CGI process
-    int cgiOutputFd;  // For reading from CGI process
 	Client();
 	Client(int clientSock, const ServerBlock *block);
 
@@ -57,10 +52,9 @@ class Client
 	void				popRequest();
 	bool				&isSending();
 	bool				&isReceiving();
-	size_t				parseRequest(char *buffer, int bytesRead);
-	void setCGIPipes(int inputFd, int outputFd);
 
-    int getCGIInputFd() const;
+	void setCGIOutput(int outputFd);
+
     int getCGIOutputFd() const;
 	pid_t getPid() const;
 	void setPid(pid_t newPid);
@@ -68,20 +62,21 @@ class Client
 
 // PREVIOUS 
 	// Partial Request Management
-	bool 			hasPartialRequest() const;
-	HttpRequest&	getPartialRequest();
-	std::string&	getPartialRequestBody();
-	void 			appendToPartialRequestBody(const std::string& bodyChunk);
-	void 			setPartialRequest(HttpRequest* request);
-	void 			clearPartialRequest();
-	void 			handleRequest();
+
+
+
+
+
+
+
 	void 			closeConnection();
 	void 			queueResponse(const std::string& response);
 	void 			queueRequest(string request);
-	void 			appendRequest(string request);
+	void			appendRequest(string request);
+
 	bool			isLastComplete();
-	bool 			headersParsed() const;
-	void 			setHeadersParsed(bool parsed);
+
+
 	int				processFile();
 	std::ofstream	&get_outFile();
 	string			&get_boundary();

@@ -168,7 +168,7 @@ void	Server::processRequest(Client &client)
 		HttpRequest		request(client);
 		if (isCGIRequest(request))
 		{
-			executeCGI(client, resolveCGIPath(request.getUri()), request);
+			executeCGI(client, resolveCGIPath(request.getUri()), req);
 			return;
 		}
 		else if (request.getMethod() == "POST")
@@ -306,40 +306,49 @@ void Server::removeClient(Client &client)
 	close(client.getSocket());
 	this->clients.erase(client.getSocket());
 }
-void Server::executeCGI(Client &client, const std::string &cgiPath, const HttpRequest &request) {
-	(void)request;
-	int cgiInput[2], cgiOutput[2];
-	if (pipe(cgiInput) < 0 || pipe(cgiOutput) < 0) {
+void Server::executeCGI(Client &client, const std::string &cgiPath, string &request)
+{
+	int cgiOutput[2];
+	if (pipe(cgiOutput) < 0)
+	{
 		throw std::runtime_error("Failed to create pipes for CGI");
 	}
 
 	client.setPid(fork());
-	if (client.getPid() < 0) {
+	if (client.getPid() < 0)
+	{
 		throw std::runtime_error("Failed to fork CGI process");
 	}
 
-	if (client.getPid() == 0) { // Child process
-		close(cgiInput[1]); // Close unused write end
+	if (client.getPid() == 0)
+	{ // Child process
 		close(cgiOutput[0]); // Close unused read end
-
-		dup2(cgiInput[0], STDIN_FILENO);  // Redirect CGI input
 		dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
 
-		execl(cgiPath.c_str(), cgiPath.c_str(), NULL); // Execute CGI script
-		_exit(1); // If exec fails
-	} else { // Parent process
-		close(cgiInput[0]);  // Close unused read end
+		const char* python = "/usr/bin/php";
+		char* const args[] = {const_cast<char*>(python), const_cast<char*>(cgiPath.c_str()), const_cast<char*>(request.c_str()), nullptr};
+
+		if (execve(python, args, nullptr) == -1)
+		{
+			_exit(1); // Exit child process if execve fails
+		}
+	}
+	else
+	{ // Parent process
 		close(cgiOutput[1]); // Close unused write end
+		client.setCGIOutput(cgiOutput[0]);
+		debug("executin child with parameter:\n" + request);
 
 		// Add the output pipe to the kqueue
 		struct kevent event;
 		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
-		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
+		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+		{
+			close(cgiOutput[0]);
 			throw std::runtime_error("Failed to add CGI output to kqueue");
 		}
 
 		// Store CGI-related file descriptors in the client
-		client.setCGIPipes(cgiInput[1], cgiOutput[0]);
 	}
 }
 
@@ -400,7 +409,6 @@ void Server::sendCGIOutput(Client &client)
 			this->postEvent(client.getSocket(), 2);
 
 			// Close the pipes after processing the output
-			close(client.getCGIInputFd());
 			close(client.getCGIOutputFd());
 		}
 		else

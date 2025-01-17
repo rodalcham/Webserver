@@ -1,0 +1,9 @@
+[20250117_113217] Server running in DEBUG mode.
+[20250117_113217] Server started
+[20250117_113223] Read Event
+[20250117_113223] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250117_113223] Read Event
+[20250117_113223] Bytes read: 691
+[20250117_113223] Process Event

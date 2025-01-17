@@ -306,51 +306,144 @@ void Server::removeClient(Client &client)
 	close(client.getSocket());
 	this->clients.erase(client.getSocket());
 }
-void Server::executeCGI(Client &client, const std::string &cgiPath, string &request)
+// void Server::executeCGI(Client &client, const std::string &cgiPath, string &request)
+// {
+// 	int cgiOutput[2];
+// 	if (pipe(cgiOutput) < 0)
+// 	{
+// 		throw std::runtime_error("Failed to create pipes for CGI");
+// 	}
+
+// 	client.setPid(fork());
+// 	if (client.getPid() < 0)
+// 	{
+// 		throw std::runtime_error("Failed to fork CGI process");
+// 	}
+
+// 	if (client.getPid() == 0)
+// 	{ // Child process
+// 		close(cgiOutput[0]); // Close unused read end
+// 		dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
+// 		close(cgiOutput[1]);
+
+// 		const char* python = "/usr/bin/python3";
+// 		char* const args[] = {const_cast<char*>(python), const_cast<char*>(cgiPath.c_str()), const_cast<char*>(request.c_str()), nullptr};
+
+// 		if (execve(python, args, nullptr) == -1)
+// 		{
+// 			_exit(1); // Exit child process if execve fails
+// 		}
+// 	}
+// 	else
+// 	{ // Parent process
+// 		close(cgiOutput[1]); // Close unused write end
+// 		client.setCGIOutput(cgiOutput[0]);
+// 		debug("executin child with parameter:\n" + request);
+
+// 		// Add the output pipe to the kqueue
+// 		struct kevent event;
+// 		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
+// 		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+// 		{
+// 			close(cgiOutput[0]);
+// 			throw std::runtime_error("Failed to add CGI output to kqueue");
+// 		}
+
+// 		// Store CGI-related file descriptors in the client
+// 	}
+// }
+
+void Server::executeCGI(Client &client, const std::string &cgiPath, std::string &request)
 {
-	int cgiOutput[2];
-	if (pipe(cgiOutput) < 0)
-	{
-		throw std::runtime_error("Failed to create pipes for CGI");
-	}
+    // We create two pipes:
+    //   - cgiOutput: child’s STDOUT -> parent
+    //   - cgiInput : parent -> child’s STDIN (OPTIONAL if you need to send the raw request to STDIN)
+    int cgiOutput[2];
+    int cgiInput[2];
+    if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
+    {
+        throw std::runtime_error("Failed to create pipes for CGI");
+    }
 
-	client.setPid(fork());
-	if (client.getPid() < 0)
-	{
-		throw std::runtime_error("Failed to fork CGI process");
-	}
+    // Fork a child to run the CGI script
+    client.setPid(fork());
+    if (client.getPid() < 0)
+    {
+        throw std::runtime_error("Failed to fork CGI process");
+    }
 
-	if (client.getPid() == 0)
-	{ // Child process
-		close(cgiOutput[0]); // Close unused read end
-		dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
-		close(cgiOutput[1]);
+    if (client.getPid() == 0)
+    {
+        // ---------------- CHILD PROCESS ----------------
 
-		const char* python = "/usr/bin/python3";
-		char* const args[] = {const_cast<char*>(python), const_cast<char*>(cgiPath.c_str()), const_cast<char*>(request.c_str()), nullptr};
+        // We won't read from the output pipe
+        close(cgiOutput[0]);
+        // We'll redirect child’s STDOUT to cgiOutput[1]
+        dup2(cgiOutput[1], STDOUT_FILENO);
+        close(cgiOutput[1]);
 
-		if (execve(python, args, nullptr) == -1)
-		{
-			_exit(1); // Exit child process if execve fails
-		}
-	}
-	else
-	{ // Parent process
-		close(cgiOutput[1]); // Close unused write end
-		client.setCGIOutput(cgiOutput[0]);
-		debug("executin child with parameter:\n" + request);
+        // We won't write to the input pipe
+        close(cgiInput[1]);
+        // If you want the script to read from STDIN, uncomment next 2 lines:
+        // dup2(cgiInput[0], STDIN_FILENO);
+        // close(cgiInput[0]);
 
-		// Add the output pipe to the kqueue
-		struct kevent event;
-		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
-		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		{
-			close(cgiOutput[0]);
-			throw std::runtime_error("Failed to add CGI output to kqueue");
-		}
+        // Determine the interpreter by file extension
+        std::string::size_type dotPos = cgiPath.find_last_of('.');
+        std::string extension;
+        if (dotPos != std::string::npos)
+            extension = cgiPath.substr(dotPos + 1); // "py", "php", etc.
 
-		// Store CGI-related file descriptors in the client
-	}
+        const char* interpreter = "/usr/bin/python3"; // default
+        if (extension == "php")
+            interpreter = "/usr/bin/php";
+        else if (extension == "py")
+            interpreter = "/usr/bin/python3";
+        // You could add more else if blocks for other interpreters
+
+        // Prepare arguments. 
+        // Right now, we pass the entire HTTP request as argv[2].
+        // If your script expects data from STDIN instead, remove request from argv
+        // and actually write the request to cgiInput[1] in the parent.
+        char* const args[] = {
+            const_cast<char*>(interpreter),
+            const_cast<char*>(cgiPath.c_str()),
+            const_cast<char*>(request.c_str()),  // optional if your script reads from argv
+            nullptr
+        };
+
+        // Exec the interpreter with your script
+        if (execve(interpreter, args, nullptr) == -1)
+        {
+            _exit(1); // if execve fails
+        }
+    }
+    else
+    {
+        // ---------------- PARENT PROCESS ----------------
+
+        // We don’t write to cgiOutput[1], so close it
+        close(cgiOutput[1]);
+
+        // If you aren’t writing the raw request to STDIN, close the input pipe
+        close(cgiInput[0]);
+        close(cgiInput[1]);
+
+        // Save the child’s STDOUT fd so we can read it in `sendCGIOutput`
+        client.setCGIOutput(cgiOutput[0]);
+        debug("executing child with parameter:\n" + request);
+
+        // Add the child’s STDOUT pipe to the kqueue for reading
+        struct kevent event;
+        EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
+        if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+        {
+            close(cgiOutput[0]);
+            throw std::runtime_error("Failed to add CGI output to kqueue");
+        }
+
+        // The rest is handled in `sendCGIOutput(...)` once data is ready
+    }
 }
 
 void Server::sendCGIOutput(Client &client)

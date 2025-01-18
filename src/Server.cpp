@@ -6,12 +6,40 @@
 #include "../include/Client.hpp"
 
 #include <errno.h>
+#include <filesystem> // C++17 or later
+#include <vector>
+#include <string>
 
 class log;
 
 extern std::atomic<bool> keepRunning;
 
 uint16_t	ft_htons(uint16_t port);
+
+
+std::string listUploadsJSON(const std::string &dirPath)
+{
+    namespace fs = std::filesystem;
+    std::vector<std::string> files;
+    for (const auto &entry : fs::directory_iterator(dirPath))
+    {
+        if (entry.is_regular_file())
+        {
+            files.push_back(entry.path().filename().string());
+        }
+    }
+    // Build a JSON array: ["file1.jpg","file2.png",...]
+    std::string json = "[";
+    for (size_t i = 0; i < files.size(); ++i)
+    {
+        json += "\"" + files[i] + "\"";
+        if (i + 1 < files.size())
+            json += ",";
+    }
+    json += "]";
+    return json;
+}
+
 
 Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_blocks)
 {
@@ -171,8 +199,65 @@ void	Server::processRequest(Client &client)
 			executeCGI(client, resolveCGIPath(request.getUri()), req);
 			return;
 		}
+		if (request.getUri() == "/list-uploads")
+            {
+                // produce a JSON list of filenames
+                std::string jsonList = listUploadsJSON("./www/uploads");
+                // build HTTP response
+                std::string resp =
+                    "HTTP/1.1 200 OK\r\n"
+                    "Content-Type: application/json\r\n\r\n" +
+                    jsonList;
+                client.queueResponse(resp);
+                this->postEvent(client.getSocket(), 2);
+                client.popRequest();
+                return;
+            }
+		if (request.getMethod() == "DELETE")
+        {
+            // Suppose the URI is like: /uploads/myImage.jpg
+            std::string uri = request.getUri();
+            // security check: ensure it starts with "/uploads/"
+            if (uri.rfind("/uploads/", 0) == 0)
+            {
+                // parse out the filename
+                std::string filename = uri.substr(std::string("/uploads/").size());
+                std::string fullPath = "./www/uploads/" + filename;
+
+                // Attempt to delete
+                if (std::remove(fullPath.c_str()) == 0)
+                {
+                    std::string resp = 
+                        "HTTP/1.1 200 OK\r\n"
+                        "Content-Type: text/plain\r\n\r\n"
+                        "File deleted successfully.";
+                    client.queueResponse(resp);
+                }
+                else
+                {
+                    std::string resp =
+                        "HTTP/1.1 404 Not Found\r\n"
+                        "Content-Type: text/plain\r\n\r\n"
+                        "File not found or cannot delete.";
+                    client.queueResponse(resp);
+                }
+            }
+            else
+            {
+                // invalid path
+                std::string resp =
+                    "HTTP/1.1 400 Bad Request\r\n"
+                    "Content-Type: text/plain\r\n\r\n"
+                    "Invalid delete path.";
+                client.queueResponse(resp);
+            }
+            this->postEvent(client.getSocket(), 2);
+            client.popRequest();
+            return;
+        }
 		else if (request.getMethod() == "POST")
 		{
+			
 			string filename = request.getHeader("filename");
 			if (filename.empty())
 				request.setStatusCode(500); // Check

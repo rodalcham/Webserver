@@ -1,0 +1,20 @@
+[20250120_141327] Server running in DEBUG mode.
+[20250120_141327] Server started
+[20250120_141330] Read Event
+[20250120_141330] Client accepted : 7
+Connected through port : 8081
+Through host : localhost:8081
+[20250120_141330] Read Event
+[20250120_141330] Bytes read: 764
+[20250120_141330] Process Event
+[20250120_141330] Send Event
+[20250120_141330] Sending message to client : HTTP/1.1 413 Payload Too Large
+Content-Type: text/plain
+Content-Length: 49
+
+The request payload is too large for the server to handle.
+
+[20250120_141330] Read Event
+[20250120_141330] Bytes read: 0
+[20250120_141330] Client Closed Connection
+[20250120_141330] Removing Client 7

@@ -21,6 +21,7 @@
 #include <iostream>
 #include <fstream>
 #include <deque>
+#include <filesystem>
 
 #define SOCKET_BACKLOG_MAX 10
 

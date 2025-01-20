@@ -213,7 +213,7 @@ void	Server::processRequest(Client &client)
 		if (request.getUri() == "/list-uploads")
             {
                 // produce a JSON list of filenames
-                std::string jsonList = listUploadsJSON("./www/uploads");
+                std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"));
                 // build HTTP response
                 std::string resp =
                     "HTTP/1.1 200 OK\r\n"
@@ -233,7 +233,7 @@ void	Server::processRequest(Client &client)
             {
                 // parse out the filename
                 std::string filename = uri.substr(std::string("/uploads/").size());
-                std::string fullPath = "./www/uploads/" + filename;
+                std::string fullPath = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root") + filename;
 
                 // Attempt to delete
                 if (std::remove(fullPath.c_str()) == 0)
@@ -270,9 +270,10 @@ void	Server::processRequest(Client &client)
 		{
 			
 			string filename = request.getHeader("filename");
+			string root = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root");
 			if (filename.empty())
 				request.setStatusCode(500); // Check
-			client.get_outFile().open("./www/uploads/" + filename, std::ios::binary);//temp
+			client.get_outFile().open(root + filename, std::ios::binary);//temp
 			if (!client.get_outFile().is_open())
 				request.setStatusCode(500); // Check
 			string contentType = request.getHeader("Content-Type");

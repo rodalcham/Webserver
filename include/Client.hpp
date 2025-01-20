@@ -37,7 +37,6 @@ class Client
     int cgiOutputFd;  // For reading from CGI process
 
 
-
 	public : 
 
 	Client();

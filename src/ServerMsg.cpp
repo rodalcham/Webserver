@@ -174,7 +174,8 @@ void Server::msg_receive(Client& client)
 		if (client.isLastComplete())
 		{
 			// debug("Request Added Succesfully from Client " + std::to_string(client.getSocket()));
-			this->postEvent(client.getSocket(), 1);
+			// this->postEvent(client.getSocket(), 1);
+			this->processRequest(client);
 		}
 	}
 }

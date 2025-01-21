@@ -343,15 +343,15 @@ void	Server::processRequest(Client &client)
 			client.get_outFile().open(root + filename, std::ios::binary);//temp
 			if (!client.get_outFile().is_open())
 				request.setStatusCode(500); // Check
-			string contentType = request.getHeader("Content-Type");
-			std::regex boundaryRegex("boundary=([a-zA-Z0-9'-]+)");
-			std::smatch match;
-			if (std::regex_search(contentType, match, boundaryRegex) && match.size() > 1)
-			{
-				client.get_boundary() = match[1].str();
-			}
-			else
-				request.setStatusCode(500); // Check
+			// string contentType = request.getHeader("Content-Type");
+			// std::regex boundaryRegex("boundary=([a-zA-Z0-9'-]+)");
+			// std::smatch match;
+			// if (std::regex_search(contentType, match, boundaryRegex) && match.size() > 1)
+			// {
+			// 	client.get_boundary() = match[1].str();
+			// }
+			// else
+			// 	request.setStatusCode(500); // Check
 			client.isSending() = true; // Used?
 		}
 

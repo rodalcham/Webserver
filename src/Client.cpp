@@ -127,6 +127,35 @@ int Client::processFile()
 	return 0;
 }
 
+std::string extractBoundary(const std::string& postRequest)
+{
+	const std::string contentTypeHeader = "Content-Type: ";
+	const std::string boundaryKey = "boundary=";
+
+	// Find the Content-Type header
+	size_t contentTypePos = postRequest.find(contentTypeHeader);
+	if (contentTypePos == std::string::npos)
+	{
+		return ""; // Content-Type header not found
+	}
+
+	// Find the boundary key within the Content-Type header
+	size_t boundaryPos = postRequest.find(boundaryKey, contentTypePos);
+	if (boundaryPos == std::string::npos)
+	{
+		return ""; // Boundary key not found
+	}
+
+	// Extract the boundary value
+	size_t boundaryStart = boundaryPos + boundaryKey.length();
+	size_t boundaryEnd = postRequest.find("\r\n", boundaryStart);
+	if (boundaryEnd == std::string::npos)
+	{
+		boundaryEnd = postRequest.length(); // End of string if no newline
+	}
+
+	return postRequest.substr(boundaryStart, boundaryEnd - boundaryStart);
+}
 
 bool	Client::isLastComplete()
 {
@@ -143,7 +172,10 @@ bool	Client::isLastComplete()
 			return false;
 		}
 		if (req.find("POST") != std::string::npos && req.find("cgi") == string::npos)
+		{
+			this->_boundary = extractBoundary(req);
 			return true;
+		}
 		std::regex contentLengthRegex("Content-Length: (\\d+)", std::regex::icase);
 		std::smatch match;
 		if (std::regex_search(req, match, contentLengthRegex))

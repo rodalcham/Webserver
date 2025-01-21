@@ -16,6 +16,56 @@ extern std::atomic<bool> keepRunning;
 
 uint16_t	ft_htons(uint16_t port);
 
+void Server::handleRedirect(Client &client)
+{
+    const ServerBlock *serverBlock = client.getServerBlock();
+    std::string redirectLocation = serverBlock->getLocationValue("/return", "return");
+
+    if (redirectLocation.empty()) {
+        // Respond with 500 Internal Server Error if no return directive
+        std::string resp =
+            "HTTP/1.1 500 Internal Server Error\r\n"
+            "Content-Type: text/plain\r\n\r\n"
+            "No redirection target specified for /return.";
+        client.queueResponse(resp);
+        this->postEvent(client.getSocket(), 2);
+        client.popRequest();
+        return;
+    }
+
+    // Build the redirection response
+    std::string resp =
+        "HTTP/1.1 301 Moved Permanently\r\n"
+        "Location: " + redirectLocation + "\r\n"
+        "Content-Length: 0\r\n\r\n";
+    client.queueResponse(resp);
+    this->postEvent(client.getSocket(), 2);
+    client.popRequest();
+}
+
+bool Server::isMethodAllowedInUploads(const std::string &method, Client &client) {
+    const ServerBlock *serverBlock = client.getServerBlock();
+    auto locationBlock = serverBlock->getLocationBlock("/uploads/");
+
+    std::cout << "Checking methods for /uploads/...\n";
+    if (locationBlock.find("allow_methods") != locationBlock.end()) {
+        std::cout << "Allow methods found: " << locationBlock.at("allow_methods") << "\n";
+        std::istringstream iss(locationBlock.at("allow_methods"));
+        std::string allowedMethod;
+        while (iss >> allowedMethod) {
+            std::cout << "Allowed method: " << allowedMethod << "\n";
+            if (allowedMethod == method) {
+                std::cout << "Method " << method << " is allowed.\n";
+                return true;
+            }
+        }
+    }
+
+    std::cout << "Method " << method << " is not allowed.\n";
+    return false;
+}
+
+
 
 std::string listUploadsJSON(const std::string &dirPath)
 {
@@ -194,6 +244,23 @@ void	Server::processRequest(Client &client)
 	if (req.find("HTTP") != std::string::npos)
 	{
 		HttpRequest		request(client);
+
+        if (request.getUri() == "/return")
+        {
+            handleRedirect(client);
+            return;
+        }
+		if (!isMethodAllowedInUploads(request.getMethod(), client))
+		{
+			std::string response =
+				"HTTP/1.1 405 Method Not Allowed\r\n"
+				"Content-Type: text/plain\r\n\r\n"
+				"The " + request.getMethod() + " method is not allowed for /uploads/.";
+			client.queueResponse(response);
+			this->postEvent(client.getSocket(), 2);
+			client.popRequest();
+			return;
+		}
 		if (request.getHeader("Content-Length").length() &&
 			client.getServerBlock()->getDirectiveValue("client_max_body_size").length() &&
 			std::stoi(request.getHeader("Content-Length")) > std::stoi(client.getServerBlock()->getDirectiveValue("client_max_body_size")))

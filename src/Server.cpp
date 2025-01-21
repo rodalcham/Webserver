@@ -263,7 +263,7 @@ void	Server::processRequest(Client &client)
 		}
 		if (request.getHeader("Content-Length").length() &&
 			client.getServerBlock()->getDirectiveValue("client_max_body_size").length() &&
-			std::stoi(request.getHeader("Content-Length")) > std::stoi(client.getServerBlock()->getDirectiveValue("client_max_body_size")))
+			std::stoi(request.getHeader("Content-Length")) > 1000000 * std::stoi(client.getServerBlock()->getDirectiveValue("client_max_body_size")))
 		{
 			client.popRequest();
 			string response = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: text/plain\r\nContent-Length: 49\r\n\r\nThe request payload is too large for the server to handle.\r\n";

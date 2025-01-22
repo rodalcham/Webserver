@@ -27,6 +27,7 @@ class Client
 	int						clientSock;
 	std::deque<std::string>	requests;
 	std::deque<std::string>	responses;
+	std::deque<std::string>	_file_content;
 	bool					is_sending = false;
 	bool					is_receiving = false;
 	const ServerBlock		*_block;
@@ -45,6 +46,8 @@ class Client
 	int					&getSocket();
 	std::string			&getRequest();
 	bool				hasRequest();
+	bool				hasResponse();
+	bool				hasFileContent();
 	std::string			&getResponse();
 	const ServerBlock	*getServerBlock();
 	void				popResponse();
@@ -70,13 +73,14 @@ class Client
 
 	void 			closeConnection();
 	void 			queueResponse(const std::string& response);
+	void			queueFileContent(const string &content);
 	void 			queueRequest(string request);
 	void			appendRequest(string request);
 
 	bool			isLastComplete();
 
 
-	int				processFile();
+	int				processFile(int mode);
 	std::ofstream	&get_outFile();
 	string			&get_boundary();
 

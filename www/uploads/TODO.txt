@@ -1,0 +1,16 @@
+CGI - MB
+remove throwing errors in request - MB
+
+
+checking methods are allowed etc - GS (or maybe MB if CGI is fast)
+Resonse - GS
+Auto indexing - GS
+
+
+Server - RC
+make sure after a REQUEST finishes, it will lead to a RESPONSE - RC
+
+
+Error handling
+remove errno if relevant
+

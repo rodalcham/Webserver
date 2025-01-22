@@ -181,17 +181,26 @@ void	Server::run()
 			}
 			else if (eventList[i].filter == EVFILT_USER)
 			{
-				if (event % 10 == 1)
-				{
-					debug("Process Event");
-					processRequest(this->clients[event/10]);
-				}
-				else if (event % 10 == 2)
+				if (event % 10 == 2)
 				{
 					debug("Send Event");
-					msg_send(this->clients[event/10], 0);
+					if (this->clients[event/10].hasResponse())
+						msg_send(this->clients[event/10], 0);
+					else
+						this->removeEvent(event);
 				}
-				this->removeEvent(event);
+				else
+				{
+					debug("File event");
+					if (this->clients[event/10].hasFileContent())
+					{
+						if (this->clients[event/10].processFile(event % 10));
+							this->postEvent(event/10, 2);
+
+					}
+					else
+						this->removeEvent(event);
+				}
 			}
 			else if (eventList[i].filter == EVFILT_WRITE)
 			{
@@ -372,25 +381,53 @@ void	Server::processRequest(Client &client)
 	}
 	else
 	{
-		int status = client.processFile();
-		if (status)
+		string boundaryPrefix = "--" + client.get_boundary() + "\r\n";
+		string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
+		string *endBoundary;
+
+	// Ensure that the chunk begins with the correct boundary prefix
+		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
+			return ; // add appropiate response
+
+	// Check if the chunk ends with a boundary prefix or suffix
+		if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
+			endBoundary = &boundaryPrefix;
+		else if (req.substr(req.length() - boundarySuffix.length()) == boundarySuffix)
 		{
-			client.isSending() = false;
-			string response;
-			client.get_outFile().close();
-			if (!client.get_outFile() || status < 0)
-			{
-				//create upload failed response
-				response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n";
-			}
-			//create upload complete response
-			response = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\nUpload successful.\r\n";
-			client.queueResponse(response);
-			this->postEvent(client.getSocket(), 2);
+			debug("LAST CHUNK RECEIVED");
+			endBoundary = &boundarySuffix;
 		}
-		// else
+		else
+			return ; // add appropiate response
+
+		// Extract the content of the chunk, excluding the boundary markers
+		string content = req.substr(boundaryPrefix.length(), req.length());
+		content = content.substr(0, content.length() - endBoundary->length());
+		content = content.substr(0, content.length() - 2);
+
+		// Remove the multipart headers (if they exist)
+		size_t headerEndPos = content.find("\r\n\r\n");
+		if (headerEndPos != string::npos)
+			content = content.substr(headerEndPos + 4); // Skip past the headers
+		client.queueFileContent(content);
+		if (*endBoundary == boundarySuffix)
+			postEvent(client.getSocket(), 4);
+		else
+			postEvent(client.getSocket(), 3);
+
+		// int status = client.processFile();
+		// if (status)
 		// {
-		// 	string	response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 4\r\n\r\nOK\r\n";
+		// 	client.isSending() = false;
+		// 	string response;
+		// 	client.get_outFile().close();
+		// 	if (!client.get_outFile() || status < 0)
+		// 	{
+		// 		//create upload failed response
+		// 		response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n";
+		// 	}
+		// 	//create upload complete response
+		// 	response = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\nUpload successful.\r\n";
 		// 	client.queueResponse(response);
 		// 	this->postEvent(client.getSocket(), 2);
 		// }

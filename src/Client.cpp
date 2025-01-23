@@ -76,59 +76,32 @@ void	Client::appendRequest(string request)
 
 int Client::processFile(int mode)
 {
+    if (!this->is_sending)
+    {
+        this->_file_content.pop_front();
+        return (0);
+    }
+
 	string *req = &this->_file_content.front();
     const string  success = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\nUpload successful.\r\n";
     const string  failure = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n";
 
-	// debug("CHUNK : ");
-	// debug(*req);
-
-	// string boundaryPrefix = "--" + this->_boundary + "\r\n";
-	// string boundarySuffix = "--" + this->_boundary + "--\r\n";
-	// string *endBoundary;
-
-	// // Ensure that the chunk begins with the correct boundary prefix
-	// if (req->substr(0, boundaryPrefix.length()) != boundaryPrefix)
-	// 	return -1;
-
-	// // Check if the chunk ends with a boundary prefix or suffix
-	// if (req->substr(req->length() - boundaryPrefix.length()) == boundaryPrefix)
-	// 	endBoundary = &boundaryPrefix;
-	// else if (req->substr(req->length() - boundarySuffix.length()) == boundarySuffix)
-	// {
-	// 	debug("LAST CHUNK RECEIVED");
-	// 	endBoundary = &boundarySuffix;
-	// }
-	// else
-	// 	return -1;
-
-	// // Extract the content of the chunk, excluding the boundary markers
-	// string content = req->substr(boundaryPrefix.length(), req->length());
-	// content = content.substr(0, content.length() - endBoundary->length());
-	// content = content.substr(0, content.length() - 2);
-
-	// // Remove the multipart headers (if they exist)
-	// size_t headerEndPos = content.find("\r\n\r\n");
-	// if (headerEndPos != string::npos) {
-	// 	content = content.substr(headerEndPos + 4); // Skip past the headers
-	// }
-
-	// Open the file for writing if it's not already open
 	if (!this->_outFile || !this->_outFile.is_open())
     {
         this->_outFile.close();
         this->queueResponse(failure);
+        this->_file_content.pop_front();
+        this->is_sending = false;
 		return -1;
     }
 
 	debug("Writing into file...");
 
-	// Write the extracted content (this is the file data) into the file
-	// debug(content);
 	this->_outFile << *req;
     this->_file_content.pop_front();
     if (mode == 4)
     {
+        this->is_sending = false;
         this->_outFile.close();
         if(!this->_outFile)
         {
@@ -142,13 +115,11 @@ int Client::processFile(int mode)
 	// Check if the file was successfully written
 	if (!this->_outFile)
     {
+        this->is_sending = false;
         this->queueResponse(failure);
         this->_outFile.close();
 		return -1;
     }
-	// If the chunk ends with the final boundary, return 1 to signal completion
-	// if (*endBoundary == boundarySuffix)
-	// 	return 1;
 
 	return 0;
 }

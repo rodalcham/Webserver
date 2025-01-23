@@ -171,10 +171,12 @@ void	Server::run()
 					acceptClient(event);
 				else if(this->clients.find(event) != this->clients.end())
 				{
+					debug("From client");
 					msg_receive(this->clients[event]);
 				}
 				else
 				{
+					debug("From cgi");
 					Client& client = *reinterpret_cast<Client*>(eventList[i].udata);
 					sendCGIOutput(client);
 				}
@@ -194,9 +196,8 @@ void	Server::run()
 					debug("File event");
 					if (this->clients[event/10].hasFileContent())
 					{
-						if (this->clients[event/10].processFile(event % 10));
+						if (this->clients[event/10].processFile(event % 10))
 							this->postEvent(event/10, 2);
-
 					}
 					else
 						this->removeEvent(event);
@@ -385,10 +386,6 @@ void	Server::processRequest(Client &client)
 		string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
 		string *endBoundary;
 
-	// Ensure that the chunk begins with the correct boundary prefix
-		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
-			return ; // add appropiate response
-
 	// Check if the chunk ends with a boundary prefix or suffix
 		if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
 			endBoundary = &boundaryPrefix;
@@ -398,39 +395,39 @@ void	Server::processRequest(Client &client)
 			endBoundary = &boundarySuffix;
 		}
 		else
-			return ; // add appropiate response
+		{
+			endBoundary = NULL;
+		}
 
-		// Extract the content of the chunk, excluding the boundary markers
-		string content = req.substr(boundaryPrefix.length(), req.length());
-		content = content.substr(0, content.length() - endBoundary->length());
-		content = content.substr(0, content.length() - 2);
+	// Ensure that the chunk begins with the correct boundary prefix
+		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
+		{
+			endBoundary = NULL;
+		}
 
-		// Remove the multipart headers (if they exist)
-		size_t headerEndPos = content.find("\r\n\r\n");
-		if (headerEndPos != string::npos)
-			content = content.substr(headerEndPos + 4); // Skip past the headers
-		client.queueFileContent(content);
-		if (*endBoundary == boundarySuffix)
-			postEvent(client.getSocket(), 4);
+		if (endBoundary)
+		{
+			string content = req.substr(boundaryPrefix.length(), req.length());
+			content = content.substr(0, content.length() - endBoundary->length());
+			content = content.substr(0, content.length() - 2);
+
+			// Remove the multipart headers (if they exist)
+			size_t headerEndPos = content.find("\r\n\r\n");
+			if (headerEndPos != string::npos)
+				content = content.substr(headerEndPos + 4); // Skip past the headers
+			client.queueFileContent(content);
+			if (*endBoundary == boundarySuffix)
+				postEvent(client.getSocket(), 4);
+			else
+				postEvent(client.getSocket(), 3);
+		}
 		else
-			postEvent(client.getSocket(), 3);
-
-		// int status = client.processFile();
-		// if (status)
-		// {
-		// 	client.isSending() = false;
-		// 	string response;
-		// 	client.get_outFile().close();
-		// 	if (!client.get_outFile() || status < 0)
-		// 	{
-		// 		//create upload failed response
-		// 		response = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n";
-		// 	}
-		// 	//create upload complete response
-		// 	response = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\nUpload successful.\r\n";
-		// 	client.queueResponse(response);
-		// 	this->postEvent(client.getSocket(), 2);
-		// }
+		{
+			client.queueResponse("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n");
+			this->postEvent(client.getSocket(), 2);
+			client.isSending() = false;
+		}
+		
 	}
 	client.popRequest();
 }

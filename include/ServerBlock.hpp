@@ -17,7 +17,7 @@ class HttpRequest;
 class ServerBlock
 {
 private:
-	int															_port;
+	int															_port = -1;
 	std::string													_host_name;
 	int															_socket_no;
 	std::map<std::string, std::string>							_directive_pairs;
@@ -30,9 +30,11 @@ public:
 
 	void			parseBlock(std::istream& stream);
 	void			setErrorPage(std::string& value, std::string& line);
+	void			setRedirect(std::string& value, std::string& line);
 	std::string		createDirectiveStr(std::string& line);
 	// bool			isRequestAllowed(const HttpRequest& request) const;
 	void			serverBlockDebug() const;
+	bool			duplicateServers() const;
 
 	// SETTERS
 	void			setSocketNo(const int& socket_number);

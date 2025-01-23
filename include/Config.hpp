@@ -22,6 +22,7 @@ public:
     Config(const std::string& conf_path);
     ~Config();
 
-    std::vector<ServerBlock>& getServerBlocks();
-    void configDebug() const; // Debug all server blocks
+    std::vector<ServerBlock>&	getServerBlocks();
+    void						configDebug() const; // Debug all server blocks
+	void						isValid() const;
 };

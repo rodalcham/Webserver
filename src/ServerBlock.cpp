@@ -215,7 +215,7 @@ std::string	ServerBlock::getLocationValue(std::string location, std::string key)
 		}
 	// debug("[DEBUG] no value found in location: " + location + " for key: " + key);
 	}
-	return ("");
+	return (getDirectiveValue(key));
 }
 
 int	ServerBlock::getSocketNo() const {

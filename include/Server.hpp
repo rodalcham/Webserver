@@ -45,7 +45,7 @@ class Server {
 	void	setTimeout(Client &client);
 	void	executeCGI(Client &client, const std::string &cgiPath, std::string &request);
 	void	sendCGIOutput(Client &client);
-	bool	isMethodAllowedInUploads(const std::string &method, Client &client);
+	bool	isMethodAllowedInUploads(HttpRequest request, Client &client);
 	void	handleRedirect(Client &client);
 	std::string handleDefaultIndex(Client &client, const std::string &uri);
 	std::string handleAutoIndex(Client &client, const std::string &uri, HttpRequest request);

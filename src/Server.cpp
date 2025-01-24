@@ -126,12 +126,15 @@ void Server::handleRedirect(Client &client)
     client.popRequest();
 }
 
-bool Server::isMethodAllowedInUploads(const std::string &method, Client &client) {
+bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
+{
+	std::string method = request.getMethod();
     const ServerBlock *serverBlock = client.getServerBlock();
-    auto locationBlock = serverBlock->getLocationBlock("/uploads/");
+    auto locationBlock = serverBlock->getLocationBlock(request.getMatched_location());
 
     std::cout << "Checking methods for /uploads/...\n";
-    if (locationBlock.find("allow_methods") != locationBlock.end()) {
+    if (locationBlock.find("allow_methods") != locationBlock.end())
+	{
         std::cout << "Allow methods found: " << locationBlock.at("allow_methods") << "\n";
         std::istringstream iss(locationBlock.at("allow_methods"));
         std::string allowedMethod;
@@ -354,9 +357,7 @@ void	Server::processRequest(Client &client)
 		std::string uri = request.getUri();
 		if (request.getUri() == "/list-uploads")
 		{
-			// produce a JSON list of filenames
 			std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"));
-			// build HTTP response
 			std::string resp =
 				"HTTP/1.1 200 OK\r\n"
 				"Content-Type: application/json\r\n\r\n" +
@@ -379,7 +380,10 @@ void	Server::processRequest(Client &client)
 			client.popRequest();
 			return;
 		}
-		if (!isMethodAllowedInUploads(request.getMethod(), client))
+		// std::cout << " URI " << uri << std::endl;
+		debug("LOG URI" + uri);
+		debug("LOCATION" + request.getMatched_location());
+		if (!isMethodAllowedInUploads(request, client))
 		{
 			std::string response =
 				"HTTP/1.1 405 Method Not Allowed\r\n"
@@ -403,22 +407,18 @@ void	Server::processRequest(Client &client)
 		if (isCGIRequest(request))
 		{
 			executeCGI(client, resolveCGIPath(request.getUri()), req);
-			//client.popRequest();
+			client.popRequest();
 			return;
 		}
 		if (request.getMethod() == "DELETE")
         {
-            // Suppose the URI is like: /uploads/myImage.jpg
             std::string uri = request.getUri();
-            // security check: ensure it starts with "/uploads/"
             if (uri.rfind("/uploads/", 0) == 0)
             {
-                // parse out the filename
                 std::string filename = uri.substr(std::string("/uploads/").size());
                 std::string fullPath = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root") + "/uploads/" + filename;
 				std::cout << "full path " << fullPath << std::endl;
 
-                // Attempt to delete
                 if (std::remove(fullPath.c_str()) == 0)
                 {
                     std::string resp = 
@@ -459,32 +459,17 @@ void	Server::processRequest(Client &client)
 			client.get_outFile().open(root + "/uploads/" + filename, std::ios::binary);//temp
 			if (!client.get_outFile().is_open())
 				request.setStatusCode(500); // Check
-			// string contentType = request.getHeader("Content-Type");
-			// std::regex boundaryRegex("boundary=([a-zA-Z0-9'-]+)");
-			// std::smatch match;
-			// if (std::regex_search(contentType, match, boundaryRegex) && match.size() > 1)
-			// {
-			// 	client.get_boundary() = match[1].str();
-			// }
-			// else
-			// 	request.setStatusCode(500); // Check
-			client.isSending() = true; // Used?
+			client.isSending() = true;
 		}
 
 		HttpResponse	response(request);
 		
-		if (request.getMethod()=="POST") //temp
-		{
-			// debug("Sending 100 CONTINUE");
-			// client.queueResponse(request.getContinueResponse());
-		}
-		else
+		if (request.getMethod()!="POST")
 		{
 			client.queueResponse(response.returnResponse());
 			this->postEvent(client.getSocket(), 2); //TEMP
 
 		}
-		// this->postEvent(client.getSocket(), 2);
 	}
 	else
 	{
@@ -492,7 +477,6 @@ void	Server::processRequest(Client &client)
 		string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
 		string *endBoundary;
 
-	// Check if the chunk ends with a boundary prefix or suffix
 		if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
 			endBoundary = &boundaryPrefix;
 		else if (req.substr(req.length() - boundarySuffix.length()) == boundarySuffix)
@@ -505,7 +489,6 @@ void	Server::processRequest(Client &client)
 			endBoundary = NULL;
 		}
 
-	// Ensure that the chunk begins with the correct boundary prefix
 		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
 		{
 			endBoundary = NULL;
@@ -517,10 +500,9 @@ void	Server::processRequest(Client &client)
 			content = content.substr(0, content.length() - endBoundary->length());
 			content = content.substr(0, content.length() - 2);
 
-			// Remove the multipart headers (if they exist)
 			size_t headerEndPos = content.find("\r\n\r\n");
 			if (headerEndPos != string::npos)
-				content = content.substr(headerEndPos + 4); // Skip past the headers
+				content = content.substr(headerEndPos + 4);
 			client.queueFileContent(content);
 			if (*endBoundary == boundarySuffix)
 				postEvent(client.getSocket(), 4);

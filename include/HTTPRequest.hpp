@@ -39,7 +39,7 @@ public:
 	std::string							getMatched_location() const;
 	std::string 						getFileContent() const;
 	const ServerBlock& 					getRequestBlock() const;
-	const std::string& 				getContinueResponse() const;
+	const std::string& 					getContinueResponse() const;
 	int 								getStatusCode() const;
 	int 								getPort() const;
 	// SETTERS

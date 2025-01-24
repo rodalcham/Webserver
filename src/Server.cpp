@@ -154,7 +154,8 @@ std::string listUploadsJSON(const std::string &dirPath)
 {
     namespace fs = std::filesystem;
     std::vector<std::string> files;
-    for (const auto &entry : fs::directory_iterator(dirPath))
+	std::cout << "dir path " << dirPath << std::endl;
+    for (const auto &entry : fs::directory_iterator(dirPath + "/uploads/"))
     {
         if (entry.is_regular_file())
         {
@@ -351,6 +352,20 @@ void	Server::processRequest(Client &client)
 	{
 		HttpRequest		request(client);
 		std::string uri = request.getUri();
+		if (request.getUri() == "/list-uploads")
+		{
+			// produce a JSON list of filenames
+			std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"));
+			// build HTTP response
+			std::string resp =
+				"HTTP/1.1 200 OK\r\n"
+				"Content-Type: application/json\r\n\r\n" +
+				jsonList;
+			client.queueResponse(resp);
+			this->postEvent(client.getSocket(), 2);
+			client.popRequest();
+			return;
+		}
 		if (request.getMethod() == "GET")
 		{
 			std::string responsee = handleDirectoryOrFile(uri, request);
@@ -391,20 +406,6 @@ void	Server::processRequest(Client &client)
 			//client.popRequest();
 			return;
 		}
-		if (request.getUri() == "/list-uploads")
-            {
-                // produce a JSON list of filenames
-                std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"));
-                // build HTTP response
-                std::string resp =
-                    "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: application/json\r\n\r\n" +
-                    jsonList;
-                client.queueResponse(resp);
-                this->postEvent(client.getSocket(), 2);
-                client.popRequest();
-                return;
-            }
 		if (request.getMethod() == "DELETE")
         {
             // Suppose the URI is like: /uploads/myImage.jpg
@@ -414,7 +415,8 @@ void	Server::processRequest(Client &client)
             {
                 // parse out the filename
                 std::string filename = uri.substr(std::string("/uploads/").size());
-                std::string fullPath = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root") + filename;
+                std::string fullPath = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root") + "/uploads/" + filename;
+				std::cout << "full path " << fullPath << std::endl;
 
                 // Attempt to delete
                 if (std::remove(fullPath.c_str()) == 0)

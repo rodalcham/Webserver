@@ -1,5 +1,7 @@
 #include "../include/Client.hpp"
 
+bool isHttpRequest(const std::string &request);
+
 Client::Client() : clientSock(-3)
 {
 
@@ -161,7 +163,7 @@ bool	Client::isLastComplete()
 		return true; // No requests to check
 	}
 	string& req = requests.back();
-	if (req.find("HTTP") != std::string::npos)
+	if (isHttpRequest(req))
 	{
 		size_t headerEnd = req.find("\r\n\r\n");
 		if (headerEnd == std::string::npos)
@@ -171,6 +173,7 @@ bool	Client::isLastComplete()
 		if (req.find("POST") != std::string::npos && req.find("cgi") == string::npos)
 		{
 			this->_boundary = extractBoundary(req);
+			debug("Boundary FOUND :" + this->_boundary);
 			return true;
 		}
 		std::regex contentLengthRegex("Content-Length: (\\d+)", std::regex::icase);

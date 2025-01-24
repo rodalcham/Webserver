@@ -339,23 +339,29 @@ std::string resolveCGIPath(const std::string &uri) {
 	}
 }
 
-bool isHttpRequest(const std::string &request)
-{
-    // Extract the first line of the request
-    std::istringstream requestStream(request);
-    std::string firstLine;
-    std::getline(requestStream, firstLine);
 
-    // Remove trailing carriage return (\r) if present
-    if (!firstLine.empty() && firstLine.back() == '\r') {
-        firstLine.pop_back();
-    }
+bool isHttpRequest(const std::string &request) {
+	// Find the position of the first newline character
+	size_t newlinePos = request.find('\n');
+	if (newlinePos == std::string::npos) {
+		// If no newline character is found, the request is invalid
+		return false;
+	}
 
-    // Regular expression to match a valid HTTP request line
-    std::regex httpRequestRegex(R"(^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT) [^\s]+ HTTP/\d\.\d$)");
+	// Extract the first line of the request (excluding the newline character)
+	std::string firstLine = request.substr(0, newlinePos);
+	debug("First line : " + firstLine);
 
-    // Validate the first line using the regex
-    return std::regex_match(firstLine, httpRequestRegex);
+	// Remove trailing carriage return (\r) if present
+	if (!firstLine.empty() && firstLine.back() == '\r') {
+		firstLine.pop_back();
+	}
+
+	// Regular expression to match a valid HTTP request line
+	std::regex httpRequestRegex(R"(^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT) [^\s]+ HTTP/\d\.\d$)");
+
+	// Validate the first line using the regex
+	return std::regex_match(firstLine, httpRequestRegex);
 }
 
 void	Server::processRequest(Client &client)
@@ -365,6 +371,7 @@ void	Server::processRequest(Client &client)
 	string&	req = client.getRequest();
 	if (isHttpRequest(req))
 	{
+		debug("HTTP REQUEST");
 		HttpRequest		request(client);
 		std::string uri = request.getUri();
 		if (request.getUri() == "/list-uploads")
@@ -485,6 +492,7 @@ void	Server::processRequest(Client &client)
 	}
 	else
 	{
+		debug("FILE CONTENT");
 		string boundaryPrefix = "--" + client.get_boundary() + "\r\n";
 		string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
 		string *endBoundary;
@@ -503,6 +511,7 @@ void	Server::processRequest(Client &client)
 
 		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
 		{
+			debug("Missing Boundary prefix: " + boundaryPrefix);
 			endBoundary = NULL;
 		}
 

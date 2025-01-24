@@ -341,9 +341,21 @@ std::string resolveCGIPath(const std::string &uri) {
 
 bool isHttpRequest(const std::string &request)
 {
-    std::regex httpRequestRegex(R"(^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT) [^\s]+ HTTP/\d\.\d\r\n)");
+    // Extract the first line of the request
+    std::istringstream requestStream(request);
+    std::string firstLine;
+    std::getline(requestStream, firstLine);
 
-    return std::regex_search(request, httpRequestRegex);
+    // Remove trailing carriage return (\r) if present
+    if (!firstLine.empty() && firstLine.back() == '\r') {
+        firstLine.pop_back();
+    }
+
+    // Regular expression to match a valid HTTP request line
+    std::regex httpRequestRegex(R"(^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT) [^\s]+ HTTP/\d\.\d$)");
+
+    // Validate the first line using the regex
+    return std::regex_match(firstLine, httpRequestRegex);
 }
 
 void	Server::processRequest(Client &client)

@@ -1,0 +1,1435 @@
+[20250124_150330] Server running in DEBUG mode.
+[20250124_150330] Server started
+[20250124_150337] Read Event
+[20250124_150337] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_150337] Read Event
+[20250124_150337] From client
+[20250124_150337] Bytes read: 648
+[20250124_150337] executing child with parameter:
+POST /cgi-bin/calculator.py HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Content-Length: 3
+sec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"
+Content-Type: text/plain
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36
+sec-ch-ua-platform: "macOS"
+Accept: */*
+Origin: http://localhost:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8080/index.html
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7
+
+1+1
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] CGI still running
+[20250124_150339] Read Event
+[20250124_150339] From cgi
+[20250124_150339] Send Event
+[20250124_150339] Sending message to client : HTTP/1.1 200 OK
+Content-Length: 32
+
+Content-Type: text/plain
+
+2.0
+
+
+[20250124_150339] Send Event
+[20250124_150339] Read Event
+[20250124_150339] From client
+[20250124_150339] Bytes read: 0
+[20250124_150339] Client Closed Connection
+[20250124_150339] Removing Client 7
+[20250124_150354] Read Event
+[20250124_150354] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_150354] Read Event
+[20250124_150354] From client
+[20250124_150354] Bytes read: 639
+[20250124_150354] executing child with parameter:
+POST /cgi/hello.php HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Content-Length: 2
+sec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"
+Content-Type: text/plain
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36
+sec-ch-ua-platform: "macOS"
+Accept: */*
+Origin: http://localhost:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8080/index.html
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7
+
+hi
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] CGI still running
+[20250124_150355] Read Event
+[20250124_150355] From cgi
+[20250124_150355] Send Event
+[20250124_150355] Sending message to client : HTTP/1.1 200 OK
+Content-Length: 83
+
+
+<html><head><title>Hello CGI</title></head><body><h1>Hello hi!</h1></body></html>
+
+[20250124_150355] Send Event
+[20250124_150355] Read Event
+[20250124_150355] From client
+[20250124_150355] Bytes read: 0
+[20250124_150355] Client Closed Connection
+[20250124_150355] Removing Client 7
+[20250124_150452] Read Event
+[20250124_150452] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_150452] Read Event
+[20250124_150452] From client
+[20250124_150452] Bytes read: 639
+[20250124_150452] executing child with parameter:
+POST /cgi/hello.php HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Content-Length: 2
+sec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"
+Content-Type: text/plain
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36
+sec-ch-ua-platform: "macOS"
+Accept: */*
+Origin: http://localhost:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8080/index.html
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7
+
+hi
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] CGI still running
+[20250124_150452] Read Event
+[20250124_150452] From cgi
+[20250124_150452] Send Event
+[20250124_150452] Sending message to client : HTTP/1.1 200 OK
+Content-Length: 20
+
+
+<h1>Hello hi!</h1>
+
+[20250124_150452] Send Event
+[20250124_150452] Read Event
+[20250124_150452] From client
+[20250124_150452] Bytes read: 0
+[20250124_150452] Client Closed Connection
+[20250124_150452] Removing Client 7
+[20250124_150524] Read Event
+[20250124_150524] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_150524] Read Event
+[20250124_150524] From client
+[20250124_150524] Bytes read: 644
+[20250124_150524] executing child with parameter:
+POST /cgi/hello.php HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Content-Length: 7
+sec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"
+Content-Type: text/plain
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36
+sec-ch-ua-platform: "macOS"
+Accept: */*
+Origin: http://localhost:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8080/index.html
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7
+
+Rodrigo
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] CGI still running
+[20250124_150525] Read Event
+[20250124_150525] From cgi
+[20250124_150525] Send Event
+[20250124_150525] Sending message to client : HTTP/1.1 200 OK
+Content-Length: 16
+
+
+Hello Rodrigo!
+
+[20250124_150525] Send Event
+[20250124_150525] Read Event
+[20250124_150525] From client
+[20250124_150525] Bytes read: 0
+[20250124_150525] Client Closed Connection
+[20250124_150525] Removing Client 7
+[20250124_150540] Read Event
+[20250124_150540] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_150540] Read Event
+[20250124_150540] From client
+[20250124_150540] Bytes read: 559
+[20250124_150540] Send Event
+[20250124_150540] Sending message to client : HTTP/1.1 404 Not Found
+Content-Type: text/html
+Content-Length: 15
+
+404 Not Found
+
+[20250124_150540] Send Event
+[20250124_150545] Timeout event
+[20250124_150545] Removing Client 7
+[20250124_150547] Read Event
+[20250124_150547] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 741
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 40960
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 40960
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 40960
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 40960
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 40960
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 40960
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 40960
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 40960
+[20250124_150547] Read Event
+[20250124_150547] From client
+[20250124_150547] Bytes read: 25764
+[20250124_150547] LAST CHUNK RECEIVED
+[20250124_150548] LAST CHUNK RECEIVED
+[20250124_150548] File event
+[20250124_150548] Writing into file...
+[20250124_150548] File event
+[20250124_150548] Send Event
+[20250124_150548] Sending message to client : HTTP/1.1 201 Created
+Content-Type: text/plain
+Content-Length: 22
+
+Upload successful.
+
+[20250124_150548] Send Event
+[20250124_150549] Read Event
+[20250124_150549] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_150549] Read Event
+[20250124_150549] From client
+[20250124_150549] Bytes read: 559
+[20250124_150549] Send Event
+[20250124_150549] Sending message to client : HTTP/1.1 404 Not Found
+Content-Type: text/html
+Content-Length: 15
+
+404 Not Found
+
+[20250124_150549] Send Event
+[20250124_150552] Read Event
+[20250124_150552] From client
+[20250124_150552] Bytes read: 559
+[20250124_150552] Send Event
+[20250124_150552] Sending message to client : HTTP/1.1 404 Not Found
+Content-Type: text/html
+Content-Length: 15
+
+404 Not Found
+
+[20250124_150552] Send Event
+[20250124_150553] Timeout event
+[20250124_150553] Removing Client 7
+[20250124_150557] Timeout event
+[20250124_150557] Removing Client 8
+[20250124_150602] Read Event
+[20250124_150602] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_150602] Read Event
+[20250124_150602] From client
+[20250124_150602] Bytes read: 559
+[20250124_150602] Send Event
+[20250124_150602] Sending message to client : HTTP/1.1 404 Not Found
+Content-Type: text/html
+Content-Length: 15
+
+404 Not Found
+
+[20250124_150602] Send Event
+[20250124_150607] Timeout event
+[20250124_150607] Removing Client 7

@@ -68,7 +68,7 @@ void	Server::removeEvent(int eventID)
  */
 void		Server::msg_send(Client &client, int mode)
 {
-	size_t	bytes;
+	ssize_t	bytes;
 	if (!mode && client.isReceiving())
 	{
 		this->postEvent(client.getSocket(), 2);
@@ -83,6 +83,7 @@ void		Server::msg_send(Client &client, int mode)
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);
 		if	(bytes > 0)
 		{
+			setTimeout(client);
 			msg->erase(0, bytes);
 			if (msg->empty())
 			{
@@ -96,7 +97,7 @@ void		Server::msg_send(Client &client, int mode)
 				return;
 			}
 		}
-		else if (errno == EAGAIN || errno == EWOULDBLOCK) //WRONG !!!!!!!!!
+		else
 		{
 			if (!mode)
 			{
@@ -104,14 +105,6 @@ void		Server::msg_send(Client &client, int mode)
 				enable_write_listen(client.getSocket());
 			}
 			break;
-		}
-		else
-		{
-			if (mode)
-				disable_write_listen(client.getSocket());
-			close(client.getSocket());
-			this->clients.erase(client.getSocket());
-			throw std::runtime_error("Failed to send to client socket " + std::to_string(client.getSocket()) + ": " + strerror(errno));
 		}
 	}
 }
@@ -143,12 +136,15 @@ void Server::msg_receive(Client& client)
 	{
 		debug("Error receiving from client " + std::to_string(client.getSocket()));
 		removeClient(client);
+		return;
 	}
 	else if (bytes_read == 0)
 	{
 		debug("Client Closed Connection");
 		removeClient(client);
+		return;
 	}
+	setTimeout(client);
 	
 	pos = 0;
 	while (pos < bytes_read)

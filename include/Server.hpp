@@ -42,6 +42,7 @@ class Server {
 
 	void	acceptClient(int server_sock);
 	void	removeClient(Client &client);
+	void	setTimeout(Client &client);
 	void	executeCGI(Client &client, const std::string &cgiPath, std::string &request);
 	void	sendCGIOutput(Client &client);
 	bool	isMethodAllowedInUploads(const std::string &method, Client &client);

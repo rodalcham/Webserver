@@ -24,6 +24,7 @@
 #include <filesystem>
 
 #define SOCKET_BACKLOG_MAX 10
+#define TIMEOUT 5000
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"

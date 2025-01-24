@@ -281,6 +281,8 @@ void	Server::run()
 					{
 						if (this->clients[event/10].processFile(event % 10))
 							this->postEvent(event/10, 2);
+						else
+							setTimeout(this->clients[event/10]);
 					}
 					else
 						this->removeEvent(event);
@@ -290,6 +292,11 @@ void	Server::run()
 			{
 				debug("Write Event");
 				msg_send(this->clients[event], 1);  
+			}
+			else if (eventList[i].filter == EVFILT_TIMER)
+			{
+				debug("Timeout event");
+				removeClient(this->clients[event]);
 			}
 		}
 	}
@@ -537,23 +544,27 @@ void	Server::acceptClient(int server_sock)
 			return; // No more connections to accept
 		throw std::runtime_error("Failed to accept new client");
 	}
+	this->clients[clientSock] = Client(clientSock, this->_server_sockets[server_sock]);
 
 	// Set client socket to non-blocking mode
 	int flags = fcntl(clientSock, F_GETFL, 0);
-	if (flags < 0 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) < 0) {
-		close(clientSock);
+	if (flags < 0 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) < 0)
+	{
+		removeClient(this->clients[clientSock]);
 		throw std::runtime_error("Failed to set client socket to non-blocking mode");
 	}
 
 	// Register the client socket with kqueue
 	struct kevent event;
 	EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
-		close(clientSock);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+	{
+		removeClient(this->clients[clientSock]);
 		throw std::runtime_error("Failed to add client socket to kqueue");
 	}
 
-	this->clients[clientSock] = Client(clientSock, this->_server_sockets[server_sock]);
+	setTimeout(this->clients[clientSock]);
+
 	debug("Client accepted : " + std::to_string(clientSock) + 
 		"\nConnected through port : " + std::to_string(this->_server_sockets[server_sock]->getPort())
 		+ "\nThrough host : " + this->_server_sockets[server_sock]->getHostName());
@@ -593,13 +604,29 @@ void Server::removeClient(Client &client)
 
 	debug("Removing Client " + std::to_string(client.getSocket()));
 	EV_SET(&event, client.getSocket(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	kevent(this->kq, &event, 1, NULL, 0, NULL);
-	if (client.isReceiving())
-	{
+	if (kevent(this->kq, &event, 1, NULL, 0, NULL))
+		throw std::runtime_error("Failed disable read event");
+	EV_SET(&event, client.getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
+		throw std::runtime_error("Failed disable timeout event");
+	if (client.isSending())
 		disable_write_listen(client.getSocket());
-	}
 	close(client.getSocket());
 	this->clients.erase(client.getSocket());
+}
+
+void	Server::setTimeout(Client &client)
+{
+	struct kevent event;
+
+	// Overwrite the old timer event with the same ident (clientSocket)
+	EV_SET(&event, client.getSocket(), EVFILT_TIMER, EV_ADD | EV_ENABLE, 0, TIMEOUT, nullptr);
+
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
+	{
+		removeClient(client);
+		throw std::runtime_error("Failed to reset timer event");
+	}
 }
 // void Server::executeCGI(Client &client, const std::string &cgiPath, string &request)
 // {

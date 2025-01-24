@@ -1,0 +1,81 @@
+[20250123_135917] Server running in DEBUG mode.
+[20250123_135917] Server started
+[20250123_135925] Read Event
+[20250123_135925] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_135925] Read Event
+[20250123_135925] From client
+[20250123_135925] Bytes read: 734
+[20250123_135925] Read Event
+[20250123_135925] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_135925] Send Event
+[20250123_135925] Sending message to client : HTTP/1.1 404 Not Found
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 23 Jan 2025 13:59:25 CET
+Server: webserv/42.0
+Content-Length: 206
+
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>
+
+
+[20250123_135925] Send Event
+[20250123_135925] Read Event
+[20250123_135925] From client
+[20250123_135925] Bytes read: 0
+[20250123_135925] Client Closed Connection
+[20250123_135925] Removing Client 7
+[20250123_135939] Read Event
+[20250123_135939] From client
+[20250123_135939] Bytes read: 821
+[20250123_135939] Send Event
+[20250123_135939] Sending message to client : HTTP/1.1 404 Not Found
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 23 Jan 2025 13:59:39 CET
+Server: webserv/42.0
+Content-Length: 206
+
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>
+
+
+[20250123_135939] Send Event
+[20250123_135939] Read Event
+[20250123_135939] From client
+[20250123_135939] Bytes read: 0
+[20250123_135939] Client Closed Connection
+[20250123_135939] Removing Client 8
+[20250123_135942] Read Event
+[20250123_135942] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_135942] Read Event
+[20250123_135942] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_135942] Read Event
+[20250123_135942] From client
+[20250123_135942] Bytes read: 769
+[20250123_135942] Send Event
+[20250123_135942] Sending message to client : HTTP/1.1 404 Not Found
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 23 Jan 2025 13:59:42 CET
+Server: webserv/42.0
+Content-Length: 206
+
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>
+
+
+[20250123_135942] Send Event
+[20250123_135942] Read Event
+[20250123_135942] From client
+[20250123_135942] Bytes read: 0
+[20250123_135942] Client Closed Connection
+[20250123_135942] Removing Client 7

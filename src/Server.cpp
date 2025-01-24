@@ -16,6 +16,88 @@ extern std::atomic<bool> keepRunning;
 
 uint16_t	ft_htons(uint16_t port);
 
+std::string Server::handleDirectoryOrFile(const std::string &uri, HttpRequest &request)
+{
+	std::cout << "COME TO THE FUNCTION" << std::endl;
+    const ServerBlock serverBlock = request.getRequestBlock();
+    std::string root = serverBlock.getLocationValue(request.getMatched_location(), "root");
+    std::string indexFile = serverBlock.getLocationValue(request.getMatched_location(), "index");
+    std::string autoindex = serverBlock.getLocationValue(request.getMatched_location(), "autoindex");
+
+    std::string fullPath = root + uri;
+	std::cout << "FULL PATH" << fullPath << std::endl;
+    if (std::filesystem::is_directory(fullPath))
+    {
+		std::cout << "IT IS A DIRECTORY" << std::endl;
+        std::string indexFilePath = fullPath + "/" + indexFile;
+		std::cout << "INDEX FILE" << indexFile << std::endl;
+        if (!indexFile.empty() && std::filesystem::exists(indexFilePath) && std::filesystem::is_regular_file(indexFilePath))
+        {
+            std::string fileContent = Server::readFile(indexFilePath);
+            std::string mimeType = Server::getMimeType(indexFilePath);
+
+            std::string response =
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: " + mimeType + "\r\n"
+                "Content-Length: " + std::to_string(fileContent.size()) + "\r\n\r\n" +
+                fileContent;
+
+            return response;
+        }
+		std::cout << "I do autoindex" << std::endl;
+        if (autoindex == "on")
+        {
+            std::string html = "<html><head><title>Index of " + uri + "</title></head><body>";
+            html += "<h1>Index of " + uri + "</h1><hr><pre>";
+
+            for (const auto &entry : std::filesystem::directory_iterator(fullPath))
+            {
+                std::string name = entry.path().filename().string();
+                std::string link = uri + (uri.back() == '/' ? "" : "/") + name;
+                html += "<a href=\"" + link + "\">" + name + "</a>\n";
+            }
+            html += "</pre><hr></body></html>";
+            std::string response =
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/html\r\n"
+                "Content-Length: " + std::to_string(html.size()) + "\r\n\r\n" +
+                html;
+
+            return response;
+        }
+        std::string response =
+            "HTTP/1.1 403 Forbidden\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: 19\r\n\r\n"
+            "403 Forbidden\r\n";
+        return response;
+    }
+
+    // If the path is not a directory, check if it's a file
+    if (std::filesystem::exists(fullPath) && std::filesystem::is_regular_file(fullPath))
+    {
+        // Serve the file directly
+        std::string fileContent = readFile(fullPath);
+        std::string mimeType = getMimeType(fullPath);
+
+        std::string response =
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: " + mimeType + "\r\n"
+            "Content-Length: " + std::to_string(fileContent.size()) + "\r\n\r\n" +
+            fileContent;
+
+        return response;
+    }
+
+    // If neither a directory nor a file exists, return a 404 Not Found response
+    std::string response =
+        "HTTP/1.1 404 Not Found\r\n"
+        "Content-Type: text/html\r\n"
+        "Content-Length: 15\r\n\r\n"
+        "404 Not Found\r\n";
+    return response;
+}
+
 void Server::handleRedirect(Client &client)
 {
     const ServerBlock *serverBlock = client.getServerBlock();
@@ -254,7 +336,16 @@ void	Server::processRequest(Client &client)
 	if (req.find("HTTP") != std::string::npos)
 	{
 		HttpRequest		request(client);
-
+		std::string uri = request.getUri();
+		if (request.getMethod() == "GET")
+		{
+			std::cout << "BITCH" << std::endl;
+			std::string responsee = handleDirectoryOrFile(uri, request);
+			client.queueResponse(responsee);
+			this->postEvent(client.getSocket(), 2);
+			client.popRequest();
+			return;
+		}
         if (request.getUri() == "/return")
         {
             handleRedirect(client);

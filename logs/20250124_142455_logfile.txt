@@ -1,0 +1,29 @@
+[20250124_142455] Server running in DEBUG mode.
+[20250124_142455] Server started
+[20250124_142458] Read Event
+[20250124_142458] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_142458] Read Event
+[20250124_142458] From client
+[20250124_142458] Bytes read: 732
+[20250124_142458] Read Event
+[20250124_142458] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_142458] Send Event
+[20250124_142458] Sending message to client : HTTP/1.1 200 OK
+Content-Type: text/html
+Content-Length: 314
+
+<html><head><title>Index of /uploads/</title></head><body><h1>Index of /uploads/</h1><hr><pre><a href="/uploads/index.html">index.html</a>
+<a href="/uploads/picture.jpg">picture.jpg</a>
+<a href="/uploads/swedishforest.jpg">swedishforest.jpg</a>
+<a href="/uploads/testfolder">testfolder</a>
+</pre><hr></body></html>
+[20250124_142458] Send Event
+[20250124_142656] Read Event
+[20250124_142656] From client
+[20250124_142656] Bytes read: 0
+[20250124_142656] Client Closed Connection
+[20250124_142656] Removing Client 8

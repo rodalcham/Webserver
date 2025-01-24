@@ -20,6 +20,7 @@ private:
 	const ServerBlock* 					_request_block;
 	std::string 						_continue_response; // Store the "100 Continue" response if needed
 	std::string 						_file_content;
+	std::string							_matched_location;
 
 public:
 	// CONSTRUCTORS
@@ -35,6 +36,7 @@ public:
 	std::string 						getHeaders(const std::string& key) const;
 	std::string 						getHeader(const std::string& key) const;
 	std::string 						getFilename() const;
+	std::string							getMatched_location() const;
 	std::string 						getFileContent() const;
 	const ServerBlock& 					getRequestBlock() const;
 	const std::string& 				getContinueResponse() const;

@@ -1,0 +1,61 @@
+[20250123_134923] Server running in DEBUG mode.
+[20250123_134923] Server started
+[20250123_134930] Read Event
+[20250123_134930] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_134930] Read Event
+[20250123_134930] From client
+[20250123_134930] Bytes read: 821
+[20250123_134930] Send Event
+[20250123_134930] Sending message to client : HTTP/1.1 404 Not Found
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 23 Jan 2025 13:49:30 CET
+Server: webserv/42.0
+Content-Length: 206
+
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>
+
+
+[20250123_134930] Send Event
+[20250123_134930] Read Event
+[20250123_134930] From client
+[20250123_134930] Bytes read: 0
+[20250123_134930] Client Closed Connection
+[20250123_134930] Removing Client 7
+[20250123_134931] Read Event
+[20250123_134931] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_134931] Read Event
+[20250123_134931] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_134931] Read Event
+[20250123_134931] From client
+[20250123_134931] Bytes read: 769
+[20250123_134931] Send Event
+[20250123_134931] Sending message to client : HTTP/1.1 404 Not Found
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 23 Jan 2025 13:49:31 CET
+Server: webserv/42.0
+Content-Length: 206
+
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>
+
+
+[20250123_134931] Send Event
+[20250123_134931] Read Event
+[20250123_134931] From client
+[20250123_134931] Bytes read: 0
+[20250123_134931] Client Closed Connection
+[20250123_134931] Removing Client 7
+[20250123_135051] Read Event
+[20250123_135051] From client
+[20250123_135051] Bytes read: 0
+[20250123_135051] Client Closed Connection
+[20250123_135051] Removing Client 8

@@ -1,0 +1,56 @@
+[20250123_140520] Server running in DEBUG mode.
+[20250123_140520] Server started
+[20250123_140528] Read Event
+[20250123_140528] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_140528] Read Event
+[20250123_140528] From client
+[20250123_140528] Bytes read: 821
+[20250123_140528] Send Event
+[20250123_140528] Sending message to client : HTTP/1.1 404 Not Found
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 23 Jan 2025 14:05:28 CET
+Server: webserv/42.0
+Content-Length: 206
+
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>
+
+
+[20250123_140528] Send Event
+[20250123_140528] Read Event
+[20250123_140528] From client
+[20250123_140528] Bytes read: 0
+[20250123_140528] Client Closed Connection
+[20250123_140528] Removing Client 7
+[20250123_140530] Read Event
+[20250123_140530] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_140530] Read Event
+[20250123_140530] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_140530] Read Event
+[20250123_140530] From client
+[20250123_140530] Bytes read: 769
+[20250123_140530] Send Event
+[20250123_140530] Sending message to client : HTTP/1.1 404 Not Found
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 23 Jan 2025 14:05:30 CET
+Server: webserv/42.0
+Content-Length: 206
+
+
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>
+
+
+[20250123_140530] Send Event
+[20250123_140530] Read Event
+[20250123_140530] From client
+[20250123_140530] Bytes read: 0
+[20250123_140530] Client Closed Connection
+[20250123_140530] Removing Client 7

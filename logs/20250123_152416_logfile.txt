@@ -1,0 +1,14 @@
+[20250123_152416] Server running in DEBUG mode.
+[20250123_152416] Server started
+[20250123_152424] Read Event
+[20250123_152424] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_152424] Read Event
+[20250123_152424] From client
+[20250123_152424] Bytes read: 724
+[20250123_152424] Checking directory: /
+[20250123_152424] Index file: index.html
+[20250123_152424] Path is a directory: /
+[20250123_152424] Checking for index file: //index.html
+[20250123_152424] Index file not found: //index.html

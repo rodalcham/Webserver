@@ -46,10 +46,13 @@ class Server {
 	void	sendCGIOutput(Client &client);
 	bool	isMethodAllowedInUploads(const std::string &method, Client &client);
 	void	handleRedirect(Client &client);
+	std::string handleDefaultIndex(Client &client, const std::string &uri);
+	std::string handleAutoIndex(Client &client, const std::string &uri, HttpRequest request);
 	// void sendResponse(int clientSock, const std::string& body, int statusCode, const std::string& contentType = "text/plain");
 
 	std::string readFile(const std::string& filePath); // Function to read static files
 	std::string getMimeType(const std::string& filePath);
+	std::string handleDirectoryOrFile(const std::string &uri, HttpRequest &request);
 
 	void	enable_write_listen(int clientSock);
 	void	disable_write_listen(int clientSock);

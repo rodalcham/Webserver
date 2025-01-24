@@ -1,0 +1,46 @@
+[20250124_133922] Server running in DEBUG mode.
+[20250124_133922] Server started
+[20250124_134234] Read Event
+[20250124_134234] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_134234] Read Event
+[20250124_134234] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_134234] Read Event
+[20250124_134234] From client
+[20250124_134234] Bytes read: 698
+[20250124_134234] Send Event
+[20250124_134234] Sending message to client : HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: application/octet-stream
+Date: Fri, 24 Jan 2025 13:42:34 CET
+Last-Modified: 
+Server: webserv/42.0
+Content-Length: 0
+
+
+
+
+
+[20250124_134234] Send Event
+[20250124_134234] Read Event
+[20250124_134234] From client
+[20250124_134234] Bytes read: 0
+[20250124_134234] Client Closed Connection
+[20250124_134234] Removing Client 7
+[20250124_134240] Read Event
+[20250124_134240] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_134341] Read Event
+[20250124_134341] From client
+[20250124_134341] Bytes read: 0
+[20250124_134341] Client Closed Connection
+[20250124_134341] Removing Client 8
+[20250124_134341] Read Event
+[20250124_134341] From client
+[20250124_134341] Bytes read: 0
+[20250124_134341] Client Closed Connection
+[20250124_134341] Removing Client 7

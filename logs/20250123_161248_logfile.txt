@@ -1,0 +1,13 @@
+[20250123_161248] Server running in DEBUG mode.
+[20250123_161248] Server started
+[20250123_161257] Read Event
+[20250123_161257] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_161257] Read Event
+[20250123_161257] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250123_161257] Read Event
+[20250123_161257] From client
+[20250123_161257] Bytes read: 742

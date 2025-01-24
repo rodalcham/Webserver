@@ -2,16 +2,13 @@
 #include "../include/HTTPRequest.hpp"
 #include "../include/ServerBlock.hpp"
 
-// Constructors
-
-// Default Constructor
 HttpRequest::HttpRequest() 
 	: _stat_code_no(200), _filename(""), _request_block(NULL)
 {
 	// Default initialized request
 }
 
-// Parameterized Constructor with Pre-Matched ServerBlock
+
 HttpRequest::HttpRequest(Client &client)
 	: _stat_code_no(200), _filename(""), _request_block(client.getServerBlock()), _continue_response("")
 {
@@ -19,12 +16,12 @@ HttpRequest::HttpRequest(Client &client)
 
 	size_t headerEnd = request.find("\r\n\r\n");
 	if (headerEnd == std::string::npos) {
-		_stat_code_no = 400; // Bad Request
+		_stat_code_no = 400;
 		throw std::runtime_error("Invalid HTTP request: Missing headers or body");
 	}
 
 	std::string headerPart = request.substr(0, headerEnd);
-	_body = request.substr(headerEnd + 4); // The remainder is considered the body
+	_body = request.substr(headerEnd + 4);
 
 	std::istringstream requestStream(headerPart);
 	std::string requestLine;
@@ -57,7 +54,18 @@ HttpRequest::HttpRequest(Client &client)
 		return;
 	}
 
-	// If _stat_code_no != 200 and method != POST, just return (likely error or non-body method)
+    const std::map<std::string, std::map<std::string, std::string>> &locations = _request_block->getAllLocationBlocks();
+    _matched_location = "/";
+    size_t longestMatch = 0;
+
+    for (const auto &location : locations)
+	{
+        if (_uri.find(location.first) == 0 && location.first.size() > longestMatch)
+		{
+            _matched_location = location.first;
+            longestMatch = location.first.size();
+        }
+    }
 	if (_stat_code_no != 200 && _method != "POST")
 	{
 		return;
@@ -65,7 +73,6 @@ HttpRequest::HttpRequest(Client &client)
 }
 
 
-// Destructor
 HttpRequest::~HttpRequest()
 {
 	// Cleanup if needed
@@ -82,7 +89,7 @@ std::string HttpRequest::parseHttpMethod(const std::string& methodStr)
 	throw std::runtime_error("Unsupported HTTP method: " + methodStr);
 }
 
-// Parse Headers
+
 std::map<std::string, std::string> HttpRequest::parseHeaders(std::istringstream& requestStream)
 {
 	std::map<std::string, std::string> headers;
@@ -110,7 +117,6 @@ std::map<std::string, std::string> HttpRequest::parseHeaders(std::istringstream&
 	return headers;
 }
 
-// Validate Headers and Method
 void HttpRequest::headersGood()
 {
 	if (_method == "GET")
@@ -143,14 +149,15 @@ void HttpRequest::headersGood()
 			{
 				size_t length = std::stoul(content_length_str);
 				const size_t MAX_UPLOAD_SIZE = 50 * 1024 * 1024; // 50 MB max
-				if (length > MAX_UPLOAD_SIZE) {
-					_stat_code_no = 413; // Payload Too Large
+				if (length > MAX_UPLOAD_SIZE)
+				{
+					_stat_code_no = 413;
 					return;
 				}
 			}
 			catch (...)
 			{
-				_stat_code_no = 400; // Bad Request
+				_stat_code_no = 400;
 				return;
 			}
 		}
@@ -163,7 +170,6 @@ void HttpRequest::headersGood()
 	}
 }
 
-// Get Header by Key (Case-Insensitive)
 std::string HttpRequest::getHeader(const std::string& key) const
 {
 	std::string normalizedKey = key;
@@ -175,7 +181,6 @@ std::string HttpRequest::getHeader(const std::string& key) const
 	return "";
 }
 
-// Getters
 std::string HttpRequest::getMethod() const
 {
 	return _method;
@@ -257,4 +262,8 @@ void HttpRequest::setFileContent(const std::string& content)
 void HttpRequest::setPort(int port)
 {
 	_port = port;
+}
+std::string	HttpRequest::getMatched_location() const
+{
+	return (_matched_location);
 }

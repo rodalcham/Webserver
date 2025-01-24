@@ -1,0 +1,21 @@
+[20250124_141431] Server running in DEBUG mode.
+[20250124_141431] Server started
+[20250124_141435] Read Event
+[20250124_141435] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_141435] Read Event
+[20250124_141435] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250124_141435] Read Event
+[20250124_141435] From client
+[20250124_141435] Bytes read: 732
+[20250124_141435] Send Event
+[20250124_141435] Sending message to client : HTTP/1.1 404 Not Found
+Content-Type: text/html
+Content-Length: 15
+
+404 Not Found
+
+[20250124_141435] Send Event

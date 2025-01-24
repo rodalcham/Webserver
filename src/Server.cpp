@@ -454,7 +454,7 @@ void	Server::processRequest(Client &client)
 			string root = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root");
 			if (filename.empty())
 				request.setStatusCode(500); // Check
-			client.get_outFile().open(root + filename, std::ios::binary);//temp
+			client.get_outFile().open(root + "/uploads/" + filename, std::ios::binary);//temp
 			if (!client.get_outFile().is_open())
 				request.setStatusCode(500); // Check
 			// string contentType = request.getHeader("Content-Type");

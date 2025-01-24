@@ -6,9 +6,10 @@
 #include "../include/Client.hpp"
 
 #include <errno.h>
-#include <filesystem> // C++17 or later
+#include <filesystem>
 #include <vector>
 #include <string>
+
 
 class log;
 
@@ -327,19 +328,24 @@ std::string resolveCGIPath(const std::string &uri) {
 	}
 }
 
+bool isHttpRequest(const std::string &request)
+{
+    std::regex httpRequestRegex(R"(^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT) [^\s]+ HTTP/\d\.\d\r\n)");
+
+    return std::regex_search(request, httpRequestRegex);
+}
 
 void	Server::processRequest(Client &client)
 {
 	if (!client.hasRequest())
 		return;
 	string&	req = client.getRequest();
-	if (req.find("HTTP") != std::string::npos)
+	if (isHttpRequest(req))
 	{
 		HttpRequest		request(client);
 		std::string uri = request.getUri();
 		if (request.getMethod() == "GET")
 		{
-			std::cout << "BITCH" << std::endl;
 			std::string responsee = handleDirectoryOrFile(uri, request);
 			client.queueResponse(responsee);
 			this->postEvent(client.getSocket(), 2);

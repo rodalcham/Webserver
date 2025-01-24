@@ -366,6 +366,11 @@ void	Server::processRequest(Client &client)
 			client.popRequest();
 			return;
 		}
+		if (request.getUri() == "/return")
+        {
+            handleRedirect(client);
+            return;
+        }
 		if (request.getMethod() == "GET")
 		{
 			std::string responsee = handleDirectoryOrFile(uri, request);
@@ -374,11 +379,6 @@ void	Server::processRequest(Client &client)
 			client.popRequest();
 			return;
 		}
-        if (request.getUri() == "/return")
-        {
-            handleRedirect(client);
-            return;
-        }
 		if (!isMethodAllowedInUploads(request.getMethod(), client))
 		{
 			std::string response =

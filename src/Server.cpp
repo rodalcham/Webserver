@@ -19,19 +19,19 @@ uint16_t	ft_htons(uint16_t port);
 
 std::string Server::handleDirectoryOrFile(const std::string &uri, HttpRequest &request)
 {
-	std::cout << "COME TO THE FUNCTION" << std::endl;
+
     const ServerBlock serverBlock = request.getRequestBlock();
     std::string root = serverBlock.getLocationValue(request.getMatched_location(), "root");
     std::string indexFile = serverBlock.getLocationValue(request.getMatched_location(), "index");
     std::string autoindex = serverBlock.getLocationValue(request.getMatched_location(), "autoindex");
 
     std::string fullPath = root + uri;
-	std::cout << "FULL PATH" << fullPath << std::endl;
+
     if (std::filesystem::is_directory(fullPath))
     {
-		std::cout << "IT IS A DIRECTORY" << std::endl;
+
         std::string indexFilePath = fullPath + "/" + indexFile;
-		std::cout << "INDEX FILE" << indexFile << std::endl;
+
         if (!indexFile.empty() && std::filesystem::exists(indexFilePath) && std::filesystem::is_regular_file(indexFilePath))
         {
             std::string fileContent = Server::readFile(indexFilePath);
@@ -45,7 +45,7 @@ std::string Server::handleDirectoryOrFile(const std::string &uri, HttpRequest &r
 
             return response;
         }
-		std::cout << "I do autoindex" << std::endl;
+
         if (autoindex == "on")
         {
             std::string html = "<html><head><title>Index of " + uri + "</title></head><body>";
@@ -132,22 +132,22 @@ bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
     const ServerBlock *serverBlock = client.getServerBlock();
     auto locationBlock = serverBlock->getLocationBlock(request.getMatched_location());
 
-    std::cout << "Checking methods for /uploads/...\n";
+
     if (locationBlock.find("allow_methods") != locationBlock.end())
 	{
-        std::cout << "Allow methods found: " << locationBlock.at("allow_methods") << "\n";
+
         std::istringstream iss(locationBlock.at("allow_methods"));
         std::string allowedMethod;
         while (iss >> allowedMethod) {
-            std::cout << "Allowed method: " << allowedMethod << "\n";
+
             if (allowedMethod == method) {
-                std::cout << "Method " << method << " is allowed.\n";
+
                 return true;
             }
         }
     }
 
-    std::cout << "Method " << method << " is not allowed.\n";
+
     return false;
 }
 
@@ -157,7 +157,7 @@ std::string listUploadsJSON(const std::string &dirPath)
 {
     namespace fs = std::filesystem;
     std::vector<std::string> files;
-	std::cout << "dir path " << dirPath << std::endl;
+
     for (const auto &entry : fs::directory_iterator(dirPath + "/uploads/"))
     {
         if (entry.is_regular_file())
@@ -436,7 +436,7 @@ void	Server::processRequest(Client &client)
             {
                 std::string filename = uri.substr(std::string("/uploads/").size());
                 std::string fullPath = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root") + "/uploads/" + filename;
-				std::cout << "full path " << fullPath << std::endl;
+
 
                 if (std::remove(fullPath.c_str()) == 0)
                 {

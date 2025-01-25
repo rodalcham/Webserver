@@ -21,6 +21,8 @@ private:
 	std::string 						_continue_response; // Store the "100 Continue" response if needed
 	std::string 						_file_content;
 	std::string							_matched_location;
+	std::string							_allowed_methods;
+	std::string							_redir_location;
 
 public:
 	// CONSTRUCTORS
@@ -42,11 +44,15 @@ public:
 	const std::string& 					getContinueResponse() const;
 	int 								getStatusCode() const;
 	int 								getPort() const;
+	std::string 						getAllowedMethods() const;
+	std::string 						getRedirLocation() const;
 	// SETTERS
 	void 								setFilename(const std::string& filename);
 	void 								setFileContent(const std::string& content);
 	void 								setStatusCode(int statusCode);
 	void 								setPort(int port);
+	void 								setAllowedMethods(std::string& allowed_method);
+	void 								setRedirLocation(std::string& redir_location);
 
 	// OTHER
 	std::string							parseHttpMethod(const std::string& methodStr);

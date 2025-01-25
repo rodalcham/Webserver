@@ -12,7 +12,20 @@
 
 class log;
 
+bool isHttpRequest(const std::string &request);
+
 void	Server::processRequest(Client &client)
 {
-	
+	if (!client.hasRequest())
+		return;
+	string&	req = client.getRequest();
+	HttpResponse *res;
+	if (isHttpRequest(req))
+	{
+		HttpRequest(client);
+	}
+	else
+	{
+		handleFileContent();
+	}
 }

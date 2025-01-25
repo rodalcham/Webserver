@@ -1,0 +1,87 @@
+[20250125_105809] Server running in DEBUG mode.
+[20250125_105809] Server started
+[20250125_105817] Read Event
+[20250125_105817] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250125_105817] Read Event
+[20250125_105817] From client
+[20250125_105817] Bytes read: 638
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] First line : POST /cgi-bin/calculator.py HTTP/1.1
+[20250125_105817] HTTP REQUEST
+[20250125_105817] LOG URI/cgi-bin/calculator.py
+[20250125_105817] LOCATION/cgi-bin/
+[20250125_105817] executing child with parameter:
+POST /cgi-bin/calculator.py HTTP/1.1
+Host: localhost:8080
+Connection: keep-alive
+Content-Length: 3
+sec-ch-ua: "Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"
+Content-Type: text/plain
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36
+sec-ch-ua-platform: "macOS"
+Accept: */*
+Origin: http://localhost:8080
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8080/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7
+
+2+2
+[20250125_105819] Read Event
+[20250125_105819] From cgi
+[20250125_105819] Send Event
+[20250125_105819] Sending message to client : HTTP/1.1 200 OK
+Content-Length: 32
+
+Content-Type: text/plain
+
+4.0
+
+
+[20250125_105819] Send Event
+[20250125_105819] Read Event
+[20250125_105819] From client
+[20250125_105819] Bytes read: 0
+[20250125_105819] Client Closed Connection
+[20250125_105819] Removing Client 7

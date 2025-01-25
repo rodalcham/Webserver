@@ -306,7 +306,7 @@ bool isCGIRequest(const HttpRequest &request)
 
 	if (request.getHeaders("X-request-type") == "cgi")
 	{
-	debug("Is CGI");
+		debug("Is CGI");
 		return true;
 	}
 	return false;

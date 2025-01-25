@@ -34,25 +34,30 @@ void	Server::processRequest(Client &client)
 	{
 		HttpRequest	request(client);
 		if (!isMethodAllowedInUploads(request, client)) //CHANGE NAME!
-			*res = HttpResponse(405, "Method " + request.getMethod() + " not allowed.", request);
+			res = new HttpResponse(405, "Method " + request.getMethod() + " not allowed.", request);
 		else if (checkRequestSize(request, client))
-			*res = HttpResponse(413, "Payload is too large.", request);
+			res =  new HttpResponse(413, "Payload is too large.", request);
 		else if (request.getMethod() == "GET")
-			*res = handleGet(request, client);
+			res = new HttpResponse(handleGet(request, client));
 		// else if (request.getMethod() == "POST")
 		// else if (request.getMethod() == "DELETE")
 		else
-			*res = HttpResponse(501, "Method not implemented", request);
+			res = new HttpResponse(501, "Method not implemented", request);
 	}
 	else
 	{
 		if (handleFileContent(client, req))
-			*res = HttpResponse(500, "Upload Failed", HttpRequest(client));
+			res = new HttpResponse(500, "Upload Failed", HttpRequest(client));
 	}
 	if (res)
 	{
 		client.queueResponse(res->returnResponse());
 	}
+
+    this->postEvent(client.getSocket(), 2);
+    client.popRequest();
+
+	delete res;
 }
 
 HttpResponse	Server::retrieveFile(HttpRequest &request)

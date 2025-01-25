@@ -96,7 +96,7 @@ std::string Server::handleDirectoryOrFile(const std::string &uri, HttpRequest &r
 	return response;
 }
 
-string Server::handleRedirect(Client &client)
+void Server::handleRedirect(Client &client)
 {
 	const ServerBlock *serverBlock = client.getServerBlock();
 	std::string redirectLocation = serverBlock->getLocationValue("/return", "return");
@@ -131,10 +131,10 @@ bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 	debug("MAtched location: " + request.getMatched_location());
 	if (locationBlock.find("allow_methods") != locationBlock.end())
 	{
-
 		std::istringstream iss(locationBlock.at("allow_methods"));
 		std::string allowedMethod;
 		while (iss >> allowedMethod) {
+			request.setAllowedMethods(allowedMethod);
 			debug("ALLOWED METHODS" + allowedMethod);
 			if (allowedMethod == method) {
 
@@ -352,181 +352,181 @@ bool isHttpRequest(const std::string &request)
 	return std::regex_match(firstLine, httpRequestRegex);
 }
 
-void	Server::processRequest(Client &client)
-{
-	if (!client.hasRequest())
-		return;
-	string&	req = client.getRequest();
-	debug("Request :\n" + req);
-	if (isHttpRequest(req))
-	{
-		debug("HTTP REQUEST");
-		HttpRequest		request(client);
-		std::string uri = request.getUri();
-		if (request.getUri() == "/list-uploads")
-		{
-			std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"), request.getHeader("X-uploadEndpoint"));
-			std::string resp =
-				"HTTP/1.1 200 OK\r\n"
-				"Content-Type: application/json\r\n\r\n" +
-				jsonList;
-			client.queueResponse(resp);
-			this->postEvent(client.getSocket(), 2);
-			client.popRequest();
-			return;
-		}
-		if (request.getUri() == "/return")
-		{
-			handleRedirect(client);
-			return;
-		}
-		if (request.getMethod() == "GET")
-		{
-			std::string responsee = handleDirectoryOrFile(uri, request);
-			client.queueResponse(responsee);
-			this->postEvent(client.getSocket(), 2);
-			client.popRequest();
-			return;
-		}
-		if (!isMethodAllowedInUploads(request, client))
-		{
-			std::string response =
-				"HTTP/1.1 405 Method Not Allowed\r\n"
-				"Content-Type: text/plain\r\n\r\n"
-				"The " + request.getMethod() + " method is not allowed for /uploads/.";
-			client.queueResponse(response);
-			this->postEvent(client.getSocket(), 2);
-			client.popRequest();
-			return;
-		}
-		if (request.getHeader("Content-Length").length() &&
-			client.getServerBlock()->getDirectiveValue("client_max_body_size").length() &&
-			std::stoi(request.getHeader("Content-Length")) > 1000000 * std::stoi(client.getServerBlock()->getDirectiveValue("client_max_body_size")))
-		{
-			client.popRequest();
-			string response = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: text/plain\r\nContent-Length: 49\r\n\r\nThe request payload is too large for the server to handle.\r\n";
-			client.queueResponse(response);
-			this->postEvent(client.getSocket(), 2);
-			return;
-		}
-		if (isCGIRequest(request))
-		{
-			executeCGI(client, resolveCGIPath(request.getUri()), req);
-			client.popRequest();
-			return;
-		}
-		if (request.getMethod() == "DELETE")
-		{
-			std::string uri = request.getUri();
-			if (uri.rfind(request.getMatched_location(), 0) == 0)
-			{
-				// debug("URI" + uri);
-				std::string filename = uri.substr(std::string(uri).size());
-				std::string fullPath = "./" + client.getServerBlock()->getLocationValue(uri, "root") + uri + filename;
+// void	Server::processRequest(Client &client)
+// {
+// 	if (!client.hasRequest())
+// 		return;
+// 	string&	req = client.getRequest();
+// 	debug("Request :\n" + req);
+// 	if (isHttpRequest(req))
+// 	{
+// 		debug("HTTP REQUEST");
+// 		HttpRequest		request(client);
+// 		std::string uri = request.getUri();
+// 		if (request.getUri() == "/list-uploads")
+// 		{
+// 			std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"), request.getHeader("X-uploadEndpoint"));
+// 			std::string resp =
+// 				"HTTP/1.1 200 OK\r\n"
+// 				"Content-Type: application/json\r\n\r\n" +
+// 				jsonList;
+// 			client.queueResponse(resp);
+// 			this->postEvent(client.getSocket(), 2);
+// 			client.popRequest();
+// 			return;
+// 		}
+// 		if (request.getUri() == "/return")
+// 		{
+// 			handleRedirect(client);
+// 			return;
+// 		}
+// 		if (request.getMethod() == "GET")
+// 		{
+// 			std::string responsee = handleDirectoryOrFile(uri, request);
+// 			client.queueResponse(responsee);
+// 			this->postEvent(client.getSocket(), 2);
+// 			client.popRequest();
+// 			return;
+// 		}
+// 		if (!isMethodAllowedInUploads(request, client))
+// 		{
+// 			std::string response =
+// 				"HTTP/1.1 405 Method Not Allowed\r\n"
+// 				"Content-Type: text/plain\r\n\r\n"
+// 				"The " + request.getMethod() + " method is not allowed for /uploads/.";
+// 			client.queueResponse(response);
+// 			this->postEvent(client.getSocket(), 2);
+// 			client.popRequest();
+// 			return;
+// 		}
+// 		if (request.getHeader("Content-Length").length() &&
+// 			client.getServerBlock()->getDirectiveValue("client_max_body_size").length() &&
+// 			std::stoi(request.getHeader("Content-Length")) > 1000000 * std::stoi(client.getServerBlock()->getDirectiveValue("client_max_body_size")))
+// 		{
+// 			client.popRequest();
+// 			string response = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: text/plain\r\nContent-Length: 49\r\n\r\nThe request payload is too large for the server to handle.\r\n";
+// 			client.queueResponse(response);
+// 			this->postEvent(client.getSocket(), 2);
+// 			return;
+// 		}
+// 		if (isCGIRequest(request))
+// 		{
+// 			executeCGI(client, resolveCGIPath(request.getUri()), req);
+// 			client.popRequest();
+// 			return;
+// 		}
+// 		if (request.getMethod() == "DELETE")
+// 		{
+// 			std::string uri = request.getUri();
+// 			if (uri.rfind(request.getMatched_location(), 0) == 0)
+// 			{
+// 				// debug("URI" + uri);
+// 				std::string filename = uri.substr(std::string(uri).size());
+// 				std::string fullPath = "./" + client.getServerBlock()->getLocationValue(uri, "root") + uri + filename;
 
 
-				if (std::remove(fullPath.c_str()) == 0)
-				{
-					std::string resp = 
-						"HTTP/1.1 200 OK\r\n"
-						"Content-Type: text/plain\r\n\r\n"
-						"File deleted successfully.";
-					client.queueResponse(resp);
-				}
-				else
-				{
-					std::string resp =
-						"HTTP/1.1 404 Not Found\r\n"
-						"Content-Type: text/plain\r\n\r\n"
-						"File not found or cannot delete.";
-					client.queueResponse(resp);
-				}
-			}
-			else
-			{
-				std::string resp =
-					"HTTP/1.1 400 Bad Request\r\n"
-					"Content-Type: text/plain\r\n\r\n"
-					"Invalid delete path.";
-				client.queueResponse(resp);
-			}
-			this->postEvent(client.getSocket(), 2);
-			client.popRequest();
-			return;
-		}
-		else if (request.getMethod() == "POST")
-		{
-			// debug("URI" + uri);
-			//Store Last POST REQ.
-			string filename = request.getHeader("filename");
-			string root = "./" + client.getServerBlock()->getLocationValue(uri, "root");
-			if (filename.empty())
-				request.setStatusCode(500); // Check
-			client.get_outFile().open(root + uri + filename, std::ios::binary);
-			if (!client.get_outFile().is_open())
-				request.setStatusCode(500); // Check
-			client.isSending() = true;
-		}
+// 				if (std::remove(fullPath.c_str()) == 0)
+// 				{
+// 					std::string resp = 
+// 						"HTTP/1.1 200 OK\r\n"
+// 						"Content-Type: text/plain\r\n\r\n"
+// 						"File deleted successfully.";
+// 					client.queueResponse(resp);
+// 				}
+// 				else
+// 				{
+// 					std::string resp =
+// 						"HTTP/1.1 404 Not Found\r\n"
+// 						"Content-Type: text/plain\r\n\r\n"
+// 						"File not found or cannot delete.";
+// 					client.queueResponse(resp);
+// 				}
+// 			}
+// 			else
+// 			{
+// 				std::string resp =
+// 					"HTTP/1.1 400 Bad Request\r\n"
+// 					"Content-Type: text/plain\r\n\r\n"
+// 					"Invalid delete path.";
+// 				client.queueResponse(resp);
+// 			}
+// 			this->postEvent(client.getSocket(), 2);
+// 			client.popRequest();
+// 			return;
+// 		}
+// 		else if (request.getMethod() == "POST")
+// 		{
+// 			// debug("URI" + uri);
+// 			//Store Last POST REQ.
+// 			string filename = request.getHeader("filename");
+// 			string root = "./" + client.getServerBlock()->getLocationValue(uri, "root");
+// 			if (filename.empty())
+// 				request.setStatusCode(500); // Check
+// 			client.get_outFile().open(root + uri + filename, std::ios::binary);
+// 			if (!client.get_outFile().is_open())
+// 				request.setStatusCode(500); // Check
+// 			client.isSending() = true;
+// 		}
 
-		HttpResponse	response(request);
+// 		HttpResponse	response(request);
 		
-		if (request.getMethod()!="POST")
-		{
-			client.queueResponse(response.returnResponse());
-			this->postEvent(client.getSocket(), 2); //TEMP
+// 		if (request.getMethod()!="POST")
+// 		{
+// 			client.queueResponse(response.returnResponse());
+// 			this->postEvent(client.getSocket(), 2); //TEMP
 
-		}
-	}
-	else
-	{
-		debug("FILE CONTENT");
-		string boundaryPrefix = "--" + client.get_boundary() + "\r\n";
-		string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
-		string *endBoundary;
+// 		}
+// 	}
+// 	else
+// 	{
+// 		debug("FILE CONTENT");
+// 		string boundaryPrefix = "--" + client.get_boundary() + "\r\n";
+// 		string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
+// 		string *endBoundary;
 
-		if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
-			endBoundary = &boundaryPrefix;
-		else if (req.substr(req.length() - boundarySuffix.length()) == boundarySuffix)
-		{
-			// debug("LAST CHUNK RECEIVED");
-			endBoundary = &boundarySuffix;
-		}
-		else
-		{
-			endBoundary = NULL;
-		}
+// 		if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
+// 			endBoundary = &boundaryPrefix;
+// 		else if (req.substr(req.length() - boundarySuffix.length()) == boundarySuffix)
+// 		{
+// 			// debug("LAST CHUNK RECEIVED");
+// 			endBoundary = &boundarySuffix;
+// 		}
+// 		else
+// 		{
+// 			endBoundary = NULL;
+// 		}
 
-		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
-		{
-			// debug("Missing Boundary prefix: " + boundaryPrefix);
-			endBoundary = NULL;
-		}
+// 		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
+// 		{
+// 			// debug("Missing Boundary prefix: " + boundaryPrefix);
+// 			endBoundary = NULL;
+// 		}
 
-		if (endBoundary)
-		{
-			string content = req.substr(boundaryPrefix.length(), req.length());
-			content = content.substr(0, content.length() - endBoundary->length());
-			content = content.substr(0, content.length() - 2);
+// 		if (endBoundary)
+// 		{
+// 			string content = req.substr(boundaryPrefix.length(), req.length());
+// 			content = content.substr(0, content.length() - endBoundary->length());
+// 			content = content.substr(0, content.length() - 2);
 
-			size_t headerEndPos = content.find("\r\n\r\n");
-			if (headerEndPos != string::npos)
-				content = content.substr(headerEndPos + 4);
-			client.queueFileContent(content);
-			if (*endBoundary == boundarySuffix)
-				postEvent(client.getSocket(), 4);
-			else
-				postEvent(client.getSocket(), 3);
-		}
-		else
-		{
-			client.queueResponse("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n");
-			this->postEvent(client.getSocket(), 2);
-			client.isSending() = false;
-		}
+// 			size_t headerEndPos = content.find("\r\n\r\n");
+// 			if (headerEndPos != string::npos)
+// 				content = content.substr(headerEndPos + 4);
+// 			client.queueFileContent(content);
+// 			if (*endBoundary == boundarySuffix)
+// 				postEvent(client.getSocket(), 4);
+// 			else
+// 				postEvent(client.getSocket(), 3);
+// 		}
+// 		else
+// 		{
+// 			client.queueResponse("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n");
+// 			this->postEvent(client.getSocket(), 2);
+// 			client.isSending() = false;
+// 		}
 		
-	}
-	client.popRequest();
-}
+// 	}
+// 	client.popRequest();
+// }
 
 void	Server::acceptClient(int server_sock)
 {

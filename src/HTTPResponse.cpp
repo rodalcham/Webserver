@@ -2,21 +2,30 @@
 #include "../include/HTTPResponse.hpp"
 #include "../include/ServerBlock.hpp"
 
-HttpResponse::HttpResponse(const HttpRequest& request) : _stat_code_no(request.getStatusCode())
+// HttpResponse::HttpResponse(const HttpRequest& request) : _stat_code_no(request.getStatusCode())
+// {
+// 	setReturnPage(request);
+// 	this->_http_version = request.getHttpVersion();
+// 	this->_chunking_required = false;
+// 	if (this->_stat_code_no == 200 && request.getMethod() == "GET")
+// 		setFilePath(request);
+// 	setStatusCode(request);
+// 	setBody(true, request);
+// 	setHeaders(request);
+// }
+
+HttpResponse::HttpResponse(const int& stat_code_no, const std::string& body, const HttpRequest &request) : _stat_code_no(stat_code_no), _body(body)
 {
-	// if (this->_stat_code_no == 100)
-	// {
-	// 	_http_version = "HTTP/1.1";// TODO: REMOVE THIS once request is working
-	// 	_status_code = "100 Continue";// TODO: REMOVE THIS once request is working
-	// 	return;
-	// }
+	setReturnPage(request);
 	this->_http_version = request.getHttpVersion();
 	this->_chunking_required = false;
-	if (this->_stat_code_no == 200 || this->_stat_code_no == 201)
+	if (this->_stat_code_no == 200 && request.getMethod() == "GET")
 		setFilePath(request);
 	setStatusCode(request);
 	setBody(true, request);
 	setHeaders(request);
+
+	// respDebug();
 }
 
 HttpResponse::~HttpResponse()
@@ -24,20 +33,254 @@ HttpResponse::~HttpResponse()
 	
 }
 
+void HttpResponse::setReturnPage(const HttpRequest& request)
+{
+	_return_page = false;
 
-void HttpResponse::setFilePath(const HttpRequest& request) {
+	if ((_stat_code_no == 200 && request.getMethod() == "GET") || _stat_code_no == 401 || _stat_code_no == 403 || _stat_code_no == 404)// TODO: add others here
+	{
+		_return_page = true;
+	}
+}
+
+bool	HttpResponse::getReturnPage()
+{
+	return (this->_return_page);
+}
+
+void HttpResponse::setFilePath(const HttpRequest& request)
+{
 	const ServerBlock& block = request.getRequestBlock();
 
-	_file_path = block.getDirectiveValue("root") + request.getUri();
+	_file_path = block.getDirectiveValue("root") + request.getUri();//change to root from request
+}
+
+void	HttpResponse::setStatusCode(HttpRequest request)
+{
+	auto it = _error_status_codes.find(this->_stat_code_no);
+	if (it != _error_status_codes.end())
+		this->_status_code = it->second;
+	else
+		std::cout << "UNKNOWN STATUS CODE\n";// TODO: need to decide what to do in this situation!!!!!!!!!!!!!!!!!
+	if (_stat_code_no != 200 && _stat_code_no != 201)
+		setErrorFilePath(request);
+}
+
+// void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
+// {
+// 	setErrorFilePath(request);
+// 	if (_file_path.empty())
+// 		return;
+// 	if (getReturnPage())//maybe can remove this??????????????????????????????????
+// 	{
+// 		std::stringstream	buffer;
+// 		std::ifstream		file(this->_file_path, std::ios::binary);
+
+// 		if (file.is_open())
+// 		{
+// 			buffer << file.rdbuf();
+// 			std::string file_contents = buffer.str();
+// 			file.close();
+// 			this->_body = file_contents;
+// 		}
+// 		else if (is_first_try)
+// 		{
+// 			if (_stat_code_no == 200)
+// 				_stat_code_no = 404;
+// 			setStatusCode(request);
+// 			setBody(false, request);
+// 		}
+// 		else
+// 			this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
+// 	}
+// 	else
+// 		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
+// }
+
+void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
+{
+	if (!_body.empty())
+		return;
+	if (getReturnPage())
+	{
+		std::stringstream	buffer;
+		std::ifstream		file(this->_file_path, std::ios::binary);
+
+		if (file.is_open())
+		{
+			buffer << file.rdbuf();
+			std::string file_contents = buffer.str();
+			file.close();
+			this->_body = file_contents;
+		}
+		else if (is_first_try)
+		{
+			if (_stat_code_no == 200)
+				_stat_code_no = 404;
+			setStatusCode(request);
+			setBody(false, request);
+		}
+		else
+			this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
+	}
+	else
+		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
+}
+
+void	HttpResponse::setHeaders(const HttpRequest& request)
+{
+	this->_headers["Server"] = "webserv/42.0";
+	this->_headers["Date"] = this->setDateHeader();
+	this->_headers["Connection"] = "keep-alive";
+
+	if (_stat_code_no == 200 && request.getMethod() == "GET")
+	{
+		this->_headers["Last-Modified"] = this->setLastModifiedHeader();
+		this->_headers["Content-Type"] = this->setMimeTypeHeader();
+	}
+	else if (_stat_code_no == 201 && request.getMethod() == "POST")
+	{
+		this->_headers["Content-Type"] = request.getHeader("Content-Type");
+		this->_headers["Location"] = request.getMatched_location();
+	}
+	else if (_stat_code_no == 301)
+	{
+		this->_headers["Location"] = request.getRedirLocation();
+	}
+	else
+	{
+		this->_headers["Content-Type"] = "text/html; charset=UTF-8";
+		this->_headers["Connection"] = "close";
+		if (_stat_code_no == 405)
+			this->_headers["allowed"] = request.getAllowedMethods();
+	}
+}
+
+void	HttpResponse::setHeader(const std::string& key, const std::string& value)
+{
+	this->_headers[key] = value;
+}
+
+std::string HttpResponse::getHeaderList()
+{
+	std::string		headers_list;
+
+	for (const auto& pair : this->_headers)
+	{
+		// std::cout << "Key: -->" << pair.first << "<-- Value: -->" << pair.second << "<--\n";
+		headers_list += pair.first + ": " + pair.second + "\r\n";
+		if (pair.first == "Transfer-Encoding")
+			this->_chunking_required = true;
+	}
+	if (!_chunking_required)
+		headers_list += "Content-Length: " + std::to_string(_body.length()) + "\r\n\r\n";// TODO: this needs to be looked at
+
+	return (headers_list);
+}
+
+std::string HttpResponse::getFilePath()
+{
+	return (this->_file_path);
+}
+
+std::string	HttpResponse::returnResponse()
+{
+	std::string response;
+
+	response =	this->_http_version + " " + _status_code + "\r\n" +
+				this->getHeaderList() + "\r\n" +
+				this->_body + "\r\n\r\n";
+
+	return (response);
+}
+
+std::string	HttpResponse::makeTimestampStr(std::tm* time)
+{
+	std::ostringstream timestamp_stream;
+
+	timestamp_stream << std::put_time(time, "%a") << ", "
+					<< std::put_time(time, "%d %b %Y ")
+					<< std::put_time(time, "%X %Z");
+
+	return (timestamp_stream.str());
+}
+
+std::string	HttpResponse::setDateHeader()
+{
+	std::time_t time_since_epoch = std::time(nullptr);
+	std::tm* current_date_obj = std::localtime(&time_since_epoch);
+
+	std::string current_date_str = makeTimestampStr(current_date_obj);
+
+	return (current_date_str);
+}
+
+std::string	HttpResponse::setLastModifiedHeader()
+{
+	std::filesystem::file_time_type lw_time = std::filesystem::last_write_time(this->_file_path);
+
+	std::time_t sctp = decltype(lw_time)::clock::to_time_t(lw_time);
+	std::tm* last_modified_obj = std::localtime(&sctp);
+
+	std::string last_modified_str = makeTimestampStr(last_modified_obj);
+
+	return (last_modified_str);
+}
+
+std::string HttpResponse::setMimeTypeHeader()
+{
+	size_t dotPos = this->_file_path.find_last_of('.');
+
+	if (dotPos == std::string::npos)
+		return "application/octet-stream";
+
+	std::string extension = this->_file_path.substr(dotPos + 1);
+
+	if (extension == "html" || extension == "htm")
+		return "text/html";
+	if (extension == "css")
+		return "text/css";
+	if (extension == "js")
+		return "application/javascript";
+	if (extension == "jpg" || extension == "jpeg")
+		return "image/jpeg";
+	if (extension == "png")
+		return "image/png";
+	if (extension == "gif")
+		return "image/gif";
+	if (extension == "txt")
+		return "text/plain";
+
+	return "application/octet-stream";
+}
+
+void	HttpResponse::respDebug()
+{
+	std::cout << "\n =============== START LINE ===============\n\n";
+	std::cout << "\n\n" << _http_version << " " << _status_code << "\n\n";
+
+	std::cout << "\n =============== HEADERS ===============\n\n";
+	std::cout << "\n\n" << getHeaderList() << "\n\n";
+
+	std::cout << "\n =============== BODY ===============\n\n";
+	std::cout << "\n\n" << _body << "\n\n";
+
+	std::cout << "\n\nfile_path: " << this->_file_path << "\n";
+
+	std::cout << "\n -----------------------------------------------------------\n\n";
+
 }
 
 
 
-void HttpResponse::setErrorFilePath(const HttpRequest& request) {
+void HttpResponse::setErrorFilePath(const HttpRequest& request)
+{
 	const ServerBlock& block = request.getRequestBlock();
-	std::string error_code_str = std::to_string(_stat_code_no);
-
-	_file_path = block.getDirectiveValue("root") + block.getErrorPageValue(error_code_str);
+	std::string error_code_str = block.getErrorPageValue(std::to_string(_stat_code_no));
+	if (!error_code_str.empty())
+		_file_path = block.getLocationValue(request.getMatched_location(), "root") + block.getErrorPageValue(error_code_str);
+	else
+		_file_path = "";
 	// try {
 	// 	std::string errorPagePath;
 
@@ -245,181 +488,3 @@ void HttpResponse::setErrorFilePath(const HttpRequest& request) {
 // }
 
 
-
-
-
-
-void	HttpResponse::setStatusCode(HttpRequest request)
-{
-	auto it = _error_status_codes.find(this->_stat_code_no);
-	if (it != _error_status_codes.end())
-		this->_status_code = it->second;
-	else
-		std::cout << "UNKNOWN STATUS CODE\n";// TODO: need to decide what to do in this situation!!!!!!!!!!!!!!!!!
-	if (_stat_code_no != 200 && _stat_code_no != 201)
-		setErrorFilePath(request);// TODO: do this -----------------------------------
-}
-
-void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
-{
-	std::stringstream	buffer;
-	std::ifstream		file(this->_file_path, std::ios::binary);
-
-
-	// std::cout << _file_path << "<<<<<<<<<<<<<<<<<<<<<<<<-----file path\n";
-
-	if (file.is_open())
-	{
-		buffer << file.rdbuf();
-		std::string file_contents = buffer.str();
-		file.close();
-		this->_body = file_contents;
-	}
-	else if (is_first_try)
-	{
-		_stat_code_no = 404;
-		setStatusCode(request);
-		setBody(false, request);
-	}
-	else
-		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>"; // TODO: need to complete this with a basic html page
-}
-
-
-void	HttpResponse::setHeaders(const HttpRequest& request)
-{
-	this->_headers["Server"] = "webserv/42.0";
-	this->_headers["Date"] = this->setDateHeader();
-	this->_headers["Connection"] = "keep-alive";
-
-	if (_stat_code_no == 200 && request.getMethod() == "GET")
-	{
-		this->_headers["Last-Modified"] = this->setLastModifiedHeader();
-		this->_headers["Content-Type"] = this->setMimeTypeHeader();
-	}
-	else if (_stat_code_no == 201 && request.getMethod() == "POST")
-	{
-
-	}
-	else if (_stat_code_no == 200 && request.getMethod() == "DELETE")
-	{
-
-	}
-	else
-	{
-		this->_headers["Content-Type"] = "text/html; charset=UTF-8";
-		this->_headers["Connection"] = "close";
-		if (_stat_code_no == 405 || _stat_code_no == 501)
-			this->_headers["allowed"] = "TODO: this is temp GET POST DELETE";// TODO: need to get this from the config file of the server
-	}
-}
-
-std::string HttpResponse::getHeaderList()
-{
-	std::string		headers_list;
-
-	for (const auto& pair : this->_headers)
-	{
-		// std::cout << "Key: -->" << pair.first << "<-- Value: -->" << pair.second << "<--\n";
-		headers_list += pair.first + ": " + pair.second + "\r\n";
-		if (pair.first == "Transfer-Encoding")
-			this->_chunking_required = true;
-	}
-	if (!_chunking_required)
-		headers_list += "Content-Length: " + std::to_string(_body.length()) + "\r\n\r\n";// TODO: this needs to be looked at
-
-	return (headers_list);
-}
-std::string HttpResponse::getFilePath()
-{
-	return (this->_file_path);
-}
-
-std::string	HttpResponse::returnResponse()
-{
-	std::string response;
-
-	response =	this->_http_version + " " + _status_code + "\r\n" +
-				this->getHeaderList() + "\r\n" +
-				this->_body + "\r\n\r\n";
-
-	return (response);
-}
-
-std::string	HttpResponse::makeTimestampStr(std::tm* time)
-{
-	std::ostringstream timestamp_stream;
-
-	timestamp_stream << std::put_time(time, "%a") << ", "
-					<< std::put_time(time, "%d %b %Y ")
-					<< std::put_time(time, "%X %Z");
-
-	return (timestamp_stream.str());
-}
-
-std::string	HttpResponse::setDateHeader()
-{
-	std::time_t time_since_epoch = std::time(nullptr);
-	std::tm* current_date_obj = std::localtime(&time_since_epoch);
-	
-	std::string current_date_str = makeTimestampStr(current_date_obj);
-
-	return (current_date_str);
-}
-
-std::string	HttpResponse::setLastModifiedHeader()
-{
-	// std::filesystem::file_time_type lw_time = std::filesystem::last_write_time(this->_file_path);
-
-	// std::time_t sctp = decltype(lw_time)::clock::to_time_t(lw_time);
-	// std::tm* last_modified_obj = std::localtime(&sctp);
-	
-	// std::string last_modified_str = makeTimestampStr(last_modified_obj);
-	std::string last_modified_str = "";
-
-	return (last_modified_str);
-}
-
-std::string HttpResponse::setMimeTypeHeader()
-{
-	size_t dotPos = this->_file_path.find_last_of('.');
-
-	if (dotPos == std::string::npos)
-		return "application/octet-stream";
-
-	std::string extension = this->_file_path.substr(dotPos + 1);
-
-	if (extension == "html" || extension == "htm")
-		return "text/html";
-	if (extension == "css")
-		return "text/css";
-	if (extension == "js")
-		return "application/javascript";
-	if (extension == "jpg" || extension == "jpeg")
-		return "image/jpeg";
-	if (extension == "png")
-		return "image/png";
-	if (extension == "gif")
-		return "image/gif";
-	if (extension == "txt")
-		return "text/plain";
-
-	return "application/octet-stream";
-}
-
-void	HttpResponse::respDebug()
-{
-	std::cout << "\n =============== START LINE ===============\n\n";
-	std::cout << "\n\n" << _http_version << " " << _status_code << "\n\n";
-
-	std::cout << "\n =============== HEADERS ===============\n\n";
-	std::cout << "\n\n" << getHeaderList() << "\n\n";
-
-	std::cout << "\n =============== BODY ===============\n\n";
-	std::cout << "\n\n" << _body << "\n\n";
-	
-	std::cout << "\n\nfile_path: " << this->_file_path << "\n";
-
-	std::cout << "\n -----------------------------------------------------------\n\n";
-
-}

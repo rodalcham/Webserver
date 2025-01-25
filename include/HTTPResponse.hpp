@@ -42,10 +42,9 @@ protected:
 	{501, "501 Not Implemented"}, {502, "502 Bad Gateway"}, 
 	{503, "503 Service Unavailable"}, {504, "504 Gateway Timeout"}};
 
-
 public:
 	HttpResponse();
-	HttpResponse(const HttpRequest& request);
+	// HttpResponse(const HttpRequest& request);
 	HttpResponse(const int& stat_code_no, const std::string& body, const HttpRequest &request);
 	~HttpResponse();
 
@@ -53,10 +52,10 @@ public:
 	std::string		resolvePath(const std::string& uri, const ServerBlock& block, const std::map<std::string, std::string>& locationConfig);
 	void			setStatusCode(HttpRequest request);
 	void			setBody(bool is_first_try, HttpRequest request);
-	void			setBodyKnown(bool is_first_try, std::string body, HttpRequest request);
 	void			setHeaders(const HttpRequest& request);
 	void			setErrorFilePath(const HttpRequest& request);
 	void 			setReturnPage(const HttpRequest& request);
+	void			setHeader(const std::string& key, const std::string& value);
 
 	std::string		makeTimestampStr(std::tm* time);
 	std::string		setDateHeader();

@@ -228,6 +228,17 @@ int HttpRequest::getPort() const
 	return _port;
 }
 
+std::string HttpRequest::getAllowedMethods() const
+{
+	return _allowed_methods;
+}
+
+std::string HttpRequest::getRedirLocation() const
+{
+	return _redir_location;
+}
+
+
 // Setters
 void HttpRequest::setStatusCode(int statusCode)
 {
@@ -248,6 +259,17 @@ void HttpRequest::setPort(int port)
 {
 	_port = port;
 }
+
+void HttpRequest::setAllowedMethods(std::string& allowed_method)
+{
+	_allowed_methods = allowed_method;
+}
+
+void HttpRequest::setRedirLocation(std::string& redir_location)
+{
+	_redir_location = redir_location;
+}
+
 std::string	HttpRequest::getMatched_location() const
 {
 	return (_matched_location);

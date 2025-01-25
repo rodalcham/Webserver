@@ -127,14 +127,15 @@ bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 	const ServerBlock *serverBlock = client.getServerBlock();
 	auto locationBlock = serverBlock->getLocationBlock(request.getMatched_location());
 
-
+	debug("Method: " + method);
+	debug("MAtched location: " + request.getMatched_location());
 	if (locationBlock.find("allow_methods") != locationBlock.end())
 	{
 
 		std::istringstream iss(locationBlock.at("allow_methods"));
 		std::string allowedMethod;
 		while (iss >> allowedMethod) {
-
+			debug("ALLOWED METHODS" + allowedMethod);
 			if (allowedMethod == method) {
 
 				return true;
@@ -359,7 +360,7 @@ void	Server::processRequest(Client &client)
 	debug("Request :\n" + req);
 	if (isHttpRequest(req))
 	{
-		// debug("HTTP REQUEST");
+		debug("HTTP REQUEST");
 		HttpRequest		request(client);
 		std::string uri = request.getUri();
 		if (request.getUri() == "/list-uploads")
@@ -486,7 +487,7 @@ void	Server::processRequest(Client &client)
 			endBoundary = &boundaryPrefix;
 		else if (req.substr(req.length() - boundarySuffix.length()) == boundarySuffix)
 		{
-			debug("LAST CHUNK RECEIVED");
+			// debug("LAST CHUNK RECEIVED");
 			endBoundary = &boundarySuffix;
 		}
 		else
@@ -496,7 +497,7 @@ void	Server::processRequest(Client &client)
 
 		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
 		{
-			debug("Missing Boundary prefix: " + boundaryPrefix);
+			// debug("Missing Boundary prefix: " + boundaryPrefix);
 			endBoundary = NULL;
 		}
 

@@ -2,13 +2,6 @@
 #include "../include/HTTPRequest.hpp"
 #include "../include/ServerBlock.hpp"
 
-HttpRequest::HttpRequest() 
-	: _stat_code_no(200), _filename(""), _request_block(NULL)
-{
-	// Default initialized request
-}
-
-
 HttpRequest::HttpRequest(Client &client)
 	: _stat_code_no(200), _filename(""), _request_block(client.getServerBlock()), _continue_response("")
 {
@@ -45,15 +38,8 @@ HttpRequest::HttpRequest(Client &client)
 	}
 	_uri = requestLine.substr(methodEnd + 1, uriEnd - methodEnd - 1);
 	_http_version = requestLine.substr(uriEnd + 1);
-
-	// Parse headers
 	_headers = parseHeaders(requestStream);
 	headersGood(); 
-	if (_stat_code_no == 100)
-	{
-		return;
-	}
-
     const std::map<std::string, std::map<std::string, std::string>> &locations = _request_block->getAllLocationBlocks();
     _matched_location = "/";
     size_t longestMatch = 0;
@@ -78,7 +64,6 @@ HttpRequest::~HttpRequest()
 	// Cleanup if needed
 }
 
-// Parse HTTP Method
 std::string HttpRequest::parseHttpMethod(const std::string& methodStr)
 {
 	if (methodStr == "GET") return methodStr;

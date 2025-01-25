@@ -46,7 +46,7 @@ protected:
 public:
 	HttpResponse();
 	HttpResponse(const HttpRequest& request);
-	HttpResponse(const int& stat_code_no, const std::string& body, const HttpRequest *request);
+	HttpResponse(const int& stat_code_no, const std::string& body, const HttpRequest &request);
 	~HttpResponse();
 
 	void 			setFilePath(const HttpRequest& request);

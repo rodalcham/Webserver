@@ -96,7 +96,7 @@ std::string Server::handleDirectoryOrFile(const std::string &uri, HttpRequest &r
 	return response;
 }
 
-void Server::handleRedirect(Client &client)
+string Server::handleRedirect(Client &client)
 {
 	const ServerBlock *serverBlock = client.getServerBlock();
 	std::string redirectLocation = serverBlock->getLocationValue("/return", "return");
@@ -149,12 +149,12 @@ bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 
 
 
-std::string listUploadsJSON(const std::string &dirPath)
+std::string listUploadsJSON(const std::string &dirPath, string endpoint)
 {
 	namespace fs = std::filesystem;
 	std::vector<std::string> files;
 
-	for (const auto &entry : fs::directory_iterator(dirPath + "/uploads/"))
+	for (const auto &entry : fs::directory_iterator(dirPath + endpoint))
 	{
 		if (entry.is_regular_file())
 		{
@@ -365,7 +365,7 @@ void	Server::processRequest(Client &client)
 		std::string uri = request.getUri();
 		if (request.getUri() == "/list-uploads")
 		{
-			std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"));
+			std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"), request.getHeader("X-uploadEndpoint"));
 			std::string resp =
 				"HTTP/1.1 200 OK\r\n"
 				"Content-Type: application/json\r\n\r\n" +
@@ -457,6 +457,7 @@ void	Server::processRequest(Client &client)
 		else if (request.getMethod() == "POST")
 		{
 			// debug("URI" + uri);
+			//Store Last POST REQ.
 			string filename = request.getHeader("filename");
 			string root = "./" + client.getServerBlock()->getLocationValue(uri, "root");
 			if (filename.empty())

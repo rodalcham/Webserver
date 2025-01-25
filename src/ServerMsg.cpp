@@ -150,7 +150,7 @@ void Server::msg_receive(Client& client)
 	while (pos < bytes_read)
 	{
 		temp = extractLine(buffer + pos, bytes_read - pos);
-		// debug("Received : " + temp);
+		debug("Received : " + temp);
 		pos += temp.length();
 		if (!client.hasRequest())
 		{

@@ -243,7 +243,12 @@
     async function fetchUploads() {
       try {
         // We'll do a GET request to "/list-uploads" (adjust if needed)
-        const response = await fetch('/list-uploads');
+        const response = await fetch('/list-uploads',{
+          method: 'GET',
+          headers: {
+            'X-uploadEndpoint' : uploadEndpoint,
+          }
+        });
         if (!response.ok) {
           throw new Error(`Server error: ${response.status}`);
         }

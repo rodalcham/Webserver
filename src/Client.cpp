@@ -170,7 +170,7 @@ bool	Client::isLastComplete()
 		{
 			return false;
 		}
-		if (req.find("POST") != std::string::npos && req.find("cgi") == string::npos)
+		if (req.find("POST") != std::string::npos && req.find("X-request-type") == string::npos)
 		{
 			this->_boundary = extractBoundary(req);
 			debug("Boundary FOUND :" + this->_boundary);

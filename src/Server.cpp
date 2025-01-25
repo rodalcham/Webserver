@@ -20,161 +20,155 @@ uint16_t	ft_htons(uint16_t port);
 std::string Server::handleDirectoryOrFile(const std::string &uri, HttpRequest &request)
 {
 
-    const ServerBlock serverBlock = request.getRequestBlock();
-    std::string root = serverBlock.getLocationValue(request.getMatched_location(), "root");
-    std::string indexFile = serverBlock.getLocationValue(request.getMatched_location(), "index");
-    std::string autoindex = serverBlock.getLocationValue(request.getMatched_location(), "autoindex");
+	const ServerBlock serverBlock = request.getRequestBlock();
+	std::string root = serverBlock.getLocationValue(request.getMatched_location(), "root");
+	std::string indexFile = serverBlock.getLocationValue(request.getMatched_location(), "index");
+	std::string autoindex = serverBlock.getLocationValue(request.getMatched_location(), "autoindex");
 
-    std::string fullPath = root + uri;
+	std::string fullPath = root + uri;
 
-    if (std::filesystem::is_directory(fullPath))
-    {
+	if (std::filesystem::is_directory(fullPath))
+	{
 
-        std::string indexFilePath = fullPath + "/" + indexFile;
+		std::string indexFilePath = fullPath + "/" + indexFile;
 
-        if (!indexFile.empty() && std::filesystem::exists(indexFilePath) && std::filesystem::is_regular_file(indexFilePath))
-        {
-            std::string fileContent = Server::readFile(indexFilePath);
-            std::string mimeType = Server::getMimeType(indexFilePath);
+		if (!indexFile.empty() && std::filesystem::exists(indexFilePath) && std::filesystem::is_regular_file(indexFilePath))
+		{
+			std::string fileContent = Server::readFile(indexFilePath);
+			std::string mimeType = Server::getMimeType(indexFilePath);
 
-            std::string response =
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: " + mimeType + "\r\n"
-                "Content-Length: " + std::to_string(fileContent.size()) + "\r\n\r\n" +
-                fileContent;
+			std::string response =
+				"HTTP/1.1 200 OK\r\n"
+				"Content-Type: " + mimeType + "\r\n"
+				"Content-Length: " + std::to_string(fileContent.size()) + "\r\n\r\n" +
+				fileContent;
 
-            return response;
-        }
+			return response;
+		}
 
-        if (autoindex == "on")
-        {
-            std::string html = "<html><head><title>Index of " + uri + "</title></head><body>";
-            html += "<h1>Index of " + uri + "</h1><hr><pre>";
+		if (autoindex == "on")
+		{
+			std::string html = "<html><head><title>Index of " + uri + "</title></head><body>";
+			html += "<h1>Index of " + uri + "</h1><hr><pre>";
 
-            for (const auto &entry : std::filesystem::directory_iterator(fullPath))
-            {
-                std::string name = entry.path().filename().string();
-                std::string link = uri + (uri.back() == '/' ? "" : "/") + name;
-                html += "<a href=\"" + link + "\">" + name + "</a>\n";
-            }
-            html += "</pre><hr></body></html>";
-            std::string response =
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/html\r\n"
-                "Content-Length: " + std::to_string(html.size()) + "\r\n\r\n" +
-                html;
+			for (const auto &entry : std::filesystem::directory_iterator(fullPath))
+			{
+				std::string name = entry.path().filename().string();
+				std::string link = uri + (uri.back() == '/' ? "" : "/") + name;
+				html += "<a href=\"" + link + "\">" + name + "</a>\n";
+			}
+			html += "</pre><hr></body></html>";
+			std::string response =
+				"HTTP/1.1 200 OK\r\n"
+				"Content-Type: text/html\r\n"
+				"Content-Length: " + std::to_string(html.size()) + "\r\n\r\n" +
+				html;
 
-            return response;
-        }
-        std::string response =
-            "HTTP/1.1 403 Forbidden\r\n"
-            "Content-Type: text/html\r\n"
-            "Content-Length: 19\r\n\r\n"
-            "403 Forbidden\r\n";
-        return response;
-    }
+			return response;
+		}
+		std::string response =
+			"HTTP/1.1 403 Forbidden\r\n"
+			"Content-Type: text/html\r\n"
+			"Content-Length: 19\r\n\r\n"
+			"403 Forbidden\r\n";
+		return response;
+	}
 
-    // If the path is not a directory, check if it's a file
-    if (std::filesystem::exists(fullPath) && std::filesystem::is_regular_file(fullPath))
-    {
-        // Serve the file directly
-        std::string fileContent = readFile(fullPath);
-        std::string mimeType = getMimeType(fullPath);
 
-        std::string response =
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: " + mimeType + "\r\n"
-            "Content-Length: " + std::to_string(fileContent.size()) + "\r\n\r\n" +
-            fileContent;
+	if (std::filesystem::exists(fullPath) && std::filesystem::is_regular_file(fullPath))
+	{
+		std::string fileContent = readFile(fullPath);
+		std::string mimeType = getMimeType(fullPath);
 
-        return response;
-    }
+		std::string response =
+			"HTTP/1.1 200 OK\r\n"
+			"Content-Type: " + mimeType + "\r\n"
+			"Content-Length: " + std::to_string(fileContent.size()) + "\r\n\r\n" +
+			fileContent;
 
-    // If neither a directory nor a file exists, return a 404 Not Found response
-    std::string response =
-        "HTTP/1.1 404 Not Found\r\n"
-        "Content-Type: text/html\r\n"
-        "Content-Length: 15\r\n\r\n"
-        "404 Not Found\r\n";
-    return response;
+		return response;
+	}
+	std::string response =
+		"HTTP/1.1 404 Not Found\r\n"
+		"Content-Type: text/html\r\n"
+		"Content-Length: 15\r\n\r\n"
+		"404 Not Found\r\n";
+	return response;
 }
 
 void Server::handleRedirect(Client &client)
 {
-    const ServerBlock *serverBlock = client.getServerBlock();
-    std::string redirectLocation = serverBlock->getLocationValue("/return", "return");
+	const ServerBlock *serverBlock = client.getServerBlock();
+	std::string redirectLocation = serverBlock->getLocationValue("/return", "return");
 
-    if (redirectLocation.empty()) {
-        // Respond with 500 Internal Server Error if no return directive
-        std::string resp =
-            "HTTP/1.1 500 Internal Server Error\r\n"
-            "Content-Type: text/plain\r\n\r\n"
-            "No redirection target specified for /return.";
-        client.queueResponse(resp);
-        this->postEvent(client.getSocket(), 2);
-        client.popRequest();
-        return;
-    }
-
-    // Build the redirection response
-    std::string resp =
-        "HTTP/1.1 301 Moved Permanently\r\n"
-        "Location: " + redirectLocation + "\r\n"
-        "Content-Length: 0\r\n\r\n";
-    client.queueResponse(resp);
-    this->postEvent(client.getSocket(), 2);
-    client.popRequest();
+	if (redirectLocation.empty())
+	{
+		std::string resp =
+			"HTTP/1.1 500 Internal Server Error\r\n"
+			"Content-Type: text/plain\r\n\r\n"
+			"No redirection target specified for /return.";
+		client.queueResponse(resp);
+		this->postEvent(client.getSocket(), 2);
+		client.popRequest();
+		return;
+	}
+	std::string resp =
+		"HTTP/1.1 301 Moved Permanently\r\n"
+		"Location: " + redirectLocation + "\r\n"
+		"Content-Length: 0\r\n\r\n";
+	client.queueResponse(resp);
+	this->postEvent(client.getSocket(), 2);
+	client.popRequest();
 }
 
 bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 {
 	std::string method = request.getMethod();
-    const ServerBlock *serverBlock = client.getServerBlock();
-    auto locationBlock = serverBlock->getLocationBlock(request.getMatched_location());
+	const ServerBlock *serverBlock = client.getServerBlock();
+	auto locationBlock = serverBlock->getLocationBlock(request.getMatched_location());
 
 
-    if (locationBlock.find("allow_methods") != locationBlock.end())
+	if (locationBlock.find("allow_methods") != locationBlock.end())
 	{
 
-        std::istringstream iss(locationBlock.at("allow_methods"));
-        std::string allowedMethod;
-        while (iss >> allowedMethod) {
+		std::istringstream iss(locationBlock.at("allow_methods"));
+		std::string allowedMethod;
+		while (iss >> allowedMethod) {
 
-            if (allowedMethod == method) {
+			if (allowedMethod == method) {
 
-                return true;
-            }
-        }
-    }
+				return true;
+			}
+		}
+	}
 
 
-    return false;
+	return false;
 }
 
 
 
 std::string listUploadsJSON(const std::string &dirPath)
 {
-    namespace fs = std::filesystem;
-    std::vector<std::string> files;
+	namespace fs = std::filesystem;
+	std::vector<std::string> files;
 
-    for (const auto &entry : fs::directory_iterator(dirPath + "/uploads/"))
-    {
-        if (entry.is_regular_file())
-        {
-            files.push_back(entry.path().filename().string());
-        }
-    }
-    // Build a JSON array: ["file1.jpg","file2.png",...]
-    std::string json = "[";
-    for (size_t i = 0; i < files.size(); ++i)
-    {
-        json += "\"" + files[i] + "\"";
-        if (i + 1 < files.size())
-            json += ",";
-    }
-    json += "]";
-    return json;
+	for (const auto &entry : fs::directory_iterator(dirPath + "/uploads/"))
+	{
+		if (entry.is_regular_file())
+		{
+			files.push_back(entry.path().filename().string());
+		}
+	}
+	std::string json = "[";
+	for (size_t i = 0; i < files.size(); ++i)
+	{
+		json += "\"" + files[i] + "\"";
+		if (i + 1 < files.size())
+			json += ",";
+	}
+	json += "]";
+	return json;
 }
 
 
@@ -306,61 +300,54 @@ void	Server::run()
 	}
 }
 
-bool isCGIRequest(const HttpRequest &request) {
-	// Define CGI-related paths
-	const std::vector<std::string> cgiPaths = {"/cgi/", "/cgi-bin/"};
+bool isCGIRequest(const HttpRequest &request)
+{
 
-	// Get the URI from the request
-	const std::string &uri = request.getUri();
-
-	// Check if the URI matches any CGI path
-	for (const std::string &cgiPath : cgiPaths) {
-		if (uri.find(cgiPath) == 0) { // Starts with the CGI path
-			return true;
-		}
+	if (request.getHeaders("X-request-type") == "cgi")
+	{
+	debug("Is CGI");
+		return true;
 	}
-
 	return false;
 }
 
-std::string resolveCGIPath(const std::string &uri) {
+std::string resolveCGIPath(const std::string &uri)
+{
 	const std::string cgiRoot = "www/cgi/";
 	const std::string cgiBinRoot = "www/cgi-bin/";
 
 	size_t queryPos = uri.find('?');
 	std::string cleanUri = (queryPos != std::string::npos) ? uri.substr(0, queryPos) : uri;
 
-	if (cleanUri.find("/cgi/") == 0) {
-		return cgiRoot + cleanUri.substr(5);  // Remove "/cgi/" prefix
-	} else if (cleanUri.find("/cgi-bin/") == 0) {
-		return cgiBinRoot + cleanUri.substr(9);  // Remove "/cgi-bin/" prefix
-	} else {
+	if (cleanUri.find("/cgi/") == 0)
+	{
+		return cgiRoot + cleanUri.substr(5);
+	}
+	else if (cleanUri.find("/cgi-bin/") == 0)
+	{
+		return cgiBinRoot + cleanUri.substr(9);
+	}
+	else
+	{
 		throw std::runtime_error("Invalid CGI path: " + uri);
 	}
 }
 
 
-bool isHttpRequest(const std::string &request) {
-	// Find the position of the first newline character
+bool isHttpRequest(const std::string &request)
+{
 	size_t newlinePos = request.find('\n');
-	if (newlinePos == std::string::npos) {
-		// If no newline character is found, the request is invalid
+	if (newlinePos == std::string::npos)
+	{
+
 		return false;
 	}
-
-	// Extract the first line of the request (excluding the newline character)
 	std::string firstLine = request.substr(0, newlinePos);
-	debug("First line : " + firstLine);
-
-	// Remove trailing carriage return (\r) if present
-	if (!firstLine.empty() && firstLine.back() == '\r') {
+	if (!firstLine.empty() && firstLine.back() == '\r')
+	{
 		firstLine.pop_back();
 	}
-
-	// Regular expression to match a valid HTTP request line
 	std::regex httpRequestRegex(R"(^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT) [^\s]+ HTTP/\d\.\d$)");
-
-	// Validate the first line using the regex
 	return std::regex_match(firstLine, httpRequestRegex);
 }
 
@@ -369,9 +356,10 @@ void	Server::processRequest(Client &client)
 	if (!client.hasRequest())
 		return;
 	string&	req = client.getRequest();
+	debug("Request :\n" + req);
 	if (isHttpRequest(req))
 	{
-		debug("HTTP REQUEST");
+		// debug("HTTP REQUEST");
 		HttpRequest		request(client);
 		std::string uri = request.getUri();
 		if (request.getUri() == "/list-uploads")
@@ -387,10 +375,10 @@ void	Server::processRequest(Client &client)
 			return;
 		}
 		if (request.getUri() == "/return")
-        {
-            handleRedirect(client);
-            return;
-        }
+		{
+			handleRedirect(client);
+			return;
+		}
 		if (request.getMethod() == "GET")
 		{
 			std::string responsee = handleDirectoryOrFile(uri, request);
@@ -399,9 +387,6 @@ void	Server::processRequest(Client &client)
 			client.popRequest();
 			return;
 		}
-		// std::cout << " URI " << uri << std::endl;
-		debug("LOG URI" + uri);
-		debug("LOCATION" + request.getMatched_location());
 		if (!isMethodAllowedInUploads(request, client))
 		{
 			std::string response =
@@ -430,52 +415,52 @@ void	Server::processRequest(Client &client)
 			return;
 		}
 		if (request.getMethod() == "DELETE")
-        {
-            std::string uri = request.getUri();
-            if (uri.rfind("/uploads/", 0) == 0)
-            {
-                std::string filename = uri.substr(std::string("/uploads/").size());
-                std::string fullPath = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root") + "/uploads/" + filename;
+		{
+			std::string uri = request.getUri();
+			if (uri.rfind(request.getMatched_location(), 0) == 0)
+			{
+				// debug("URI" + uri);
+				std::string filename = uri.substr(std::string(uri).size());
+				std::string fullPath = "./" + client.getServerBlock()->getLocationValue(uri, "root") + uri + filename;
 
 
-                if (std::remove(fullPath.c_str()) == 0)
-                {
-                    std::string resp = 
-                        "HTTP/1.1 200 OK\r\n"
-                        "Content-Type: text/plain\r\n\r\n"
-                        "File deleted successfully.";
-                    client.queueResponse(resp);
-                }
-                else
-                {
-                    std::string resp =
-                        "HTTP/1.1 404 Not Found\r\n"
-                        "Content-Type: text/plain\r\n\r\n"
-                        "File not found or cannot delete.";
-                    client.queueResponse(resp);
-                }
-            }
-            else
-            {
-                // invalid path
-                std::string resp =
-                    "HTTP/1.1 400 Bad Request\r\n"
-                    "Content-Type: text/plain\r\n\r\n"
-                    "Invalid delete path.";
-                client.queueResponse(resp);
-            }
-            this->postEvent(client.getSocket(), 2);
-            client.popRequest();
-            return;
-        }
+				if (std::remove(fullPath.c_str()) == 0)
+				{
+					std::string resp = 
+						"HTTP/1.1 200 OK\r\n"
+						"Content-Type: text/plain\r\n\r\n"
+						"File deleted successfully.";
+					client.queueResponse(resp);
+				}
+				else
+				{
+					std::string resp =
+						"HTTP/1.1 404 Not Found\r\n"
+						"Content-Type: text/plain\r\n\r\n"
+						"File not found or cannot delete.";
+					client.queueResponse(resp);
+				}
+			}
+			else
+			{
+				std::string resp =
+					"HTTP/1.1 400 Bad Request\r\n"
+					"Content-Type: text/plain\r\n\r\n"
+					"Invalid delete path.";
+				client.queueResponse(resp);
+			}
+			this->postEvent(client.getSocket(), 2);
+			client.popRequest();
+			return;
+		}
 		else if (request.getMethod() == "POST")
 		{
-			
+			// debug("URI" + uri);
 			string filename = request.getHeader("filename");
-			string root = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root");
+			string root = "./" + client.getServerBlock()->getLocationValue(uri, "root");
 			if (filename.empty())
 				request.setStatusCode(500); // Check
-			client.get_outFile().open(root + "/uploads/" + filename, std::ios::binary);//temp
+			client.get_outFile().open(root + uri + filename, std::ios::binary);
 			if (!client.get_outFile().is_open())
 				request.setStatusCode(500); // Check
 			client.isSending() = true;
@@ -633,144 +618,98 @@ void	Server::setTimeout(Client &client)
 		throw std::runtime_error("Failed to reset timer event");
 	}
 }
-// void Server::executeCGI(Client &client, const std::string &cgiPath, string &request)
-// {
-// 	int cgiOutput[2];
-// 	if (pipe(cgiOutput) < 0)
-// 	{
-// 		throw std::runtime_error("Failed to create pipes for CGI");
-// 	}
-
-// 	client.setPid(fork());
-// 	if (client.getPid() < 0)
-// 	{
-// 		throw std::runtime_error("Failed to fork CGI process");
-// 	}
-
-// 	if (client.getPid() == 0)
-// 	{ // Child process
-// 		close(cgiOutput[0]); // Close unused read end
-// 		dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
-// 		close(cgiOutput[1]);
-
-// 		const char* python = "/usr/bin/python3";
-// 		char* const args[] = {const_cast<char*>(python), const_cast<char*>(cgiPath.c_str()), const_cast<char*>(request.c_str()), nullptr};
-
-// 		if (execve(python, args, nullptr) == -1)
-// 		{
-// 			_exit(1); // Exit child process if execve fails
-// 		}
-// 	}
-// 	else
-// 	{ // Parent process
-// 		close(cgiOutput[1]); // Close unused write end
-// 		client.setCGIOutput(cgiOutput[0]);
-// 		debug("executin child with parameter:\n" + request);
-
-// 		// Add the output pipe to the kqueue
-// 		struct kevent event;
-// 		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
-// 		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-// 		{
-// 			close(cgiOutput[0]);
-// 			throw std::runtime_error("Failed to add CGI output to kqueue");
-// 		}
-
-// 		// Store CGI-related file descriptors in the client
-// 	}
-// }
 
 void Server::executeCGI(Client &client, const std::string &cgiPath, std::string &request)
 {
-    // We create two pipes:
-    //   - cgiOutput: child’s STDOUT -> parent
-    //   - cgiInput : parent -> child’s STDIN (OPTIONAL if you need to send the raw request to STDIN)
-    int cgiOutput[2];
-    int cgiInput[2];
-    if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
-    {
-        throw std::runtime_error("Failed to create pipes for CGI");
-    }
+	// We create two pipes:
+	//   - cgiOutput: child’s STDOUT -> parent
+	//   - cgiInput : parent -> child’s STDIN (OPTIONAL if you need to send the raw request to STDIN)
+	int cgiOutput[2];
+	int cgiInput[2];
+	if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
+	{
+		throw std::runtime_error("Failed to create pipes for CGI");
+	}
 
-    // Fork a child to run the CGI script
-    client.setPid(fork());
-    if (client.getPid() < 0)
-    {
-        throw std::runtime_error("Failed to fork CGI process");
-    }
+	// Fork a child to run the CGI script
+	client.setPid(fork());
+	if (client.getPid() < 0)
+	{
+		throw std::runtime_error("Failed to fork CGI process");
+	}
 
-    if (client.getPid() == 0)
-    {
-        // ---------------- CHILD PROCESS ----------------
+	if (client.getPid() == 0)
+	{
+		// ---------------- CHILD PROCESS ----------------
 
-        // We won't read from the output pipe
-        close(cgiOutput[0]);
-        // We'll redirect child’s STDOUT to cgiOutput[1]
-        dup2(cgiOutput[1], STDOUT_FILENO);
-        close(cgiOutput[1]);
+		// We won't read from the output pipe
+		close(cgiOutput[0]);
+		// We'll redirect child’s STDOUT to cgiOutput[1]
+		dup2(cgiOutput[1], STDOUT_FILENO);
+		close(cgiOutput[1]);
 
-        // We won't write to the input pipe
-        close(cgiInput[1]);
-        // If you want the script to read from STDIN, uncomment next 2 lines:
-        // dup2(cgiInput[0], STDIN_FILENO);
-        // close(cgiInput[0]);
+		// We won't write to the input pipe
+		close(cgiInput[1]);
+		// If you want the script to read from STDIN, uncomment next 2 lines:
+		// dup2(cgiInput[0], STDIN_FILENO);
+		// close(cgiInput[0]);
 
-        // Determine the interpreter by file extension
-        std::string::size_type dotPos = cgiPath.find_last_of('.');
-        std::string extension;
-        if (dotPos != std::string::npos)
-            extension = cgiPath.substr(dotPos + 1); // "py", "php", etc.
+		// Determine the interpreter by file extension
+		std::string::size_type dotPos = cgiPath.find_last_of('.');
+		std::string extension;
+		if (dotPos != std::string::npos)
+			extension = cgiPath.substr(dotPos + 1); // "py", "php", etc.
 
-        const char* interpreter = "/usr/bin/python3"; // default
-        if (extension == "php")
-            interpreter = "/usr/bin/php";
-        else if (extension == "py")
-            interpreter = "/usr/bin/python3";
-        // You could add more else if blocks for other interpreters
+		const char* interpreter = "/usr/bin/python3"; // default
+		if (extension == "php")
+			interpreter = "/usr/bin/php";
+		else if (extension == "py")
+			interpreter = "/usr/bin/python3";
+		// You could add more else if blocks for other interpreters
 
-        // Prepare arguments. 
-        // Right now, we pass the entire HTTP request as argv[2].
-        // If your script expects data from STDIN instead, remove request from argv
-        // and actually write the request to cgiInput[1] in the parent.
-        char* const args[] = {
-            const_cast<char*>(interpreter),
-            const_cast<char*>(cgiPath.c_str()),
-            const_cast<char*>(request.c_str()),  // optional if your script reads from argv
-            nullptr
-        };
+		// Prepare arguments. 
+		// Right now, we pass the entire HTTP request as argv[2].
+		// If your script expects data from STDIN instead, remove request from argv
+		// and actually write the request to cgiInput[1] in the parent.
+		char* const args[] = {
+			const_cast<char*>(interpreter),
+			const_cast<char*>(cgiPath.c_str()),
+			const_cast<char*>(request.c_str()),  // optional if your script reads from argv
+			nullptr
+		};
 
-        // Exec the interpreter with your script
-        if (execve(interpreter, args, nullptr) == -1)
-        {
-            _exit(1); // if execve fails
-        }
-    }
-    else
-    {
-        // ---------------- PARENT PROCESS ----------------
+		// Exec the interpreter with your script
+		if (execve(interpreter, args, nullptr) == -1)
+		{
+			_exit(1); // if execve fails
+		}
+	}
+	else
+	{
+		// ---------------- PARENT PROCESS ----------------
 
-        // We don’t write to cgiOutput[1], so close it
-        close(cgiOutput[1]);
+		// We don’t write to cgiOutput[1], so close it
+		close(cgiOutput[1]);
 
-        // If you aren’t writing the raw request to STDIN, close the input pipe
-        close(cgiInput[0]);
-        close(cgiInput[1]);
+		// If you aren’t writing the raw request to STDIN, close the input pipe
+		close(cgiInput[0]);
+		close(cgiInput[1]);
 
-        // Save the child’s STDOUT fd so we can read it in `sendCGIOutput`
-        client.setCGIOutput(cgiOutput[0]);
-        debug("executing child with parameter:\n" + request);
+		// Save the child’s STDOUT fd so we can read it in `sendCGIOutput`
+		client.setCGIOutput(cgiOutput[0]);
+		debug("executing child with parameter:\n" + request);
 
-        // Add the child’s STDOUT pipe to the kqueue for reading
-        struct kevent event;
-        EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
-        if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-        {
-            close(cgiOutput[0]);
-            throw std::runtime_error("Failed to add CGI output to kqueue");
-        }
+		// Add the child’s STDOUT pipe to the kqueue for reading
+		struct kevent event;
+		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
+		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+		{
+			close(cgiOutput[0]);
+			throw std::runtime_error("Failed to add CGI output to kqueue");
+		}
 
-        // The rest is handled in `sendCGIOutput(...)` once data is ready
-    }
+		// The rest is handled in `sendCGIOutput(...)` once data is ready
+	}
 }
 
 void Server::sendCGIOutput(Client &client)

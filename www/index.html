@@ -165,17 +165,21 @@
         offset += CHUNK_SIZE;
       }
       try {
-        const response = await fetch(uploadEndpoint, {
+        const response = await fetch(uploadEndpoint,
+        {
           method: "POST",
           headers: headers,
           body: formData,
         });
-        if (response.ok) {
+        if (response.ok)
+        {
           statusDiv.innerHTML = `Upload complete for "${file.name}"!`;
         } else {
           statusDiv.innerHTML = `Failed to upload: ${response.statusText}`;
         }
-      } catch (error) {
+      }
+      catch (error)
+      {
         statusDiv.innerHTML = `Error uploading file: ${error.message}`;
       }
     }
@@ -193,7 +197,8 @@
         const response = await fetch('http://localhost:8080/cgi-bin/calculator.py', {
           method: 'POST',
           headers: {
-            'Content-Type': 'text/plain' // Sending raw text as the body
+            'Content-Type': 'text/plain', // Sending raw text as the body
+            'X-request-type' : 'cgi'
           },
           body: input // e.g., "2+2"
         });
@@ -214,10 +219,11 @@
         return;
       }
       try {
-        const response = await fetch('http://localhost:8080/cgi/hello.php', {
+        const response = await fetch('http://localhost:8080/cgi/hello.php',{
           method: 'POST',
           headers: {
-            'Content-Type': 'text/plain'
+            'Content-Type': 'text/plain',
+            'X-request-type' : 'cgi'
           },
           body: name
         });

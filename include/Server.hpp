@@ -69,6 +69,9 @@ class Server {
 	//Handle Events
 	int				handleFileContent(Client &client, string &req);
 	HttpResponse	handleGet(HttpRequest &request, Client &client);
+	HttpResponse	handleDelete(HttpRequest &request, Client &client);
+	int				handlePost(HttpRequest &request, Client &client);
+	int				handleCGI(HttpRequest &request, Client *client, string &req);
 	HttpResponse	retrieveFile(HttpRequest &request);
 
 };

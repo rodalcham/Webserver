@@ -13,7 +13,9 @@
 class log;
 
 bool	isHttpRequest(const std::string &request);
+bool	isCGIRequest(const HttpRequest &request);
 string	listUploadsJSON(const std::string &, string endpoint);
+string	resolveCGIPath(const std::string &uri);
 
 bool	checkRequestSize(HttpRequest &request, Client &client)
 {
@@ -28,31 +30,130 @@ void	Server::processRequest(Client &client)
 	if (!client.hasRequest())
 		return;
 	string			&req = client.getRequest();
-	HttpResponse	*res = NULL;
+	HttpResponse	res;
 
 	if (isHttpRequest(req))
 	{
 		HttpRequest	request(client);
 		if (!isMethodAllowedInUploads(request, client)) //CHANGE NAME!
-			*res = HttpResponse(405, "Method " + request.getMethod() + " not allowed.", request);
+			res = HttpResponse(405, "Method " + request.getMethod() + " not allowed.", request);
 		else if (checkRequestSize(request, client))
-			*res = HttpResponse(413, "Payload is too large.", request);
+			res = HttpResponse(413, "Payload is too large.", request);
 		else if (request.getMethod() == "GET")
-			*res = handleGet(request, client);
-		// else if (request.getMethod() == "POST")
-		// else if (request.getMethod() == "DELETE")
+			res = handleGet(request, client);
+		else if (request.getMethod() == "POST")
+		{
+			if (isCGIRequest(request))
+			{
+				if (handleCGI(request, &client, req))
+					res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
+			}
+			else if (handlePost(request, client))
+				res = HttpResponse(500, "Upload Failed", HttpRequest(client));
+		}
+		else if (request.getMethod() == "DELETE")
+			res = handleDelete(request, client);
 		else
-			*res = HttpResponse(501, "Method not implemented", request);
+			res = HttpResponse(501, "Method not implemented", request);
 	}
 	else
 	{
 		if (handleFileContent(client, req))
-			*res = HttpResponse(500, "Upload Failed", HttpRequest(client));
+			res = HttpResponse(500, "Upload Failed", HttpRequest(client));
 	}
-	if (res)
+	if (res.isReady())
 	{
-		client.queueResponse(res->returnResponse());
+		client.queueResponse(res.returnResponse());
+		postEvent(client.getSocket(), 2);
+		client.popRequest();
 	}
+}
+
+int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
+{
+	string path = resolveCGIPath(request.getUri());
+	int	cgiOutput[2];
+	if (pipe(cgiOutput) < 0)
+		return -1;
+	client->setPid(fork());
+	if (client->getPid() < 0)
+	{
+		close(cgiOutput[0]);
+		close(cgiOutput[1]);
+		return -1;
+	}
+	else if (client->getPid() == 0)
+	{
+		close(cgiOutput[0]);
+		dup2(cgiOutput[1], STDOUT_FILENO);
+		close(cgiOutput[1]);
+
+		string::size_type dotPos = path.find_last_of('.');
+		string extension;
+
+		if (dotPos != std::string::npos)
+			extension = path.substr(dotPos + 1); // "py", "php", etc.
+
+		const char* interpreter = "/usr/bin/python3";
+		if (extension == "php")
+			interpreter = "/usr/bin/php";
+		else if (extension == "py")
+			interpreter = "/usr/bin/python3";
+
+		char* const args[] = {
+			const_cast<char*>(interpreter),
+			const_cast<char*>(path.c_str()),
+			const_cast<char*>(req.c_str()),  // optional if your script reads from argv
+			nullptr
+		};
+		if (execve(interpreter, args, nullptr) == -1)
+		{
+			_exit(-1);
+		}
+		else
+		{
+			close(cgiOutput[1]);
+			client->setCGIOutput(cgiOutput[0]);
+			struct kevent event;
+			EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, client);
+			if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+			{
+				close(cgiOutput[0]);
+				return -1;
+			}
+		}
+	}
+}
+
+int	Server::handlePost(HttpRequest &request, Client &client)
+{
+	string filename = request.getHeader("filename");
+	string uri = request.getUri();
+	string root = "./" + client.getServerBlock()->getLocationValue(uri, "root");
+	if (filename.empty())
+		return -1;
+	client.get_outFile().open(root + uri + filename, std::ios::binary);
+	if (!client.get_outFile().is_open())
+		return -1;
+	client.isSending() = true;
+	return 0;
+}
+
+HttpResponse	Server::handleDelete(HttpRequest &request, Client &client)
+{
+	string uri = request.getUri();
+	if (uri.rfind(request.getMatched_location(), 0) == 0)
+	{
+		std::string filename = uri.substr(std::string(uri).size());
+		std::string fullPath = "./" + client.getServerBlock()->getLocationValue(uri, "root") + uri + filename;
+
+		if (std::remove(fullPath.c_str()) == 0)
+			return HttpResponse(200, "File deleted Successfully", request);
+		else
+			return HttpResponse(404, "File not found or cannot delete", request);
+	}
+	else
+		return HttpResponse(400, "Invalid Delete path", request);
 }
 
 HttpResponse	Server::retrieveFile(HttpRequest &request)
@@ -136,7 +237,6 @@ int	Server::handleFileContent(Client &client, string &req)
 		endBoundary = &boundaryPrefix;
 	else if (req.substr(req.length() - boundarySuffix.length()) == boundarySuffix)
 	{
-		// debug("LAST CHUNK RECEIVED");
 		endBoundary = &boundarySuffix;
 	}
 	else
@@ -146,7 +246,6 @@ int	Server::handleFileContent(Client &client, string &req)
 
 	if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
 	{
-		// debug("Missing Boundary prefix: " + boundaryPrefix);
 		endBoundary = NULL;
 	}
 

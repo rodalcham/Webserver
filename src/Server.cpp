@@ -96,7 +96,7 @@ std::string Server::handleDirectoryOrFile(const std::string &uri, HttpRequest &r
 	return response;
 }
 
-string Server::handleRedirect(Client &client)
+void Server::handleRedirect(Client &client)
 {
 	const ServerBlock *serverBlock = client.getServerBlock();
 	std::string redirectLocation = serverBlock->getLocationValue("/return", "return");
@@ -312,7 +312,7 @@ bool isCGIRequest(const HttpRequest &request)
 	return false;
 }
 
-std::string resolveCGIPath(const std::string &uri)
+std::string	resolveCGIPath(const std::string &uri)
 {
 	const std::string cgiRoot = "www/cgi/";
 	const std::string cgiBinRoot = "www/cgi-bin/";
@@ -623,9 +623,6 @@ void	Server::setTimeout(Client &client)
 
 void Server::executeCGI(Client &client, const std::string &cgiPath, std::string &request)
 {
-	// We create two pipes:
-	//   - cgiOutput: child’s STDOUT -> parent
-	//   - cgiInput : parent -> child’s STDIN (OPTIONAL if you need to send the raw request to STDIN)
 	int cgiOutput[2];
 	int cgiInput[2];
 	if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
@@ -633,7 +630,6 @@ void Server::executeCGI(Client &client, const std::string &cgiPath, std::string 
 		throw std::runtime_error("Failed to create pipes for CGI");
 	}
 
-	// Fork a child to run the CGI script
 	client.setPid(fork());
 	if (client.getPid() < 0)
 	{
@@ -642,37 +638,22 @@ void Server::executeCGI(Client &client, const std::string &cgiPath, std::string 
 
 	if (client.getPid() == 0)
 	{
-		// ---------------- CHILD PROCESS ----------------
-
-		// We won't read from the output pipe
 		close(cgiOutput[0]);
-		// We'll redirect child’s STDOUT to cgiOutput[1]
 		dup2(cgiOutput[1], STDOUT_FILENO);
 		close(cgiOutput[1]);
-
-		// We won't write to the input pipe
 		close(cgiInput[1]);
-		// If you want the script to read from STDIN, uncomment next 2 lines:
-		// dup2(cgiInput[0], STDIN_FILENO);
-		// close(cgiInput[0]);
 
-		// Determine the interpreter by file extension
 		std::string::size_type dotPos = cgiPath.find_last_of('.');
 		std::string extension;
 		if (dotPos != std::string::npos)
 			extension = cgiPath.substr(dotPos + 1); // "py", "php", etc.
 
-		const char* interpreter = "/usr/bin/python3"; // default
+		const char* interpreter = "/usr/bin/python3";
 		if (extension == "php")
 			interpreter = "/usr/bin/php";
 		else if (extension == "py")
 			interpreter = "/usr/bin/python3";
-		// You could add more else if blocks for other interpreters
 
-		// Prepare arguments. 
-		// Right now, we pass the entire HTTP request as argv[2].
-		// If your script expects data from STDIN instead, remove request from argv
-		// and actually write the request to cgiInput[1] in the parent.
 		char* const args[] = {
 			const_cast<char*>(interpreter),
 			const_cast<char*>(cgiPath.c_str()),
@@ -680,10 +661,9 @@ void Server::executeCGI(Client &client, const std::string &cgiPath, std::string 
 			nullptr
 		};
 
-		// Exec the interpreter with your script
 		if (execve(interpreter, args, nullptr) == -1)
 		{
-			_exit(1); // if execve fails
+			_exit(1);
 		}
 	}
 	else
@@ -735,7 +715,7 @@ void Server::sendCGIOutput(Client &client)
 		{
 			throw std::runtime_error("Failed to remove CGI output from kqueue");
 		}
-		if (WIFEXITED(status))
+		if (WIFEXITED(status) > 0)
 		{
 			std::string response;
 			char buffer[2048];

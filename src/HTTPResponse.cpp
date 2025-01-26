@@ -10,6 +10,7 @@ HttpResponse::HttpResponse(const HttpRequest& request) : _stat_code_no(request.g
 	// 	_status_code = "100 Continue";// TODO: REMOVE THIS once request is working
 	// 	return;
 	// }
+	_ready = false;
 	this->_http_version = request.getHttpVersion();
 	this->_chunking_required = false;
 	if (this->_stat_code_no == 200 || this->_stat_code_no == 201)
@@ -19,9 +20,49 @@ HttpResponse::HttpResponse(const HttpRequest& request) : _stat_code_no(request.g
 	setHeaders(request);
 }
 
+HttpResponse::HttpResponse(const int& stat_code_no, const std::string& body, const HttpRequest &request) : _stat_code_no(stat_code_no), _body(body)
+{
+	setReturnPage(request);
+	this->_http_version = request.getHttpVersion();
+	this->_chunking_required = false;
+	if (this->_stat_code_no == 200 && request.getMethod() == "GET")
+		setFilePath(request);
+	setStatusCode(request);
+	setBody(true, request);
+	setHeaders(request);
+	_ready = true;
+	// respDebug();
+}
+
+bool	HttpResponse::isReady()
+{
+	return _ready;
+}
+
 HttpResponse::~HttpResponse()
 {
 	
+}
+
+HttpResponse&	HttpResponse::operator=(const HttpResponse& other)
+{
+	if (this != &other) // Check for self-assignment
+	{
+		// Copy primitive and standard types
+		_http_version = other._http_version;
+		_stat_code_no = other._stat_code_no;
+		_status_code = other._status_code;
+		_headers = other._headers;
+		_chunking_required = other._chunking_required;
+		_body = other._body;
+		_file_path = other._file_path;
+		_matched_location = other._matched_location;
+		_return_page = other._return_page;
+		_ready = other._ready;
+
+		// _error_status_codes is a const map and is already initialized; no need to copy
+	}
+	return *this;
 }
 
 

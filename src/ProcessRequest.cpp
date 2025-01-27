@@ -46,7 +46,9 @@ void	Server::processRequest(Client &client)
 			if (isCGIRequest(request))
 			{
 				if (handleCGI(request, &client, req))
-					res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
+					debug("I HAVE AN ERROR HERE");
+					// res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
+				return;
 			}
 			else if (handlePost(request, client))
 				res = HttpResponse(500, "Upload Failed", HttpRequest(client));
@@ -66,6 +68,7 @@ void	Server::processRequest(Client &client)
 		client.queueResponse(res.returnResponse());
 		postEvent(client.getSocket(), 2);
 	}
+	debug("I STILL COME HERE");
 	client.popRequest();
 }
 
@@ -178,8 +181,6 @@ HttpResponse	Server::retrieveFile(HttpRequest &request) // FIX
 	string indexFile = serverBlock.getLocationValue(request.getMatched_location(), "index");
 	string autoindex = serverBlock.getLocationValue(request.getMatched_location(), "autoindex");
 	string fullPath = root + uri;
-	// if (uri.length() > 2)
-	// 	fullPath += uri;
 
 
 	if (std::filesystem::is_directory(fullPath))
@@ -220,6 +221,7 @@ HttpResponse	Server::retrieveFile(HttpRequest &request) // FIX
 
 	if (std::filesystem::exists(fullPath) && std::filesystem::is_regular_file(fullPath))
 	{
+		debug("fullpath" + fullPath);
 		std::string fileContent = readFile(fullPath);
 		std::string mimeType = getMimeType(fullPath);
 
@@ -241,7 +243,7 @@ HttpResponse	Server::handleGet(HttpRequest &request, Client &client)
 	{
 		string redirect = client.getServerBlock()->getLocationValue("/return", "return");
 		if (redirect.empty())
-			return HttpResponse(500, "No reirection target", request);
+			return HttpResponse(500, "No redirection target", request);
 		HttpResponse	res(301, "", request);
 		res.setHeader("Location", redirect);
 		return res;

@@ -85,7 +85,7 @@ int Client::processFile(int mode)
     }
 
 	string *req = &this->_file_content.front();
-    const string  success = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\nUpload successful.\r\n";
+    const string  success = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload successful.\r\n";
     const string  failure = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n";
 
 	if (!this->_outFile || !this->_outFile.is_open())

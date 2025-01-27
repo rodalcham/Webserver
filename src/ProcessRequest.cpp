@@ -297,4 +297,3 @@ int	Server::handleFileContent(Client &client, string &req)
 	}
 	return 0;
 }
-

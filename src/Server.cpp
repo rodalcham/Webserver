@@ -481,4 +481,3 @@ void Server::sendCGIOutput(Client &client)
 		throw std::runtime_error("Failed Waitpid");
 	}
 }
-

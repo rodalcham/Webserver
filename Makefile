@@ -24,8 +24,9 @@ SRCS		=	$(SRC_DIR)/Config.cpp \
 				$(SRC_DIR)/log.cpp \
 				$(SRC_DIR)/ServerMsg.cpp \
 				$(SRC_DIR)/Client.cpp \
+				$(SRC_DIR)/Utils.cpp \
 				$(SRC_DIR)/ProcessRequest.cpp \
-				$(SRC_DIR)/Utils.cpp
+
 
 # Objects
 OBJS		= $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)

@@ -157,21 +157,35 @@ HttpResponse	Server::handleDelete(HttpRequest &request, Client &client)
 		return HttpResponse(400, "Invalid Delete path", request);
 }
 
-HttpResponse	Server::retrieveFile(HttpRequest &request)
+
+/*
+TODO 
+
+Fix cgi responses
+Give gray request of last post
+
+TES TEST TEST
+
+Fix this V
+
+*/
+
+HttpResponse	Server::retrieveFile(HttpRequest &request) // FIX 
 {
 	string uri = request.getUri();
 	const ServerBlock serverBlock = request.getRequestBlock();
 	string root = serverBlock.getLocationValue(request.getMatched_location(), "root");
 	string indexFile = serverBlock.getLocationValue(request.getMatched_location(), "index");
 	string autoindex = serverBlock.getLocationValue(request.getMatched_location(), "autoindex");
-	string fullPath = root;
-	if (uri.length() > 2)
-		fullPath += uri;
+	string fullPath = root + uri;
+	// if (uri.length() > 2)
+	// 	fullPath += uri;
 
 
 	if (std::filesystem::is_directory(fullPath))
 	{
-		std::string indexFilePath = fullPath + "/" + indexFile;
+		std::string indexFilePath = root+ "/" + indexFile;
+		debug("INDEX FILE = " + indexFilePath);
 		if (!indexFile.empty() && std::filesystem::exists(indexFilePath) && std::filesystem::is_regular_file(indexFilePath))
 		{
 			std::string fileContent = Server::readFile(indexFilePath);
@@ -201,7 +215,7 @@ HttpResponse	Server::retrieveFile(HttpRequest &request)
 			return res;
 		
 		}
-		return HttpResponse(403, "403 Forbidden", request);
+		return HttpResponse(404, "NOT FOUND", request);
 	}
 
 	if (std::filesystem::exists(fullPath) && std::filesystem::is_regular_file(fullPath))

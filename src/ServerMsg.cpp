@@ -94,6 +94,7 @@ void		Server::msg_send(Client &client, int mode)
 					disable_write_listen(client.getSocket());
 					client.isReceiving() = false;
 				}
+				removeClient(client); //TEMP
 				return;
 			}
 		}

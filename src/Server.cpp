@@ -17,109 +17,7 @@ extern std::atomic<bool> keepRunning;
 
 uint16_t	ft_htons(uint16_t port);
 
-std::string Server::handleDirectoryOrFile(const std::string &uri, HttpRequest &request)
-{
 
-	const ServerBlock serverBlock = request.getRequestBlock();
-	std::string root = serverBlock.getLocationValue(request.getMatched_location(), "root");
-	std::string indexFile = serverBlock.getLocationValue(request.getMatched_location(), "index");
-	std::string autoindex = serverBlock.getLocationValue(request.getMatched_location(), "autoindex");
-
-	std::string fullPath = root + uri;
-
-	if (std::filesystem::is_directory(fullPath))
-	{
-
-		std::string indexFilePath = fullPath + "/" + indexFile;
-
-		if (!indexFile.empty() && std::filesystem::exists(indexFilePath) && std::filesystem::is_regular_file(indexFilePath))
-		{
-			std::string fileContent = Server::readFile(indexFilePath);
-			std::string mimeType = Server::getMimeType(indexFilePath);
-
-			std::string response =
-				"HTTP/1.1 200 OK\r\n"
-				"Content-Type: " + mimeType + "\r\n"
-				"Content-Length: " + std::to_string(fileContent.size()) + "\r\n\r\n" +
-				fileContent;
-
-			return response;
-		}
-
-		if (autoindex == "on")
-		{
-			std::string html = "<html><head><title>Index of " + uri + "</title></head><body>";
-			html += "<h1>Index of " + uri + "</h1><hr><pre>";
-
-			for (const auto &entry : std::filesystem::directory_iterator(fullPath))
-			{
-				std::string name = entry.path().filename().string();
-				std::string link = uri + (uri.back() == '/' ? "" : "/") + name;
-				html += "<a href=\"" + link + "\">" + name + "</a>\n";
-			}
-			html += "</pre><hr></body></html>";
-			std::string response =
-				"HTTP/1.1 200 OK\r\n"
-				"Content-Type: text/html\r\n"
-				"Content-Length: " + std::to_string(html.size()) + "\r\n\r\n" +
-				html;
-
-			return response;
-		}
-		std::string response =
-			"HTTP/1.1 403 Forbidden\r\n"
-			"Content-Type: text/html\r\n"
-			"Content-Length: 19\r\n\r\n"
-			"403 Forbidden\r\n";
-		return response;
-	}
-
-
-	if (std::filesystem::exists(fullPath) && std::filesystem::is_regular_file(fullPath))
-	{
-		std::string fileContent = readFile(fullPath);
-		std::string mimeType = getMimeType(fullPath);
-
-		std::string response =
-			"HTTP/1.1 200 OK\r\n"
-			"Content-Type: " + mimeType + "\r\n"
-			"Content-Length: " + std::to_string(fileContent.size()) + "\r\n\r\n" +
-			fileContent;
-
-		return response;
-	}
-	std::string response =
-		"HTTP/1.1 404 Not Found\r\n"
-		"Content-Type: text/html\r\n"
-		"Content-Length: 15\r\n\r\n"
-		"404 Not Found\r\n";
-	return response;
-}
-
-void Server::handleRedirect(Client &client)
-{
-	const ServerBlock *serverBlock = client.getServerBlock();
-	std::string redirectLocation = serverBlock->getLocationValue("/return", "return");
-
-	if (redirectLocation.empty())
-	{
-		std::string resp =
-			"HTTP/1.1 500 Internal Server Error\r\n"
-			"Content-Type: text/plain\r\n\r\n"
-			"No redirection target specified for /return.";
-		client.queueResponse(resp);
-		this->postEvent(client.getSocket(), 2);
-		client.popRequest();
-		return;
-	}
-	std::string resp =
-		"HTTP/1.1 301 Moved Permanently\r\n"
-		"Location: " + redirectLocation + "\r\n"
-		"Content-Length: 0\r\n\r\n";
-	client.queueResponse(resp);
-	this->postEvent(client.getSocket(), 2);
-	client.popRequest();
-}
 
 bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 {
@@ -127,16 +25,17 @@ bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 	const ServerBlock *serverBlock = client.getServerBlock();
 	auto locationBlock = serverBlock->getLocationBlock(request.getMatched_location());
 
-	debug("Method: " + method);
-	debug("MAtched location: " + request.getMatched_location());
+	if (request.getMatched_location() == "/return")
+		return true;
 	if (locationBlock.find("allow_methods") != locationBlock.end())
 	{
 
 		std::istringstream iss(locationBlock.at("allow_methods"));
 		std::string allowedMethod;
-		while (iss >> allowedMethod) {
-			debug("ALLOWED METHODS" + allowedMethod);
-			if (allowedMethod == method) {
+		while (iss >> allowedMethod)
+		{
+			if (allowedMethod == method)
+			{
 
 				return true;
 			}
@@ -305,7 +204,6 @@ bool isCGIRequest(const HttpRequest &request)
 {
 	if (request.getHeader("X-Request-Type") == "cgi")
 	{
-		debug("Is CGI");
 		return true;
 	}
 	return false;
@@ -351,181 +249,6 @@ bool isHttpRequest(const std::string &request)
 	return std::regex_match(firstLine, httpRequestRegex);
 }
 
-// void	Server::processRequest(Client &client)
-// {
-// 	if (!client.hasRequest())
-// 		return;
-// 	string&	req = client.getRequest();
-// 	debug("Request :\n" + req);
-// 	if (isHttpRequest(req))
-// 	{
-// 		debug("HTTP REQUEST");
-// 		HttpRequest		request(client);
-// 		std::string uri = request.getUri();
-// 		if (request.getUri() == "/list-uploads")
-// 		{
-// 			std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"), request.getHeader("X-uploadEndpoint"));
-// 			std::string resp =
-// 				"HTTP/1.1 200 OK\r\n"
-// 				"Content-Type: application/json\r\n\r\n" +
-// 				jsonList;
-// 			client.queueResponse(resp);
-// 			this->postEvent(client.getSocket(), 2);
-// 			client.popRequest();
-// 			return;
-// 		}
-// 		if (request.getUri() == "/return")
-// 		{
-// 			handleRedirect(client);
-// 			return;
-// 		}
-// 		if (request.getMethod() == "GET")
-// 		{
-// 			std::string responsee = handleDirectoryOrFile(uri, request);
-// 			client.queueResponse(responsee);
-// 			this->postEvent(client.getSocket(), 2);
-// 			client.popRequest();
-// 			return;
-// 		}
-// 		if (!isMethodAllowedInUploads(request, client))
-// 		{
-// 			std::string response =
-// 				"HTTP/1.1 405 Method Not Allowed\r\n"
-// 				"Content-Type: text/plain\r\n\r\n"
-// 				"The " + request.getMethod() + " method is not allowed for /uploads/.";
-// 			client.queueResponse(response);
-// 			this->postEvent(client.getSocket(), 2);
-// 			client.popRequest();
-// 			return;
-// 		}
-// 		if (request.getHeader("Content-Length").length() &&
-// 			client.getServerBlock()->getDirectiveValue("client_max_body_size").length() &&
-// 			std::stoi(request.getHeader("Content-Length")) > 1000000 * std::stoi(client.getServerBlock()->getDirectiveValue("client_max_body_size")))
-// 		{
-// 			client.popRequest();
-// 			string response = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: text/plain\r\nContent-Length: 49\r\n\r\nThe request payload is too large for the server to handle.\r\n";
-// 			client.queueResponse(response);
-// 			this->postEvent(client.getSocket(), 2);
-// 			return;
-// 		}
-// 		if (isCGIRequest(request))
-// 		{
-// 			executeCGI(client, resolveCGIPath(request.getUri()), req);
-// 			client.popRequest();
-// 			return;
-// 		}
-// 		if (request.getMethod() == "DELETE")
-// 		{
-// 			std::string uri = request.getUri();
-// 			if (uri.rfind(request.getMatched_location(), 0) == 0)
-// 			{
-// 				// debug("URI" + uri);
-// 				std::string filename = uri.substr(std::string(uri).size());
-// 				std::string fullPath = "./" + client.getServerBlock()->getLocationValue(uri, "root") + uri + filename;
-
-
-// 				if (std::remove(fullPath.c_str()) == 0)
-// 				{
-// 					std::string resp = 
-// 						"HTTP/1.1 200 OK\r\n"
-// 						"Content-Type: text/plain\r\n\r\n"
-// 						"File deleted successfully.";
-// 					client.queueResponse(resp);
-// 				}
-// 				else
-// 				{
-// 					std::string resp =
-// 						"HTTP/1.1 404 Not Found\r\n"
-// 						"Content-Type: text/plain\r\n\r\n"
-// 						"File not found or cannot delete.";
-// 					client.queueResponse(resp);
-// 				}
-// 			}
-// 			else
-// 			{
-// 				std::string resp =
-// 					"HTTP/1.1 400 Bad Request\r\n"
-// 					"Content-Type: text/plain\r\n\r\n"
-// 					"Invalid delete path.";
-// 				client.queueResponse(resp);
-// 			}
-// 			this->postEvent(client.getSocket(), 2);
-// 			client.popRequest();
-// 			return;
-// 		}
-// 		else if (request.getMethod() == "POST")
-// 		{
-// 			// debug("URI" + uri);
-// 			//Store Last POST REQ.
-// 			string filename = request.getHeader("filename");
-// 			string root = "./" + client.getServerBlock()->getLocationValue(uri, "root");
-// 			if (filename.empty())
-// 				request.setStatusCode(500); // Check
-// 			client.get_outFile().open(root + uri + filename, std::ios::binary);
-// 			if (!client.get_outFile().is_open())
-// 				request.setStatusCode(500); // Check
-// 			client.isSending() = true;
-// 		}
-
-// 		HttpResponse	response(request);
-		
-// 		if (request.getMethod()!="POST")
-// 		{
-// 			client.queueResponse(response.returnResponse());
-// 			this->postEvent(client.getSocket(), 2); //TEMP
-
-// 		}
-// 	}
-// 	else
-// 	{
-// 		debug("FILE CONTENT");
-// 		string boundaryPrefix = "--" + client.get_boundary() + "\r\n";
-// 		string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
-// 		string *endBoundary;
-
-// 		if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
-// 			endBoundary = &boundaryPrefix;
-// 		else if (req.substr(req.length() - boundarySuffix.length()) == boundarySuffix)
-// 		{
-// 			// debug("LAST CHUNK RECEIVED");
-// 			endBoundary = &boundarySuffix;
-// 		}
-// 		else
-// 		{
-// 			endBoundary = NULL;
-// 		}
-
-// 		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
-// 		{
-// 			// debug("Missing Boundary prefix: " + boundaryPrefix);
-// 			endBoundary = NULL;
-// 		}
-
-// 		if (endBoundary)
-// 		{
-// 			string content = req.substr(boundaryPrefix.length(), req.length());
-// 			content = content.substr(0, content.length() - endBoundary->length());
-// 			content = content.substr(0, content.length() - 2);
-
-// 			size_t headerEndPos = content.find("\r\n\r\n");
-// 			if (headerEndPos != string::npos)
-// 				content = content.substr(headerEndPos + 4);
-// 			client.queueFileContent(content);
-// 			if (*endBoundary == boundarySuffix)
-// 				postEvent(client.getSocket(), 4);
-// 			else
-// 				postEvent(client.getSocket(), 3);
-// 		}
-// 		else
-// 		{
-// 			client.queueResponse("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n");
-// 			this->postEvent(client.getSocket(), 2);
-// 			client.isSending() = false;
-// 		}
-		
-// 	}
-// 	client.popRequest();
-// }
 
 void	Server::acceptClient(int server_sock)
 {
@@ -688,8 +411,6 @@ void Server::executeCGI(Client &client, const std::string &cgiPath, std::string 
 			close(cgiOutput[0]);
 			throw std::runtime_error("Failed to add CGI output to kqueue");
 		}
-
-		// The rest is handled in `sendCGIOutput(...)` once data is ready
 	}
 }
 
@@ -697,18 +418,20 @@ void Server::sendCGIOutput(Client &client)
 {
 	int status;
 	pid_t ret;
+	HttpRequest	request(client);
+	HttpResponse	res;
 
 	ret = waitpid(client.getPid(), &status, WNOHANG);
+	debug("CGI");
 	if (ret == 0)
 	{
 		debug("CGI still running");
-		return; // CGI process is still running
+		return;
 	}
 	else if (ret == client.getPid())
 	{
 		struct kevent event;
 		
-		// Remove the event from the kqueue
 		EV_SET(&event, client.getCGIOutputFd(), EVFILT_READ, EV_DELETE, 0, 0, nullptr);
 		if (kevent(this->kq, &event, 1, nullptr, 0, nullptr) < 0)
 		{
@@ -720,39 +443,33 @@ void Server::sendCGIOutput(Client &client)
 			char buffer[2048];
 			ssize_t bytesRead = read(client.getCGIOutputFd(), buffer, sizeof(buffer));
 			
-			// Check for read error or empty output
 			if (bytesRead < 0)
 			{
 				throw std::runtime_error("Failed to read CGI output");
 			}
-
-			// If there was no data, it's a failure
 			std::string output;
 			if (bytesRead > 0)
 			{
 				output.append(buffer, bytesRead); // Append the output from the pipe
 				debug("Response : " + output);
 			}
-
-			// Build the HTTP response
 			if (output.empty())
 			{
-				response = "HTTP/1.1 500 Internal Server Error\r\n";
+				// response = "HTTP/1.1 500 Internal Server Error\r\n";
+				res = HttpResponse(500, "Internal Server Error", request);
 			}
 			else
 			{
-				response = "HTTP/1.1 200 OK\r\n";
-				response += "Content-Length: " + std::to_string(output.size()) + "\r\n";
-				response += "\r\n"; // End of headers
-				response.append(output); // Append the CGI output
-				response.append("\r\n");
+				// response = "HTTP/1.1 200 OK\r\n";
+				// response += "Content-Length: " + std::to_string(output.size()) + "\r\n";
+				// response += "\r\n"; // End of headers
+				// response.append(output); // Append the CGI output
+				// response.append("\r\n");
+				res = HttpResponse(200, output, request);
 			}
-			response.append("\0");
-			client.queueResponse(response);
-			this->postEvent(client.getSocket(), 2);
-
-			// Close the pipes after processing the output
-			close(client.getCGIOutputFd());
+			client.queueResponse(res.returnResponse());
+			postEvent(client.getSocket(), 2);
+			client.popRequest();
 		}
 		else
 		{

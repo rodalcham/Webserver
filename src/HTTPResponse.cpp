@@ -2,30 +2,38 @@
 #include "../include/HTTPResponse.hpp"
 #include "../include/ServerBlock.hpp"
 
-// HttpResponse::HttpResponse(const HttpRequest& request) : _stat_code_no(request.getStatusCode())
-// {
-// 	setReturnPage(request);
-// 	this->_http_version = request.getHttpVersion();
-// 	this->_chunking_required = false;
-// 	if (this->_stat_code_no == 200 && request.getMethod() == "GET")
-// 		setFilePath(request);
-// 	setStatusCode(request);
-// 	setBody(true, request);
-// 	setHeaders(request);
-// }
-
-HttpResponse::HttpResponse(const int& stat_code_no, const std::string& body, const HttpRequest &request) : _stat_code_no(stat_code_no), _body(body)
+HttpResponse::HttpResponse()
 {
-	setReturnPage(request);
+	_ready = false;
+}
+
+HttpResponse::HttpResponse(const int& stat_code_no, const std::string &body, const HttpRequest &request) : _stat_code_no(stat_code_no), _body(body)
+{
+	// setReturnPage(request);
 	this->_http_version = request.getHttpVersion();
 	this->_chunking_required = false;
 	if (this->_stat_code_no == 200 && request.getMethod() == "GET")
 		setFilePath(request);
 	setStatusCode(request);
-	setBody(true, request);
+	setBody();
 	setHeaders(request);
+	_ready = true;
+	respDebug();
+}
 
-	// respDebug();
+// void HttpResponse::setReturnPage(const HttpRequest& request)
+// {
+// 	_return_page = false;
+
+// 	if ((_stat_code_no == 200 && request.getMethod() == "GET") || _stat_code_no == 401 || _stat_code_no == 403 || _stat_code_no == 404)// TODO: add others here (Hardcoded?)
+// 	{
+// 		_return_page = true;
+// 	}
+// }
+
+bool	HttpResponse::isReady()
+{
+	return _ready;
 }
 
 HttpResponse::~HttpResponse()
@@ -33,14 +41,25 @@ HttpResponse::~HttpResponse()
 	
 }
 
-void HttpResponse::setReturnPage(const HttpRequest& request)
+HttpResponse&	HttpResponse::operator=(const HttpResponse& other)
 {
-	_return_page = false;
-
-	if ((_stat_code_no == 200 && request.getMethod() == "GET") || _stat_code_no == 401 || _stat_code_no == 403 || _stat_code_no == 404)// TODO: add others here
+	if (this != &other) // Check for self-assignment
 	{
-		_return_page = true;
+		// Copy primitive and standard types
+		_http_version = other._http_version;
+		_stat_code_no = other._stat_code_no;
+		_status_code = other._status_code;
+		_headers = other._headers;
+		_chunking_required = other._chunking_required;
+		_body = other._body;
+		_file_path = other._file_path;
+		_matched_location = other._matched_location;
+		_return_page = other._return_page;
+		_ready = other._ready;
+
+		// _error_status_codes is a const map and is already initialized; no need to copy
 	}
+	return *this;
 }
 
 bool	HttpResponse::getReturnPage()
@@ -62,7 +81,7 @@ void	HttpResponse::setStatusCode(HttpRequest request)
 		this->_status_code = it->second;
 	else
 		std::cout << "UNKNOWN STATUS CODE\n";// TODO: need to decide what to do in this situation!!!!!!!!!!!!!!!!!
-	if (_stat_code_no != 200 && _stat_code_no != 201)
+	if (_stat_code_no != 200 && _stat_code_no != 201 && _stat_code_no != 301)
 		setErrorFilePath(request);
 }
 
@@ -97,11 +116,43 @@ void	HttpResponse::setStatusCode(HttpRequest request)
 // 		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
 // }
 
-void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
+// void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
+// {
+	
+// 	if (!_body.empty())
+// 		return;
+// 	if (getReturnPage())
+// 	{
+// 		std::stringstream	buffer;
+// 		std::ifstream		file(this->_file_path, std::ios::binary);
+
+// 		if (file.is_open())
+// 		{
+// 			buffer << file.rdbuf();
+// 			std::string file_contents = buffer.str();
+// 			file.close();
+// 			this->_body = file_contents;
+// 		}
+// 		else if (is_first_try)
+// 		{
+// 			if (_stat_code_no == 200)
+// 				_stat_code_no = 404;
+// 			setStatusCode(request);
+// 			setBody(false, request);
+// 		}
+// 		else
+// 			this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
+// 	}
+// 	else
+// 		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
+// }
+
+void	HttpResponse::setBody()
 {
-	if (!_body.empty())
+	
+	if (_stat_code_no == 200 || _stat_code_no == 201)
 		return;
-	if (getReturnPage())
+	else if (!_file_path.empty())
 	{
 		std::stringstream	buffer;
 		std::ifstream		file(this->_file_path, std::ios::binary);
@@ -112,19 +163,12 @@ void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
 			std::string file_contents = buffer.str();
 			file.close();
 			this->_body = file_contents;
+			return;
 		}
-		else if (is_first_try)
-		{
-			if (_stat_code_no == 200)
-				_stat_code_no = 404;
-			setStatusCode(request);
-			setBody(false, request);
-		}
-		else
-			this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
 	}
-	else
-		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
+	std::string		page_content = _body;
+	_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _body + "</h1></body></html>";
+
 }
 
 void	HttpResponse::setHeaders(const HttpRequest& request)
@@ -486,5 +530,3 @@ void HttpResponse::setErrorFilePath(const HttpRequest& request)
 
 // 	throw std::runtime_error("Data '" + key + "' not found in the location '" + location + "' or globally.");
 // }
-
-

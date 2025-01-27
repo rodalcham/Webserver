@@ -20,7 +20,12 @@ HttpResponse::HttpResponse(const HttpRequest& request) : _stat_code_no(request.g
 	setHeaders(request);
 }
 
-HttpResponse::HttpResponse(const int& stat_code_no, const std::string& body, const HttpRequest &request) : _stat_code_no(stat_code_no), _body(body)
+HttpResponse::HttpResponse()
+{
+	_ready = false;
+}
+
+HttpResponse::HttpResponse(const int& stat_code_no, const std::string &body, const HttpRequest &request) : _stat_code_no(stat_code_no), _body(body)
 {
 	setReturnPage(request);
 	this->_http_version = request.getHttpVersion();
@@ -28,10 +33,20 @@ HttpResponse::HttpResponse(const int& stat_code_no, const std::string& body, con
 	if (this->_stat_code_no == 200 && request.getMethod() == "GET")
 		setFilePath(request);
 	setStatusCode(request);
-	setBody(true, request);
+	// setBody(true, request);
 	setHeaders(request);
 	_ready = true;
 	// respDebug();
+}
+
+void HttpResponse::setReturnPage(const HttpRequest& request)
+{
+	_return_page = false;
+
+	if ((_stat_code_no == 200 && request.getMethod() == "GET") || _stat_code_no == 401 || _stat_code_no == 403 || _stat_code_no == 404)// TODO: add others here (Hardcoded?)
+	{
+		_return_page = true;
+	}
 }
 
 bool	HttpResponse::isReady()
@@ -72,6 +87,10 @@ void HttpResponse::setFilePath(const HttpRequest& request) {
 	_file_path = block.getDirectiveValue("root") + request.getUri();
 }
 
+void	HttpResponse::setHeader(const std::string& key, const std::string& value)
+{
+	this->_headers[key] = value;
+}
 
 
 void HttpResponse::setErrorFilePath(const HttpRequest& request) {
@@ -326,6 +345,10 @@ void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
 		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>"; // TODO: need to complete this with a basic html page
 }
 
+string	HttpResponse::getBody()
+{
+	return _body;
+}
 
 void	HttpResponse::setHeaders(const HttpRequest& request)
 {
@@ -367,7 +390,7 @@ std::string HttpResponse::getHeaderList()
 			this->_chunking_required = true;
 	}
 	if (!_chunking_required)
-		headers_list += "Content-Length: " + std::to_string(_body.length()) + "\r\n\r\n";// TODO: this needs to be looked at
+		headers_list += "Content-Length: " + std::to_string(_body.length()) + "\r\n";// TODO: this needs to be looked at
 
 	return (headers_list);
 }
@@ -382,7 +405,7 @@ std::string	HttpResponse::returnResponse()
 
 	response =	this->_http_version + " " + _status_code + "\r\n" +
 				this->getHeaderList() + "\r\n" +
-				this->_body + "\r\n\r\n";
+				this->_body + "\r\n";
 
 	return (response);
 }

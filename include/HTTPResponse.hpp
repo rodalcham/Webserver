@@ -48,7 +48,7 @@ private:
 public:
 	HttpResponse();
 	HttpResponse(const HttpRequest& request);
-	HttpResponse(const int& stat_code_no, const std::string& body, const HttpRequest &request);
+	HttpResponse(const int& stat_code_no, const std::string &body, const HttpRequest &request);
 	~HttpResponse();
 
 	HttpResponse	&operator=(const HttpResponse &other);
@@ -68,7 +68,9 @@ public:
 	std::string		setMimeTypeHeader();
 	std::string		getHeaderList();
 	std::string		getFilePath();
+	std::string		getBody();
 	bool 			getReturnPage();
+	void			setHeader(const std::string& key, const std::string& value);
 	bool			isReady();
 	std::string		returnResponse();
 	std::string		getFromLocation(const std::string& location, const std::string& data, const HttpRequest& request);

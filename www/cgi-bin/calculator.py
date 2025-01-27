@@ -99,4 +99,3 @@ if __name__ == "__main__":
     # 3) Output minimal CGI headers + result
     print("Content-Type: text/plain\r\n\r\n", end="")
     print(result)
-

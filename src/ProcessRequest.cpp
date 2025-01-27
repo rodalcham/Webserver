@@ -65,13 +65,14 @@ void	Server::processRequest(Client &client)
 	{
 		client.queueResponse(res.returnResponse());
 		postEvent(client.getSocket(), 2);
-		client.popRequest();
 	}
+	client.popRequest();
 }
 
 int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 {
 	string path = resolveCGIPath(request.getUri());
+	debug("PATH + "  + path);
 	int	cgiOutput[2];
 	if (pipe(cgiOutput) < 0)
 		return -1;
@@ -90,7 +91,6 @@ int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 
 		string::size_type dotPos = path.find_last_of('.');
 		string extension;
-
 		if (dotPos != std::string::npos)
 			extension = path.substr(dotPos + 1); // "py", "php", etc.
 
@@ -110,19 +110,20 @@ int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 		{
 			_exit(-1);
 		}
-		else
+	}
+	else
+	{
+		close(cgiOutput[1]);
+		client->setCGIOutput(cgiOutput[0]);
+		struct kevent event;
+		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, client);
+		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
 		{
-			close(cgiOutput[1]);
-			client->setCGIOutput(cgiOutput[0]);
-			struct kevent event;
-			EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, client);
-			if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-			{
-				close(cgiOutput[0]);
-				return -1;
-			}
+			close(cgiOutput[0]);
+			return -1;
 		}
 	}
+	return 0;
 }
 
 int	Server::handlePost(HttpRequest &request, Client &client)
@@ -163,7 +164,10 @@ HttpResponse	Server::retrieveFile(HttpRequest &request)
 	string root = serverBlock.getLocationValue(request.getMatched_location(), "root");
 	string indexFile = serverBlock.getLocationValue(request.getMatched_location(), "index");
 	string autoindex = serverBlock.getLocationValue(request.getMatched_location(), "autoindex");
-	string fullPath = root + uri;
+	string fullPath = root;
+	if (uri.length() > 2)
+		fullPath += uri;
+
 
 	if (std::filesystem::is_directory(fullPath))
 	{
@@ -173,8 +177,11 @@ HttpResponse	Server::retrieveFile(HttpRequest &request)
 			std::string fileContent = Server::readFile(indexFilePath);
 			std::string mimeType = Server::getMimeType(indexFilePath);
 
-			//SET content-type header to mimetype
-			return HttpResponse(200, fileContent, request);
+
+			HttpResponse res(200, fileContent, request);
+			res.setHeader("Content-type", mimeType);
+
+			return res;
 		}
 
 		if (autoindex == "on")
@@ -189,8 +196,9 @@ HttpResponse	Server::retrieveFile(HttpRequest &request)
 				html += "<a href=\"" + link + "\">" + name + "</a>\n";
 			}
 			html += "</pre><hr></body></html>";
-			//SET content-type header to text/html
-			return HttpResponse(200, html, request);
+			HttpResponse res(200, html, request);
+			res.setHeader("Content-type", "text/html");
+			return res;
 		
 		}
 		return HttpResponse(403, "403 Forbidden", request);
@@ -201,8 +209,9 @@ HttpResponse	Server::retrieveFile(HttpRequest &request)
 		std::string fileContent = readFile(fullPath);
 		std::string mimeType = getMimeType(fullPath);
 
-		//SET content-type header to mimetype
-		return HttpResponse(200, fileContent, request);
+		HttpResponse res(200, fileContent, request);
+		res.setHeader("Content-type", mimeType);
+		return res;
 	}
 	return HttpResponse(404, "404 not found", request);
 }
@@ -219,8 +228,9 @@ HttpResponse	Server::handleGet(HttpRequest &request, Client &client)
 		string redirect = client.getServerBlock()->getLocationValue("/return", "return");
 		if (redirect.empty())
 			return HttpResponse(500, "No reirection target", request);
-		request.setRedirLocation(redirect);
-		return HttpResponse(301, "", request);
+		HttpResponse	res(301, "", request);
+		res.setHeader("Location", redirect);
+		return res;
 	}
 	else
 		return retrieveFile(request);

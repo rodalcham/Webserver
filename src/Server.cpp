@@ -227,7 +227,7 @@ std::string	resolveCGIPath(const std::string &uri)
 	}
 	else
 	{
-		throw std::runtime_error("Invalid CGI path: " + uri);
+		return "";
 	}
 }
 

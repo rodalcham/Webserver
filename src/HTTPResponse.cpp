@@ -179,7 +179,7 @@ void	HttpResponse::setHeaders(const HttpRequest& request)
 
 	if (_stat_code_no == 200 && request.getMethod() == "GET")
 	{
-		this->_headers["Last-Modified"] = this->setLastModifiedHeader();
+		this->_headers["Last-Modified"] = this->setLastModifiedHeader(request);
 		this->_headers["Content-Type"] = this->setMimeTypeHeader();
 	}
 	else if (_stat_code_no == 201 && request.getMethod() == "POST")
@@ -217,7 +217,7 @@ std::string HttpResponse::getHeaderList()
 			this->_chunking_required = true;
 	}
 	if (!_chunking_required)
-		headers_list += "Content-Length: " + std::to_string(_body.length()) + "\r\n\r\n";// TODO: this needs to be looked at
+		headers_list += "Content-Length: " + std::to_string(_body.length()) + "\r\n";// TODO: this needs to be looked at
 
 	return (headers_list);
 }
@@ -259,10 +259,11 @@ std::string	HttpResponse::setDateHeader()
 	return (current_date_str);
 }
 
-std::string	HttpResponse::setLastModifiedHeader()
+std::string	HttpResponse::setLastModifiedHeader(HttpRequest request)
 {
 	std::filesystem::file_time_type lw_time = std::filesystem::last_write_time(this->_file_path);
-
+	if (request.getHeader("X-uploadEndpoint") != "")
+		lw_time = std::filesystem::last_write_time(request.getHeader("root") + request.getHeader("X-uploadEndpoint"));
 	std::time_t sctp = decltype(lw_time)::clock::to_time_t(lw_time);
 	std::tm* last_modified_obj = std::localtime(&sctp);
 

@@ -62,7 +62,7 @@ public:
 
 	std::string		makeTimestampStr(std::tm* time);
 	std::string		setDateHeader();
-	std::string		setLastModifiedHeader();
+	std::string		setLastModifiedHeader(HttpRequest request);
 	std::string		setMimeTypeHeader();
 	std::string		getHeaderList();
 	std::string		getFilePath();

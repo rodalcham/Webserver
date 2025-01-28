@@ -35,7 +35,7 @@ void	Server::processRequest(Client &client)
 	if (isHttpRequest(req))
 	{
 		HttpRequest	request(client);
-		if (!isMethodAllowedInUploads(request, client)) //CHANGE NAME!
+		if (!isMethodAllowedInUploads(request, client))
 			res = HttpResponse(405, "Method " + request.getMethod() + " not allowed.", request);
 		else if (checkRequestSize(request, client))
 			res = HttpResponse(413, "Payload is too large.", request);
@@ -46,8 +46,7 @@ void	Server::processRequest(Client &client)
 			if (isCGIRequest(request))
 			{
 				if (handleCGI(request, &client, req))
-					debug("I HAVE AN ERROR HERE");
-					// res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
+					res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
 				return;
 			}
 			else if (handlePost(request, client))

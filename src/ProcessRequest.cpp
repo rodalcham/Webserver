@@ -240,13 +240,12 @@ HttpResponse	Server::handleGet(HttpRequest &request, Client &client)
 		string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue(request.getHeader("X-uploadEndpoint"), "root"), request.getHeader("X-uploadEndpoint"));
 		return HttpResponse(200, jsonList, request);
 	}
-	else if (request.getUri() == "/return")
+	const ServerBlock serverBlock = request.getRequestBlock();
+	string return_value = serverBlock.getLocationValue(request.getMatched_location(), "return");
+	if (return_value != "")
 	{
-		string redirect = client.getServerBlock()->getLocationValue("/return", "return");
-		if (redirect.empty())
-			return HttpResponse(500, "No redirection target", request);
+		request.setRedirLocation(return_value);
 		HttpResponse	res(301, "", request);
-		res.setHeader("Location", redirect);
 		return res;
 	}
 	else

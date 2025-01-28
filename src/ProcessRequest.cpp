@@ -20,9 +20,8 @@ string	resolveCGIPath(const std::string &uri);
 bool	checkRequestSize(HttpRequest &request, Client &client)
 {
 	return (request.getHeader("Content-Length").length() &&
-			client.getServerBlock()->getDirectiveValue("client_max_body_size").length() &&
-			std::stoi(request.getHeader("Content-Length")) > 1000000 *
-			std::stoi(client.getServerBlock()->getDirectiveValue("client_max_body_size")));		
+			client.getServerBlock()->getMaxBodySize() &&
+			std::stoi(request.getHeader("Content-Length")) > client.getServerBlock()->getMaxBodySize());
 }
 
 void	Server::processRequest(Client &client)

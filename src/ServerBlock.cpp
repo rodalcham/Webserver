@@ -44,7 +44,7 @@ void ServerBlock::parseBlock(std::istream& stream)
 			_port = std::stoi(value);
 		else if (key == "server_name")
 			_host_name = value;
-		else if (key == "root" || key == "index" || key == "client_max_body_size" || key == "allow_methods" || key == "autoindex" || key == "cgi_pass")
+		else if (key == "root" || key == "index" || key == "allow_methods" || key == "autoindex" || key == "cgi_pass")
 			_directive_pairs.insert({key, value});
 		else if (key == "error_page")
 			setErrorPage(value, line);	
@@ -54,6 +54,8 @@ void ServerBlock::parseBlock(std::istream& stream)
 			value.erase(0, value.find_first_not_of(" \t"));
 			_directive_pairs.insert({key, value});
 		}
+		else if (key == "client_max_body_size")
+			setMaxBodySize(value);
 		else
 			throw std::runtime_error("Config file error: Unknown directive: " + key);
 		// for (const auto& [location, config] : _location_blocks)
@@ -183,6 +185,35 @@ void	ServerBlock::setSocketNo(const int& socket_number) {
 	this->_socket_no = socket_number;
 }
 
+void	ServerBlock::setMaxBodySize(std::string value)
+{
+	if (value.empty())
+		throw std::runtime_error("Config file error: client_max_body_size is empty");
+	size_t pos = value.find_first_not_of("0123456789");
+	if (pos != std::string::npos)
+	{
+		char		units = value.back();
+		long long	num = std::stoi(value.substr(0, pos));
+		if (num <= 0)
+			throw std::runtime_error("Config file error: client_max_body_size: " + value);
+
+		if (units == 'k' || units == 'K')
+			_max_body_size = num * 1000;
+		else if (units == 'm' || units == 'M')
+			_max_body_size = num * 1000000;
+		else if (units == 'g' || units == 'G')
+			_max_body_size = num * 1000000000;
+		else if (units == 't' || units == 'T')
+			_max_body_size = num * 1000000000000;
+		else
+			throw std::runtime_error("Config file error: client_max_body_size: " + value);
+	}
+	else
+		_max_body_size = std::stoi(value);
+	if (_max_body_size < 0)
+		throw std::runtime_error("Config file error: client_max_body_size outside limits: " + value);
+}
+
 std::string	ServerBlock::getHostName() const {
 	return (_host_name);
 }
@@ -247,4 +278,8 @@ std::string	ServerBlock::getLocationValue(std::string location, std::string key)
 
 int	ServerBlock::getSocketNo() const {
 	return (_socket_no);
+}
+
+int	ServerBlock::getMaxBodySize() const {
+	return (_max_body_size);
 }

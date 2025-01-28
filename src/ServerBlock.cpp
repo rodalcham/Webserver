@@ -62,6 +62,7 @@ void ServerBlock::parseBlock(std::istream& stream)
 		// 		std::cerr << "  Key: " << key << " | Value: " << value << "\n";
 		// }
 	}
+	_host_name = _host_name + ":" + std::to_string(_port);
 }
 
 std::string	ServerBlock::createDirectiveStr(std::string& line)

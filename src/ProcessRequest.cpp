@@ -73,9 +73,11 @@ void	Server::processRequest(Client &client)
 int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 {
 	string path = resolveCGIPath(request.getUri());
+	debug("PATH : " + path);
 	if (path.length() < 2)
 		return -1;
 	int	cgiOutput[2];
+	if (pipe(cgiOutput) < 0)
 		return -1;
 	client->setPid(fork());
 	if (client->getPid() < 0)

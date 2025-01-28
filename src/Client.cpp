@@ -97,40 +97,42 @@ int Client::processFile(int mode)
     }
 
 	string *req = &this->_file_content.front();
-    const string  success = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload successful.\r\n";
-    const string  failure = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n";
 
 	if (!this->_outFile || !this->_outFile.is_open())
     {
+		HttpResponse	failure(201, "Upload failed", this->_stored_request);
         this->_outFile.close();
-        this->queueResponse(failure);
+        this->queueResponse(failure.returnResponse());
         this->_file_content.pop_front();
         this->is_sending = false;
 		return -1;
     }
 
 	debug("Writing into file...");
-
 	this->_outFile << *req;
     this->_file_content.pop_front();
+
     if (mode == 4)
     {
         this->is_sending = false;
         this->_outFile.close();
         if(!this->_outFile)
         {
-            this->queueResponse(failure);
+			HttpResponse	failure(201, "Upload failed", this->_stored_request);
+            this->queueResponse(failure.returnResponse());
             return -1;
         }
-        this->queueResponse(success);
+		HttpResponse	success(201, "Upload successful", this->_stored_request);
+        this->queueResponse(success.returnResponse());
         return 1;
     }
 
 	// Check if the file was successfully written
 	if (!this->_outFile)
     {
+		HttpResponse	failure(201, "Upload failed", this->_stored_request);
         this->is_sending = false;
-        this->queueResponse(failure);
+        this->queueResponse(failure.returnResponse());
         this->_outFile.close();
 		return -1;
     }

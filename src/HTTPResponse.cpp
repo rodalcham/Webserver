@@ -9,7 +9,6 @@ HttpResponse::HttpResponse()
 
 HttpResponse::HttpResponse(const int& stat_code_no, const std::string &body, const HttpRequest &request) : _stat_code_no(stat_code_no), _body(body)
 {
-	// setReturnPage(request);
 	this->_http_version = request.getHttpVersion();
 	this->_chunking_required = false;
 	if (this->_stat_code_no == 200 && request.getMethod() == "GET")
@@ -20,16 +19,6 @@ HttpResponse::HttpResponse(const int& stat_code_no, const std::string &body, con
 	_ready = true;
 	respDebug();
 }
-
-// void HttpResponse::setReturnPage(const HttpRequest& request)
-// {
-// 	_return_page = false;
-
-// 	if ((_stat_code_no == 200 && request.getMethod() == "GET") || _stat_code_no == 401 || _stat_code_no == 403 || _stat_code_no == 404)// TODO: add others here (Hardcoded?)
-// 	{
-// 		_return_page = true;
-// 	}
-// }
 
 bool	HttpResponse::isReady()
 {
@@ -179,8 +168,11 @@ void	HttpResponse::setHeaders(const HttpRequest& request)
 
 	if (_stat_code_no == 200 && request.getMethod() == "GET")
 	{
-		// this->_headers["Last-Modified"] = this->setLastModifiedHeader(request);
 		this->_headers["Content-Type"] = this->setMimeTypeHeader();
+		if (request.getHeader("X-uploadEndpoint").empty())
+			this->_headers["Last-Modified"] = this->setLastModifiedHeader(request);
+		else
+			this->_headers["Content-Type"] = "application/json";
 	}
 	else if (_stat_code_no == 201 && request.getMethod() == "POST")
 	{
@@ -211,13 +203,12 @@ std::string HttpResponse::getHeaderList()
 
 	for (const auto& pair : this->_headers)
 	{
-		// std::cout << "Key: -->" << pair.first << "<-- Value: -->" << pair.second << "<--\n";
 		headers_list += pair.first + ": " + pair.second + "\r\n";
 		if (pair.first == "Transfer-Encoding")
 			this->_chunking_required = true;
 	}
 	if (!_chunking_required)
-		headers_list += "Content-Length: " + std::to_string(_body.length()) + "\r\n";// TODO: this needs to be looked at
+		headers_list += "Content-Length: " + std::to_string(_body.length()) + "\r\n";
 
 	return (headers_list);
 }

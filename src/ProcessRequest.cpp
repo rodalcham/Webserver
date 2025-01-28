@@ -79,6 +79,25 @@ int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 	int	cgiOutput[2];
 	if (pipe(cgiOutput) < 0)
 		return -1;
+
+	string::size_type dotPos = path.find_last_of('.');
+	string extension;
+	if (dotPos != std::string::npos)
+		extension = path.substr(dotPos + 1); // "py", "php", etc.
+
+	const char* interpreter = "/usr/bin/python3";
+	if (extension == "php")
+		interpreter = "/usr/bin/php";
+	else if (extension == "py")
+		interpreter = "/usr/bin/python3";
+
+	char* const args[] = {
+		const_cast<char*>(interpreter),
+		const_cast<char*>(path.c_str()),
+		const_cast<char*>(req.c_str()),  // optional if your script reads from argv
+		nullptr
+	};
+	
 	client->setPid(fork());
 	if (client->getPid() < 0)
 	{
@@ -91,24 +110,6 @@ int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 		close(cgiOutput[0]);
 		dup2(cgiOutput[1], STDOUT_FILENO);
 		close(cgiOutput[1]);
-
-		string::size_type dotPos = path.find_last_of('.');
-		string extension;
-		if (dotPos != std::string::npos)
-			extension = path.substr(dotPos + 1); // "py", "php", etc.
-
-		const char* interpreter = "/usr/bin/python3";
-		if (extension == "php")
-			interpreter = "/usr/bin/php";
-		else if (extension == "py")
-			interpreter = "/usr/bin/python3";
-
-		char* const args[] = {
-			const_cast<char*>(interpreter),
-			const_cast<char*>(path.c_str()),
-			const_cast<char*>(req.c_str()),  // optional if your script reads from argv
-			nullptr
-		};
 		if (execve(interpreter, args, nullptr) == -1)
 		{
 			_exit(-1);

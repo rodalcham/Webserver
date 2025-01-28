@@ -93,8 +93,8 @@ void		Server::msg_send(Client &client, int mode)
 					disable_write_listen(client.getSocket());
 					client.isReceiving() = false;
 				}
-				if (client.isIdle())
-					removeClient(client);
+				// if (client.isIdle())
+				// 	removeClient(client);
 				return;
 			}
 		}

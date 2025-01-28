@@ -1,0 +1,698 @@
+[20250128_155108] Server running in DEBUG mode.
+[20250128_155108] Server started
+[20250128_155111] Read Event
+[20250128_155111] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_155111] Read Event
+[20250128_155111] From client
+[20250128_155111] Read Event
+[20250128_155111] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_155111] Send Event
+[20250128_155111] Send Event
+[20250128_155111] Read Event
+[20250128_155111] From client
+[20250128_155111] Client Closed Connection
+[20250128_155111] Removing Client 7
+[20250128_155116] Read Event
+[20250128_155116] From client
+[20250128_155116] PATH : www/cgi-bin/calculator.py
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] CGI still running
+[20250128_155116] Read Event
+[20250128_155116] From cgi
+[20250128_155116] Send Event
+[20250128_155116] Send Event
+[20250128_155116] Read Event
+[20250128_155116] From client
+[20250128_155116] Client Closed Connection
+[20250128_155116] Removing Client 8
+[20250128_155118] Read Event
+[20250128_155118] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_155118] Read Event
+[20250128_155118] From client
+[20250128_155118] PATH : www/cgi-bin/calculator.py
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] CGI still running
+[20250128_155119] Read Event
+[20250128_155119] From cgi
+[20250128_155119] Send Event
+[20250128_155119] Send Event
+[20250128_155119] Read Event
+[20250128_155119] From client
+[20250128_155119] Client Closed Connection
+[20250128_155119] Removing Client 8
+[20250128_155139] Read Event
+[20250128_155139] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_155139] Read Event
+[20250128_155139] Client accepted : 10
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_155139] Read Event
+[20250128_155139] From client
+[20250128_155139] Send Event
+[20250128_155139] Send Event
+[20250128_155139] Read Event
+[20250128_155139] From client
+[20250128_155139] Client Closed Connection
+[20250128_155139] Removing Client 8
+[20250128_155145] Read Event
+[20250128_155145] From client
+[20250128_155145] PATH : www/cgi-bin/calculator.py
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] CGI still running
+[20250128_155145] Read Event
+[20250128_155145] From cgi
+[20250128_155145] Send Event
+[20250128_155145] Send Event
+[20250128_155145] Read Event
+[20250128_155145] From client
+[20250128_155145] Client Closed Connection
+[20250128_155145] Removing Client 10
+[20250128_155243] Read Event
+[20250128_155243] Client accepted : 10
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_155243] Read Event
+[20250128_155243] From client
+[20250128_155243] PATH : www/cgi-bin/calculator.py
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] CGI still running
+[20250128_155243] Read Event
+[20250128_155243] From cgi
+[20250128_155243] Send Event
+[20250128_155243] Send Event
+[20250128_155243] Read Event
+[20250128_155243] From client
+[20250128_155243] Client Closed Connection
+[20250128_155243] Removing Client 10

@@ -1,0 +1,40 @@
+[20250128_152727] Server running in DEBUG mode.
+[20250128_152727] Server started
+[20250128_152732] Read Event
+[20250128_152732] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_152732] Read Event
+[20250128_152732] From client
+[20250128_152732] Read Event
+[20250128_152732] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_152732] Send Event
+[20250128_152732] Removing Client 7
+[20250128_152732] Send Event
+[20250128_152733] Read Event
+[20250128_152733] From client
+[20250128_152733] Read Event
+[20250128_152733] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_152733] Send Event
+[20250128_152733] Removing Client 8
+[20250128_152733] Send Event
+[20250128_152733] Read Event
+[20250128_152733] From client
+[20250128_152733] Send Event
+[20250128_152733] Removing Client 7
+[20250128_152733] Send Event
+[20250128_152740] Read Event
+[20250128_152740] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_152740] Read Event
+[20250128_152740] From client
+[20250128_152740] PATH : www/cgi-bin/calculator.py
+[20250128_152740] Read Event
+[20250128_152740] From client
+[20250128_152740] Error receiving from client -3
+[20250128_152740] Removing Client -3

@@ -1,8 +1,0 @@
-[20250128_120604] Server running in DEBUG mode.
-[20250128_120604] Server started
-[20250128_120608] Read Event
-[20250128_120608] Client accepted : 7
-Connected through port : 8080
-Through host : localhost:8080
-[20250128_120608] Read Event
-[20250128_120608] From client

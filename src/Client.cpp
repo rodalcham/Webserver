@@ -238,6 +238,11 @@ string	&Client::get_boundary()
 	return this->_boundary;
 }
 
+HttpRequest	&Client::getStoredRequest()
+{
+	return this->_stored_request;
+}
+
 bool	Client::hasRequest()
 {
 	return (!this->requests.empty());

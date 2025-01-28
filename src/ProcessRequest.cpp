@@ -47,7 +47,7 @@ void	Server::processRequest(Client &client)
 			{
 				if (handleCGI(request, &client, req))
 					res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
-				return;
+				// return;
 			}
 			else if (handlePost(request, client))
 				res = HttpResponse(500, "Upload Failed", HttpRequest(client));
@@ -60,7 +60,7 @@ void	Server::processRequest(Client &client)
 	else
 	{
 		if (handleFileContent(client, req))
-			res = HttpResponse(500, "Upload Failed", HttpRequest(client));
+			res = HttpResponse(500, "Upload Failed", client.getStoredRequest());
 	}
 	if (res.isReady())
 	{
@@ -113,6 +113,7 @@ int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 	}
 	else
 	{
+		client->getStoredRequest() = request;
 		close(cgiOutput[1]);
 		client->setCGIOutput(cgiOutput[0]);
 		struct kevent event;
@@ -129,6 +130,7 @@ int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 
 int	Server::handlePost(HttpRequest &request, Client &client)
 {
+	client.getStoredRequest() = request;
 	string filename = request.getHeader("filename");
 	string uri = request.getUri();
 	string root = "./" + client.getServerBlock()->getLocationValue(uri, "root");

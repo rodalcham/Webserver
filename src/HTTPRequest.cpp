@@ -2,6 +2,11 @@
 #include "../include/HTTPRequest.hpp"
 #include "../include/ServerBlock.hpp"
 
+HttpRequest::HttpRequest()
+{
+	
+}
+
 HttpRequest::HttpRequest(Client &client)
 	: _stat_code_no(200), _filename(""), _request_block(client.getServerBlock()), _continue_response("")
 {
@@ -273,4 +278,38 @@ void HttpRequest::setRedirLocation(std::string& redir_location)
 std::string	HttpRequest::getMatched_location() const
 {
 	return (_matched_location);
+}
+
+HttpRequest	HttpRequest::operator=(const HttpRequest &other)
+{
+	if (this == &other)
+	{
+		return *this; // Handle self-assignment
+	}
+
+	// Copy non-const member variables
+	_stat_code_no = other._stat_code_no;
+	_port = other._port;
+	_method = other._method;
+	_uri = other._uri;
+	_http_version = other._http_version;
+	_headers = other._headers;
+	_body = other._body;
+	_filename = other._filename;
+	_continue_response = other._continue_response;
+	_file_content = other._file_content;
+	_matched_location = other._matched_location;
+	_allowed_methods = other._allowed_methods;
+	_redir_location = other._redir_location;
+
+	// For `_request_block` (const member), ensure it matches the original pointer
+	if (other._request_block)
+	{
+		_request_block = other._request_block;
+	} else
+	{
+		_request_block = nullptr;
+	}
+
+	return *this;
 }

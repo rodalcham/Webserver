@@ -418,7 +418,7 @@ void Server::sendCGIOutput(Client &client)
 {
 	int status;
 	pid_t ret;
-	HttpRequest	request(client);
+	HttpRequest	request = client.getStoredRequest();
 	HttpResponse	res;
 
 	ret = waitpid(client.getPid(), &status, WNOHANG);
@@ -462,7 +462,7 @@ void Server::sendCGIOutput(Client &client)
 			}
 			client.queueResponse(res.returnResponse());
 			postEvent(client.getSocket(), 2);
-			client.popRequest();
+			// client.popRequest();
 		}
 		else
 		{

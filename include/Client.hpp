@@ -2,6 +2,7 @@
 
 #include "Webserv.hpp"
 #include "ServerBlock.hpp"
+#include "HTTPRequest.hpp"
 #include <deque>
 #include <regex>
 #include <fstream>
@@ -31,6 +32,7 @@ class Client
 	bool					is_sending = false;
 	bool					is_receiving = false;
 	bool					is_executing = false;
+	HttpRequest				_stored_request;
 	const ServerBlock		*_block;
 
 	string					_boundary;
@@ -45,6 +47,7 @@ class Client
 	Client(int clientSock, const ServerBlock *block);
 
 	int					&getSocket();
+	HttpRequest			&getStoredRequest();
 	std::string			&getRequest();
 	bool				hasRequest();
 	bool				hasResponse();

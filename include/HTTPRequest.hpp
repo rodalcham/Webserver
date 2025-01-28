@@ -59,5 +59,7 @@ public:
 	std::map<std::string, std::string>	parseHeaders(std::istringstream& requestStream);
 	void 								headersGood();
 
+	HttpRequest							operator=(const HttpRequest &other);
+
 
 };

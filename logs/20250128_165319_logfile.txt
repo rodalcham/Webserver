@@ -1,0 +1,20 @@
+[20250128_165319] Server running in DEBUG mode.
+[20250128_165319] Server started
+[20250128_165322] Read Event
+[20250128_165322] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_165322] Read Event
+[20250128_165322] From client
+[20250128_165339] Read Event
+[20250128_165339] From client
+[20250128_165339] Client Closed Connection
+[20250128_165339] Removing Client 7
+[20250128_165344] Read Event
+[20250128_165344] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_165344] Read Event
+[20250128_165344] From client
+[20250128_165404] Timeout event
+[20250128_165404] Removing Client 7

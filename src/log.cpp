@@ -7,14 +7,14 @@ Log::Log()
 	if (!std::filesystem::exists(log_dir))
 	{
 		if (!std::filesystem::create_directory(log_dir))
-			throw std::runtime_error("Failed to create log directory: " + log_dir);
+			/*UNCAUGHT*/ throw std::runtime_error("Failed to create log directory: " + log_dir);
 	}
 	_log_file_path = log_dir + getTimestamp() + "_logfile.txt";
 	_file.open(_log_file_path);
 
 	if (!_file)
 	{
-		throw std::runtime_error("Failed to open log file: " + _log_file_path);
+		/*UNCAUGHT*/ throw std::runtime_error("Failed to open log file: " + _log_file_path);
 	}
 	
 }

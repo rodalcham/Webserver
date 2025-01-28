@@ -76,22 +76,22 @@ Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_
 {
 	this->kq = kqueue();
 	if (kq < 0)
-		throw	std::runtime_error("Failed to create KQUEUE");
+		/*UNCAUGHT*/ throw	std::runtime_error("Failed to create KQUEUE");
 
 	for (const auto	&block : this->_server_blocks)
 	{
 		int	sock = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock < 0)
-			throw std::runtime_error("Socket creation failed");
+			/*UNCAUGHT*/ throw std::runtime_error("Socket creation failed");
 		this->_server_sockets[sock] = &block;
 
 		int	flags = fcntl(sock, F_GETFL,0);
 		if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
-			throw std::runtime_error("Failed to set non-blocking mode");
+			/*UNCAUGHT*/ throw std::runtime_error("Failed to set non-blocking mode");
 
 		int	opt = 1;
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-			throw std::runtime_error("Failed to set socket options");
+			/*UNCAUGHT*/ throw std::runtime_error("Failed to set socket options");
 
 		sockaddr_in serverAddr{};
 		serverAddr.sin_family = AF_INET;
@@ -99,15 +99,15 @@ Server::Server(std::vector<ServerBlock>& server_blocks) : _server_blocks(server_
 		serverAddr.sin_addr.s_addr = INADDR_ANY;
 
 		if (bind(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0)
-			throw std::runtime_error("Failed to bind socket to port " + std::to_string(block.getPort()));
+			/*UNCAUGHT*/ throw std::runtime_error("Failed to bind socket to port " + std::to_string(block.getPort()));
 
 		if (listen(sock, SOCKET_BACKLOG_MAX) < 0)
-			throw std::runtime_error("Failed to listen on port "+ std::to_string(block.getPort()));
+			/*UNCAUGHT*/ throw std::runtime_error("Failed to listen on port "+ std::to_string(block.getPort()));
 
 		struct kevent event;
 		EV_SET(&event, sock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
 		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-			throw std::runtime_error("Failed to add server socket to kqueue");
+			/*UNCAUGHT*/ throw std::runtime_error("Failed to add server socket to kqueue");
 
 	}
 }
@@ -139,7 +139,7 @@ void	Server::run()
 		{
 			if (errno == EINTR)
 				continue;
-			throw std::runtime_error("kevent() failed");
+			/*UNCAUGHT*/ throw std::runtime_error("kevent() failed");
 		}
 
 		for (int i = 0; i < eventCount; ++i) 
@@ -245,7 +245,7 @@ bool isHttpRequest(const std::string &request)
 	{
 		firstLine.pop_back();
 	}
-	std::regex httpRequestRegex(R"(^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT) [^\s]+ HTTP/\d\.\d$)");
+	std::regex httpRequestRegex(R"(^[A-Z]+\s[^\s]+\sHTTP/1\.1$)");
 	return std::regex_match(firstLine, httpRequestRegex);
 }
 
@@ -256,7 +256,7 @@ void	Server::acceptClient(int server_sock)
 	if (clientSock < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) 
 			return; // No more connections to accept
-		throw std::runtime_error("Failed to accept new client");
+		/*UNCAUGHT*/ throw std::runtime_error("Failed to accept new client");
 	}
 	this->clients[clientSock] = Client(clientSock, this->_server_sockets[server_sock]);
 
@@ -265,7 +265,7 @@ void	Server::acceptClient(int server_sock)
 	if (flags < 0 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) < 0)
 	{
 		removeClient(this->clients[clientSock]);
-		throw std::runtime_error("Failed to set client socket to non-blocking mode");
+		/*UNCAUGHT*/ throw std::runtime_error("Failed to set client socket to non-blocking mode");
 	}
 
 	// Register the client socket with kqueue
@@ -274,7 +274,7 @@ void	Server::acceptClient(int server_sock)
 	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
 	{
 		removeClient(this->clients[clientSock]);
-		throw std::runtime_error("Failed to add client socket to kqueue");
+		/*UNCAUGHT*/ throw std::runtime_error("Failed to add client socket to kqueue");
 	}
 
 	setTimeout(this->clients[clientSock]);
@@ -287,7 +287,7 @@ void	Server::acceptClient(int server_sock)
 std::string Server::readFile(const std::string& filePath)
 {
 	std::ifstream file(filePath, std::ios::binary);
-	if (!file.is_open()) throw std::runtime_error("File not found");
+	if (!file.is_open()) /*UNCAUGHT*/ throw std::runtime_error("File not found");
 
 	std::ostringstream content;
 	content << file.rdbuf(); //WRONG??
@@ -319,10 +319,10 @@ void Server::removeClient(Client &client)
 	debug("Removing Client " + std::to_string(client.getSocket()));
 	EV_SET(&event, client.getSocket(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	if (kevent(this->kq, &event, 1, NULL, 0, NULL))
-		throw std::runtime_error("Failed disable read event");
+		/*UNCAUGHT*/ throw std::runtime_error("Failed disable read event");
 	EV_SET(&event, client.getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
 	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
-		throw std::runtime_error("Failed disable timeout event");
+		/*UNCAUGHT*/ throw std::runtime_error("Failed disable timeout event");
 	if (client.isSending())
 		disable_write_listen(client.getSocket());
 	close(client.getSocket());
@@ -339,7 +339,7 @@ void	Server::setTimeout(Client &client)
 	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
 	{
 		removeClient(client);
-		throw std::runtime_error("Failed to reset timer event");
+		/*UNCAUGHT*/ throw std::runtime_error("Failed to reset timer event");
 	}
 }
 
@@ -349,13 +349,13 @@ void	Server::setTimeout(Client &client)
 // 	int cgiInput[2];
 // 	if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
 // 	{
-// 		throw std::runtime_error("Failed to create pipes for CGI");
+// 		/*UNCAUGHT*/ throw std::runtime_error("Failed to create pipes for CGI");
 // 	}
 
 // 	client.setPid(fork());
 // 	if (client.getPid() < 0)
 // 	{
-// 		throw std::runtime_error("Failed to fork CGI process");
+// 		/*UNCAUGHT*/ throw std::runtime_error("Failed to fork CGI process");
 // 	}
 
 // 	if (client.getPid() == 0)
@@ -409,7 +409,7 @@ void	Server::setTimeout(Client &client)
 // 		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
 // 		{
 // 			close(cgiOutput[0]);
-// 			throw std::runtime_error("Failed to add CGI output to kqueue");
+// 			/*UNCAUGHT*/ throw std::runtime_error("Failed to add CGI output to kqueue");
 // 		}
 // 	}
 // }
@@ -435,7 +435,7 @@ void Server::sendCGIOutput(Client &client)
 		EV_SET(&event, client.getCGIOutputFd(), EVFILT_READ, EV_DELETE, 0, 0, nullptr);
 		if (kevent(this->kq, &event, 1, nullptr, 0, nullptr) < 0)
 		{
-			throw std::runtime_error("Failed to remove CGI output from kqueue");
+			/*UNCAUGHT*/ throw std::runtime_error("Failed to remove CGI output from kqueue");
 		}
 		if (WIFEXITED(status) > 0)
 		{
@@ -445,7 +445,7 @@ void Server::sendCGIOutput(Client &client)
 			
 			if (bytesRead < 0)
 			{
-				throw std::runtime_error("Failed to read CGI output");
+				/*UNCAUGHT*/ throw std::runtime_error("Failed to read CGI output");
 			}
 			std::string output;
 			if (bytesRead > 0)
@@ -466,12 +466,12 @@ void Server::sendCGIOutput(Client &client)
 		}
 		else
 		{
-			throw std::runtime_error("Child Process Failed");
+			/*UNCAUGHT*/ throw std::runtime_error("Child Process Failed");
 		}
 	}
 	else
 	{
 		client.isExecuting() = false;
-		throw std::runtime_error("Failed Waitpid");
+		/*UNCAUGHT*/ throw std::runtime_error("Failed Waitpid");
 	}
 }

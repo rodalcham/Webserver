@@ -34,7 +34,7 @@ void ServerBlock::parseBlock(std::istream& stream)
 
 		size_t space_pos = directive.find_first_of(" \t");
 		if (space_pos == std::string::npos)
-			throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
+			/*UNCAUGHT*/ throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
 
 		std::string key = directive.substr(0, space_pos);
 		std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
@@ -55,7 +55,7 @@ void ServerBlock::parseBlock(std::istream& stream)
 			_directive_pairs.insert({key, value});
 		}
 		else
-			throw std::runtime_error("Config file error: Unknown directive: " + key);
+			/*UNCAUGHT*/ throw std::runtime_error("Config file error: Unknown directive: " + key);
 		// for (const auto& [location, config] : _location_blocks)
 		// {
 		// 	for (const auto& [key, value] : config)
@@ -69,7 +69,7 @@ std::string	ServerBlock::createDirectiveStr(std::string& line)
 {
 	size_t semicolon_pos = line.find(";");
 	if (semicolon_pos == std::string::npos)
-		throw std::runtime_error("Config file error: Missing semicolon in line: " + line);
+		/*UNCAUGHT*/ throw std::runtime_error("Config file error: Missing semicolon in line: " + line);
 
 	std::string directive = line.substr(0, semicolon_pos);
 	directive.erase(0, directive.find_first_not_of(" \t"));
@@ -81,7 +81,7 @@ void	ServerBlock::setRedirect(std::string& error_directive, std::string& line)
 {
 	size_t space_pos = error_directive.find(" ");
 	if (space_pos == std::string::npos)
-		throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
+		/*UNCAUGHT*/ throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
 
 	std::string key = error_directive.substr(0, space_pos);
 	std::string value = error_directive.substr(space_pos + 1);
@@ -93,7 +93,7 @@ void	ServerBlock::setErrorPage(std::string& error_directive, std::string& line)
 {
 	size_t space_pos = error_directive.find(" ");
 	if (space_pos == std::string::npos)
-		throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
+		/*UNCAUGHT*/ throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
 
 	std::string key = error_directive.substr(0, space_pos);
 	std::string value = error_directive.substr(space_pos + 1);
@@ -105,7 +105,7 @@ void ServerBlock::setLocationBlock(std::istream& stream, std::string line)
 {
 	size_t bracket_pos = line.find("{");
 	if (bracket_pos == std::string::npos)
-		throw std::runtime_error("Config file error: Missing { in line: " + line);
+		/*UNCAUGHT*/ throw std::runtime_error("Config file error: Missing { in line: " + line);
 
 	std::string location = line.substr(0, bracket_pos);
 	location.erase(0, location.find_first_not_of(" \t"));
@@ -127,7 +127,7 @@ void ServerBlock::setLocationBlock(std::istream& stream, std::string line)
 
 		size_t space_pos = directive.find_first_of(" \t");
 		if (space_pos == std::string::npos)
-			throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
+			/*UNCAUGHT*/ throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
 
 		std::string key = directive.substr(0, space_pos);
 		std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
@@ -147,12 +147,12 @@ void ServerBlock::setLocationBlock(std::istream& stream, std::string line)
 			iss >> error_code >> error_path;
 
 			if (error_code.empty() || error_path.empty())
-				throw std::runtime_error("Invalid error_page directive in line: " + line);
+				/*UNCAUGHT*/ throw std::runtime_error("Invalid error_page directive in line: " + line);
 
 			_location_blocks[location].insert({"error_page_" + error_code, error_path});
 		}
 		else
-			throw std::runtime_error("Config file error: Unknown directive: " + key);
+			/*UNCAUGHT*/ throw std::runtime_error("Config file error: Unknown directive: " + key);
 	}
 }
 

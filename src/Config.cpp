@@ -6,7 +6,7 @@ Config::Config(const std::string& conf_path) : _config_path(conf_path)
 {
 	parseConfig(); // Call parseConfig during construction
 	if (_server_blocks.empty()) {
-		throw std::runtime_error("No server blocks found in configuration.");
+		/*UNCAUGHT*/ throw std::runtime_error("No server blocks found in configuration.");
 	}
 	isValid();
 }
@@ -17,7 +17,7 @@ Config::~Config() {}
 void Config::parseConfig() {
 	std::ifstream config_file(_config_path);
 	if (!config_file.is_open()) {
-		throw std::runtime_error("Failed to open file: " + _config_path);
+		/*UNCAUGHT*/ throw std::runtime_error("Failed to open file: " + _config_path);
 	}
 
 	std::string line;
@@ -70,7 +70,7 @@ void	Config::isValid() const
 
 	std::ifstream config_file(_config_path);
 	if (!config_file.is_open()) {
-		throw std::runtime_error("Failed to open file: " + _config_path);
+		/*UNCAUGHT*/ throw std::runtime_error("Failed to open file: " + _config_path);
 	}
 
 	std::string line;
@@ -81,11 +81,11 @@ void	Config::isValid() const
 		if (line.find("}") != std::string::npos)
 			open_braces--;
 		if (open_braces < 0)
-			throw std::runtime_error("Config file braces do not match");
+			/*UNCAUGHT*/ throw std::runtime_error("Config file braces do not match");
 	}
 	config_file.close();
 	if (open_braces != 0)
-		throw std::runtime_error("config file braces do not match");
+		/*UNCAUGHT*/ throw std::runtime_error("config file braces do not match");
 
 	int				port_val;
 	std::string		host_val;
@@ -97,11 +97,11 @@ void	Config::isValid() const
 		host_val = _server_blocks[block].getHostName();
 
 		if (port_val == -1 || host_val.empty())
-			throw std::runtime_error("All server blocks must contain both 'listen' and 'server_name' directives");
+			/*UNCAUGHT*/ throw std::runtime_error("All server blocks must contain both 'listen' and 'server_name' directives");
 		for (size_t next_block = block + 1; next_block < _server_blocks.size(); next_block++)
 		{
 			if (_server_blocks[next_block].getPort() == port_val && _server_blocks[next_block].getHostName() == host_val)
-				throw std::runtime_error("No 2 server blocks can have the same 'listen' and 'server_name' values. listen : " + std::to_string(port_val) + " server_name: " + host_val);
+				/*UNCAUGHT*/ throw std::runtime_error("No 2 server blocks can have the same 'listen' and 'server_name' values. listen : " + std::to_string(port_val) + " server_name: " + host_val);
 		}
 	}
 }

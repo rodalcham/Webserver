@@ -1,0 +1,42 @@
+[20250128_170239] Server running in DEBUG mode.
+[20250128_170239] Server started
+[20250128_170241] Read Event
+[20250128_170241] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_170241] Read Event
+[20250128_170241] From client
+[20250128_170241] Received : PUT / HTTP/1.1
+
+[20250128_170241] Received : Host: localhost:8080
+
+[20250128_170241] Received : User-Agent: curl/7.64.1
+
+[20250128_170241] Received : Accept: */*
+
+[20250128_170241] Received : X-OKAY : okay
+
+[20250128_170241] Received : 
+
+[20250128_170301] Timeout event
+[20250128_170301] Removing Client 7
+[20250128_170504] Read Event
+[20250128_170504] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250128_170504] Read Event
+[20250128_170504] From client
+[20250128_170504] Received : PUT / HTTP/1.1
+
+[20250128_170504] Received : Host: localhost:8080
+
+[20250128_170504] Received : User-Agent: curl/7.64.1
+
+[20250128_170504] Received : Accept: */*
+
+[20250128_170504] Received : X-OKAY : okay
+
+[20250128_170504] Received : 
+
+[20250128_170524] Timeout event
+[20250128_170524] Removing Client 7

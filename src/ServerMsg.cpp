@@ -68,7 +68,7 @@ void	Server::removeEvent(int eventID)
  */
 void		Server::msg_send(Client &client, int mode)
 {
-	size_t	bytes;
+	ssize_t	bytes;
 	if (!mode && client.isReceiving())
 	{
 		this->postEvent(client.getSocket(), 2);
@@ -76,13 +76,13 @@ void		Server::msg_send(Client &client, int mode)
 	}
 
 	string	*msg =&client.getResponse();
-	debug("Sending message to client : " + *msg);
-	// debug("Size : " + std::to_string(msg->size()));
+	// debug("Sending message to client : " + *msg);
 	while (!msg->empty())
 	{
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);
 		if	(bytes > 0)
 		{
+			setTimeout(client);
 			msg->erase(0, bytes);
 			if (msg->empty())
 			{
@@ -93,10 +93,12 @@ void		Server::msg_send(Client &client, int mode)
 					disable_write_listen(client.getSocket());
 					client.isReceiving() = false;
 				}
+				if (client.isIdle())
+					removeClient(client);
 				return;
 			}
 		}
-		else if (errno == EAGAIN || errno == EWOULDBLOCK) //WRONG !!!!!!!!!
+		else
 		{
 			if (!mode)
 			{
@@ -104,14 +106,6 @@ void		Server::msg_send(Client &client, int mode)
 				enable_write_listen(client.getSocket());
 			}
 			break;
-		}
-		else
-		{
-			if (mode)
-				disable_write_listen(client.getSocket());
-			close(client.getSocket());
-			this->clients.erase(client.getSocket());
-			throw std::runtime_error("Failed to send to client socket " + std::to_string(client.getSocket()) + ": " + strerror(errno));
 		}
 	}
 }
@@ -135,7 +129,7 @@ void Server::msg_receive(Client& client)
 	char	buffer[40960];
 	memset(buffer, 0, sizeof(buffer));
 	ssize_t	bytes_read = recv(client.getSocket(), buffer, sizeof(buffer), 0);
-	debug("Bytes read: " + std::to_string(bytes_read));
+	// debug("Bytes read: " + std::to_string(bytes_read));
 	ssize_t	pos;
 	string	temp;
 	
@@ -143,12 +137,15 @@ void Server::msg_receive(Client& client)
 	{
 		debug("Error receiving from client " + std::to_string(client.getSocket()));
 		removeClient(client);
+		return;
 	}
 	else if (bytes_read == 0)
 	{
 		debug("Client Closed Connection");
 		removeClient(client);
+		return;
 	}
+	setTimeout(client);
 	
 	pos = 0;
 	while (pos < bytes_read)

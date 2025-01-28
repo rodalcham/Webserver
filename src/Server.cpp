@@ -6,9 +6,10 @@
 #include "../include/Client.hpp"
 
 #include <errno.h>
-#include <filesystem> // C++17 or later
+#include <filesystem>
 #include <vector>
 #include <string>
+
 
 class log;
 
@@ -16,78 +17,58 @@ extern std::atomic<bool> keepRunning;
 
 uint16_t	ft_htons(uint16_t port);
 
-void Server::handleRedirect(Client &client)
+
+
+bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 {
-    const ServerBlock *serverBlock = client.getServerBlock();
-    std::string redirectLocation = serverBlock->getLocationValue("/return", "return");
+	std::string method = request.getMethod();
+	const ServerBlock *serverBlock = client.getServerBlock();
+	auto locationBlock = serverBlock->getLocationBlock(request.getMatched_location());
 
-    if (redirectLocation.empty()) {
-        // Respond with 500 Internal Server Error if no return directive
-        std::string resp =
-            "HTTP/1.1 500 Internal Server Error\r\n"
-            "Content-Type: text/plain\r\n\r\n"
-            "No redirection target specified for /return.";
-        client.queueResponse(resp);
-        this->postEvent(client.getSocket(), 2);
-        client.popRequest();
-        return;
-    }
+	if (request.getMatched_location() == "/return")
+		return true;
+	if (locationBlock.find("allow_methods") != locationBlock.end())
+	{
 
-    // Build the redirection response
-    std::string resp =
-        "HTTP/1.1 301 Moved Permanently\r\n"
-        "Location: " + redirectLocation + "\r\n"
-        "Content-Length: 0\r\n\r\n";
-    client.queueResponse(resp);
-    this->postEvent(client.getSocket(), 2);
-    client.popRequest();
-}
+		std::istringstream iss(locationBlock.at("allow_methods"));
+		std::string allowedMethod;
+		while (iss >> allowedMethod)
+		{
+			if (allowedMethod == method)
+			{
 
-bool Server::isMethodAllowedInUploads(const std::string &method, Client &client) {
-    const ServerBlock *serverBlock = client.getServerBlock();
-    auto locationBlock = serverBlock->getLocationBlock("/uploads/");
+				return true;
+			}
+		}
+	}
 
-    std::cout << "Checking methods for /uploads/...\n";
-    if (locationBlock.find("allow_methods") != locationBlock.end()) {
-        std::cout << "Allow methods found: " << locationBlock.at("allow_methods") << "\n";
-        std::istringstream iss(locationBlock.at("allow_methods"));
-        std::string allowedMethod;
-        while (iss >> allowedMethod) {
-            std::cout << "Allowed method: " << allowedMethod << "\n";
-            if (allowedMethod == method) {
-                std::cout << "Method " << method << " is allowed.\n";
-                return true;
-            }
-        }
-    }
 
-    std::cout << "Method " << method << " is not allowed.\n";
-    return false;
+	return false;
 }
 
 
 
-std::string listUploadsJSON(const std::string &dirPath)
+std::string listUploadsJSON(const std::string &dirPath, string endpoint)
 {
-    namespace fs = std::filesystem;
-    std::vector<std::string> files;
-    for (const auto &entry : fs::directory_iterator(dirPath))
-    {
-        if (entry.is_regular_file())
-        {
-            files.push_back(entry.path().filename().string());
-        }
-    }
-    // Build a JSON array: ["file1.jpg","file2.png",...]
-    std::string json = "[";
-    for (size_t i = 0; i < files.size(); ++i)
-    {
-        json += "\"" + files[i] + "\"";
-        if (i + 1 < files.size())
-            json += ",";
-    }
-    json += "]";
-    return json;
+	namespace fs = std::filesystem;
+	std::vector<std::string> files;
+
+	for (const auto &entry : fs::directory_iterator(dirPath + endpoint))
+	{
+		if (entry.is_regular_file())
+		{
+			files.push_back(entry.path().filename().string());
+		}
+	}
+	std::string json = "[";
+	for (size_t i = 0; i < files.size(); ++i)
+	{
+		json += "\"" + files[i] + "\"";
+		if (i + 1 < files.size())
+			json += ",";
+	}
+	json += "]";
+	return json;
 }
 
 
@@ -198,6 +179,8 @@ void	Server::run()
 					{
 						if (this->clients[event/10].processFile(event % 10))
 							this->postEvent(event/10, 2);
+						else
+							setTimeout(this->clients[event/10]);
 					}
 					else
 						this->removeEvent(event);
@@ -208,229 +191,64 @@ void	Server::run()
 				debug("Write Event");
 				msg_send(this->clients[event], 1);  
 			}
+			else if (eventList[i].filter == EVFILT_TIMER)
+			{
+				debug("Timeout event");
+				removeClient(this->clients[event]);
+			}
 		}
 	}
 }
 
-bool isCGIRequest(const HttpRequest &request) {
-	// Define CGI-related paths
-	const std::vector<std::string> cgiPaths = {"/cgi/", "/cgi-bin/"};
-
-	// Get the URI from the request
-	const std::string &uri = request.getUri();
-
-	// Check if the URI matches any CGI path
-	for (const std::string &cgiPath : cgiPaths) {
-		if (uri.find(cgiPath) == 0) { // Starts with the CGI path
-			return true;
-		}
+bool isCGIRequest(const HttpRequest &request)
+{
+	if (request.getHeader("X-Request-Type") == "cgi")
+	{
+		return true;
 	}
-
 	return false;
 }
 
-std::string resolveCGIPath(const std::string &uri) {
+std::string	resolveCGIPath(const std::string &uri)
+{
 	const std::string cgiRoot = "www/cgi/";
 	const std::string cgiBinRoot = "www/cgi-bin/";
 
 	size_t queryPos = uri.find('?');
 	std::string cleanUri = (queryPos != std::string::npos) ? uri.substr(0, queryPos) : uri;
 
-	if (cleanUri.find("/cgi/") == 0) {
-		return cgiRoot + cleanUri.substr(5);  // Remove "/cgi/" prefix
-	} else if (cleanUri.find("/cgi-bin/") == 0) {
-		return cgiBinRoot + cleanUri.substr(9);  // Remove "/cgi-bin/" prefix
-	} else {
+	if (cleanUri.find("/cgi/") == 0)
+	{
+		return cgiRoot + cleanUri.substr(5);
+	}
+	else if (cleanUri.find("/cgi-bin/") == 0)
+	{
+		return cgiBinRoot + cleanUri.substr(9);
+	}
+	else
+	{
 		throw std::runtime_error("Invalid CGI path: " + uri);
 	}
 }
 
 
-void	Server::processRequest(Client &client)
+bool isHttpRequest(const std::string &request)
 {
-	if (!client.hasRequest())
-		return;
-	string&	req = client.getRequest();
-	if (req.find("HTTP") != std::string::npos)
+	size_t newlinePos = request.find('\n');
+	if (newlinePos == std::string::npos)
 	{
-		HttpRequest		request(client);
 
-        if (request.getUri() == "/return")
-        {
-            handleRedirect(client);
-            return;
-        }
-		if (!isMethodAllowedInUploads(request.getMethod(), client))
-		{
-			std::string response =
-				"HTTP/1.1 405 Method Not Allowed\r\n"
-				"Content-Type: text/plain\r\n\r\n"
-				"The " + request.getMethod() + " method is not allowed for /uploads/.";
-			client.queueResponse(response);
-			this->postEvent(client.getSocket(), 2);
-			client.popRequest();
-			return;
-		}
-		if (request.getHeader("Content-Length").length() &&
-			client.getServerBlock()->getDirectiveValue("client_max_body_size").length() &&
-			std::stoi(request.getHeader("Content-Length")) > 1000000 * std::stoi(client.getServerBlock()->getDirectiveValue("client_max_body_size")))
-		{
-			client.popRequest();
-			string response = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: text/plain\r\nContent-Length: 49\r\n\r\nThe request payload is too large for the server to handle.\r\n";
-			client.queueResponse(response);
-			this->postEvent(client.getSocket(), 2);
-			return;
-		}
-		if (isCGIRequest(request))
-		{
-			executeCGI(client, resolveCGIPath(request.getUri()), req);
-			//client.popRequest();
-			return;
-		}
-		if (request.getUri() == "/list-uploads")
-            {
-                // produce a JSON list of filenames
-                std::string jsonList = listUploadsJSON("./" + client.getServerBlock()->getLocationValue("/uploads/", "root"));
-                // build HTTP response
-                std::string resp =
-                    "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: application/json\r\n\r\n" +
-                    jsonList;
-                client.queueResponse(resp);
-                this->postEvent(client.getSocket(), 2);
-                client.popRequest();
-                return;
-            }
-		if (request.getMethod() == "DELETE")
-        {
-            // Suppose the URI is like: /uploads/myImage.jpg
-            std::string uri = request.getUri();
-            // security check: ensure it starts with "/uploads/"
-            if (uri.rfind("/uploads/", 0) == 0)
-            {
-                // parse out the filename
-                std::string filename = uri.substr(std::string("/uploads/").size());
-                std::string fullPath = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root") + filename;
-
-                // Attempt to delete
-                if (std::remove(fullPath.c_str()) == 0)
-                {
-                    std::string resp = 
-                        "HTTP/1.1 200 OK\r\n"
-                        "Content-Type: text/plain\r\n\r\n"
-                        "File deleted successfully.";
-                    client.queueResponse(resp);
-                }
-                else
-                {
-                    std::string resp =
-                        "HTTP/1.1 404 Not Found\r\n"
-                        "Content-Type: text/plain\r\n\r\n"
-                        "File not found or cannot delete.";
-                    client.queueResponse(resp);
-                }
-            }
-            else
-            {
-                // invalid path
-                std::string resp =
-                    "HTTP/1.1 400 Bad Request\r\n"
-                    "Content-Type: text/plain\r\n\r\n"
-                    "Invalid delete path.";
-                client.queueResponse(resp);
-            }
-            this->postEvent(client.getSocket(), 2);
-            client.popRequest();
-            return;
-        }
-		else if (request.getMethod() == "POST")
-		{
-			
-			string filename = request.getHeader("filename");
-			string root = "./" + client.getServerBlock()->getLocationValue("/uploads/", "root");
-			if (filename.empty())
-				request.setStatusCode(500); // Check
-			client.get_outFile().open(root + filename, std::ios::binary);//temp
-			if (!client.get_outFile().is_open())
-				request.setStatusCode(500); // Check
-			// string contentType = request.getHeader("Content-Type");
-			// std::regex boundaryRegex("boundary=([a-zA-Z0-9'-]+)");
-			// std::smatch match;
-			// if (std::regex_search(contentType, match, boundaryRegex) && match.size() > 1)
-			// {
-			// 	client.get_boundary() = match[1].str();
-			// }
-			// else
-			// 	request.setStatusCode(500); // Check
-			client.isSending() = true; // Used?
-		}
-
-		HttpResponse	response(request);
-		
-		if (request.getMethod()=="POST") //temp
-		{
-			// debug("Sending 100 CONTINUE");
-			// client.queueResponse(request.getContinueResponse());
-		}
-		else
-		{
-			client.queueResponse(response.returnResponse());
-			this->postEvent(client.getSocket(), 2); //TEMP
-
-		}
-		// this->postEvent(client.getSocket(), 2);
+		return false;
 	}
-	else
+	std::string firstLine = request.substr(0, newlinePos);
+	if (!firstLine.empty() && firstLine.back() == '\r')
 	{
-		string boundaryPrefix = "--" + client.get_boundary() + "\r\n";
-		string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
-		string *endBoundary;
-
-	// Check if the chunk ends with a boundary prefix or suffix
-		if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
-			endBoundary = &boundaryPrefix;
-		else if (req.substr(req.length() - boundarySuffix.length()) == boundarySuffix)
-		{
-			debug("LAST CHUNK RECEIVED");
-			endBoundary = &boundarySuffix;
-		}
-		else
-		{
-			endBoundary = NULL;
-		}
-
-	// Ensure that the chunk begins with the correct boundary prefix
-		if (req.substr(0, boundaryPrefix.length()) != boundaryPrefix)
-		{
-			endBoundary = NULL;
-		}
-
-		if (endBoundary)
-		{
-			string content = req.substr(boundaryPrefix.length(), req.length());
-			content = content.substr(0, content.length() - endBoundary->length());
-			content = content.substr(0, content.length() - 2);
-
-			// Remove the multipart headers (if they exist)
-			size_t headerEndPos = content.find("\r\n\r\n");
-			if (headerEndPos != string::npos)
-				content = content.substr(headerEndPos + 4); // Skip past the headers
-			client.queueFileContent(content);
-			if (*endBoundary == boundarySuffix)
-				postEvent(client.getSocket(), 4);
-			else
-				postEvent(client.getSocket(), 3);
-		}
-		else
-		{
-			client.queueResponse("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n");
-			this->postEvent(client.getSocket(), 2);
-			client.isSending() = false;
-		}
-		
+		firstLine.pop_back();
 	}
-	client.popRequest();
+	std::regex httpRequestRegex(R"(^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|TRACE|CONNECT) [^\s]+ HTTP/\d\.\d$)");
+	return std::regex_match(firstLine, httpRequestRegex);
 }
+
 
 void	Server::acceptClient(int server_sock)
 {
@@ -440,23 +258,27 @@ void	Server::acceptClient(int server_sock)
 			return; // No more connections to accept
 		throw std::runtime_error("Failed to accept new client");
 	}
+	this->clients[clientSock] = Client(clientSock, this->_server_sockets[server_sock]);
 
 	// Set client socket to non-blocking mode
 	int flags = fcntl(clientSock, F_GETFL, 0);
-	if (flags < 0 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) < 0) {
-		close(clientSock);
+	if (flags < 0 || fcntl(clientSock, F_SETFL, flags | O_NONBLOCK) < 0)
+	{
+		removeClient(this->clients[clientSock]);
 		throw std::runtime_error("Failed to set client socket to non-blocking mode");
 	}
 
 	// Register the client socket with kqueue
 	struct kevent event;
 	EV_SET(&event, clientSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
-		close(clientSock);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+	{
+		removeClient(this->clients[clientSock]);
 		throw std::runtime_error("Failed to add client socket to kqueue");
 	}
 
-	this->clients[clientSock] = Client(clientSock, this->_server_sockets[server_sock]);
+	setTimeout(this->clients[clientSock]);
+
 	debug("Client accepted : " + std::to_string(clientSock) + 
 		"\nConnected through port : " + std::to_string(this->_server_sockets[server_sock]->getPort())
 		+ "\nThrough host : " + this->_server_sockets[server_sock]->getHostName());
@@ -496,18 +318,36 @@ void Server::removeClient(Client &client)
 
 	debug("Removing Client " + std::to_string(client.getSocket()));
 	EV_SET(&event, client.getSocket(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	kevent(this->kq, &event, 1, NULL, 0, NULL);
-	if (client.isReceiving())
-	{
+	if (kevent(this->kq, &event, 1, NULL, 0, NULL))
+		throw std::runtime_error("Failed disable read event");
+	EV_SET(&event, client.getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
+		throw std::runtime_error("Failed disable timeout event");
+	if (client.isSending())
 		disable_write_listen(client.getSocket());
-	}
 	close(client.getSocket());
 	this->clients.erase(client.getSocket());
 }
-// void Server::executeCGI(Client &client, const std::string &cgiPath, string &request)
+
+void	Server::setTimeout(Client &client)
+{
+	struct kevent event;
+
+	// Overwrite the old timer event with the same ident (clientSocket)
+	EV_SET(&event, client.getSocket(), EVFILT_TIMER, EV_ADD | EV_ENABLE, 0, TIMEOUT, nullptr);
+
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
+	{
+		removeClient(client);
+		throw std::runtime_error("Failed to reset timer event");
+	}
+}
+
+// void Server::executeCGI(Client &client, const std::string &cgiPath, std::string &request)
 // {
 // 	int cgiOutput[2];
-// 	if (pipe(cgiOutput) < 0)
+// 	int cgiInput[2];
+// 	if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
 // 	{
 // 		throw std::runtime_error("Failed to create pipes for CGI");
 // 	}
@@ -519,26 +359,51 @@ void Server::removeClient(Client &client)
 // 	}
 
 // 	if (client.getPid() == 0)
-// 	{ // Child process
-// 		close(cgiOutput[0]); // Close unused read end
-// 		dup2(cgiOutput[1], STDOUT_FILENO); // Redirect CGI output
+// 	{
+// 		close(cgiOutput[0]);
+// 		dup2(cgiOutput[1], STDOUT_FILENO);
 // 		close(cgiOutput[1]);
+// 		close(cgiInput[1]);
 
-// 		const char* python = "/usr/bin/python3";
-// 		char* const args[] = {const_cast<char*>(python), const_cast<char*>(cgiPath.c_str()), const_cast<char*>(request.c_str()), nullptr};
+// 		std::string::size_type dotPos = cgiPath.find_last_of('.');
+// 		std::string extension;
+// 		if (dotPos != std::string::npos)
+// 			extension = cgiPath.substr(dotPos + 1); // "py", "php", etc.
 
-// 		if (execve(python, args, nullptr) == -1)
+// 		const char* interpreter = "/usr/bin/python3";
+// 		if (extension == "php")
+// 			interpreter = "/usr/bin/php";
+// 		else if (extension == "py")
+// 			interpreter = "/usr/bin/python3";
+
+// 		char* const args[] = {
+// 			const_cast<char*>(interpreter),
+// 			const_cast<char*>(cgiPath.c_str()),
+// 			const_cast<char*>(request.c_str()),  // optional if your script reads from argv
+// 			nullptr
+// 		};
+
+// 		if (execve(interpreter, args, nullptr) == -1)
 // 		{
-// 			_exit(1); // Exit child process if execve fails
+// 			_exit(1);
 // 		}
 // 	}
 // 	else
-// 	{ // Parent process
-// 		close(cgiOutput[1]); // Close unused write end
-// 		client.setCGIOutput(cgiOutput[0]);
-// 		debug("executin child with parameter:\n" + request);
+// 	{
+// 		// ---------------- PARENT PROCESS ----------------
 
-// 		// Add the output pipe to the kqueue
+// 		// We don’t write to cgiOutput[1], so close it
+// 		close(cgiOutput[1]);
+
+// 		// If you aren’t writing the raw request to STDIN, close the input pipe
+// 		close(cgiInput[0]);
+// 		close(cgiInput[1]);
+
+// 		// Save the child’s STDOUT fd so we can read it in `sendCGIOutput`
+// 		client.setCGIOutput(cgiOutput[0]);
+// 		debug("executing child with parameter:\n" + request);
+
+// 		// Add the child’s STDOUT pipe to the kqueue for reading
 // 		struct kevent event;
 // 		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
 // 		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
@@ -546,163 +411,58 @@ void Server::removeClient(Client &client)
 // 			close(cgiOutput[0]);
 // 			throw std::runtime_error("Failed to add CGI output to kqueue");
 // 		}
-
-// 		// Store CGI-related file descriptors in the client
 // 	}
 // }
-
-void Server::executeCGI(Client &client, const std::string &cgiPath, std::string &request)
-{
-    // We create two pipes:
-    //   - cgiOutput: child’s STDOUT -> parent
-    //   - cgiInput : parent -> child’s STDIN (OPTIONAL if you need to send the raw request to STDIN)
-    int cgiOutput[2];
-    int cgiInput[2];
-    if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
-    {
-        throw std::runtime_error("Failed to create pipes for CGI");
-    }
-
-    // Fork a child to run the CGI script
-    client.setPid(fork());
-    if (client.getPid() < 0)
-    {
-        throw std::runtime_error("Failed to fork CGI process");
-    }
-
-    if (client.getPid() == 0)
-    {
-        // ---------------- CHILD PROCESS ----------------
-
-        // We won't read from the output pipe
-        close(cgiOutput[0]);
-        // We'll redirect child’s STDOUT to cgiOutput[1]
-        dup2(cgiOutput[1], STDOUT_FILENO);
-        close(cgiOutput[1]);
-
-        // We won't write to the input pipe
-        close(cgiInput[1]);
-        // If you want the script to read from STDIN, uncomment next 2 lines:
-        // dup2(cgiInput[0], STDIN_FILENO);
-        // close(cgiInput[0]);
-
-        // Determine the interpreter by file extension
-        std::string::size_type dotPos = cgiPath.find_last_of('.');
-        std::string extension;
-        if (dotPos != std::string::npos)
-            extension = cgiPath.substr(dotPos + 1); // "py", "php", etc.
-
-        const char* interpreter = "/usr/bin/python3"; // default
-        if (extension == "php")
-            interpreter = "/usr/bin/php";
-        else if (extension == "py")
-            interpreter = "/usr/bin/python3";
-        // You could add more else if blocks for other interpreters
-
-        // Prepare arguments. 
-        // Right now, we pass the entire HTTP request as argv[2].
-        // If your script expects data from STDIN instead, remove request from argv
-        // and actually write the request to cgiInput[1] in the parent.
-        char* const args[] = {
-            const_cast<char*>(interpreter),
-            const_cast<char*>(cgiPath.c_str()),
-            const_cast<char*>(request.c_str()),  // optional if your script reads from argv
-            nullptr
-        };
-
-        // Exec the interpreter with your script
-        if (execve(interpreter, args, nullptr) == -1)
-        {
-            _exit(1); // if execve fails
-        }
-    }
-    else
-    {
-        // ---------------- PARENT PROCESS ----------------
-
-        // We don’t write to cgiOutput[1], so close it
-        close(cgiOutput[1]);
-
-        // If you aren’t writing the raw request to STDIN, close the input pipe
-        close(cgiInput[0]);
-        close(cgiInput[1]);
-
-        // Save the child’s STDOUT fd so we can read it in `sendCGIOutput`
-        client.setCGIOutput(cgiOutput[0]);
-        debug("executing child with parameter:\n" + request);
-
-        // Add the child’s STDOUT pipe to the kqueue for reading
-        struct kevent event;
-        EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
-        if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-        {
-            close(cgiOutput[0]);
-            throw std::runtime_error("Failed to add CGI output to kqueue");
-        }
-
-        // The rest is handled in `sendCGIOutput(...)` once data is ready
-    }
-}
 
 void Server::sendCGIOutput(Client &client)
 {
 	int status;
 	pid_t ret;
+	HttpRequest	request = client.getStoredRequest();
+	HttpResponse	res;
 
 	ret = waitpid(client.getPid(), &status, WNOHANG);
 	if (ret == 0)
 	{
 		debug("CGI still running");
-		return; // CGI process is still running
+		return;
 	}
 	else if (ret == client.getPid())
 	{
 		struct kevent event;
 		
-		// Remove the event from the kqueue
+		client.isExecuting() = false;
 		EV_SET(&event, client.getCGIOutputFd(), EVFILT_READ, EV_DELETE, 0, 0, nullptr);
 		if (kevent(this->kq, &event, 1, nullptr, 0, nullptr) < 0)
 		{
 			throw std::runtime_error("Failed to remove CGI output from kqueue");
 		}
-		if (WIFEXITED(status))
+		if (WIFEXITED(status) > 0)
 		{
 			std::string response;
 			char buffer[2048];
 			ssize_t bytesRead = read(client.getCGIOutputFd(), buffer, sizeof(buffer));
 			
-			// Check for read error or empty output
 			if (bytesRead < 0)
 			{
 				throw std::runtime_error("Failed to read CGI output");
 			}
-
-			// If there was no data, it's a failure
 			std::string output;
 			if (bytesRead > 0)
 			{
 				output.append(buffer, bytesRead); // Append the output from the pipe
 			}
-
-			// Build the HTTP response
 			if (output.empty())
 			{
-				response = "HTTP/1.1 500 Internal Server Error\r\n";
+				res = HttpResponse(500, "Internal Server Error", request);
 			}
 			else
 			{
-				response = "HTTP/1.1 200 OK\r\n";
-				response += "Content-Length: " + std::to_string(output.size()) + "\r\n";
-				response += "\r\n"; // End of headers
-				response.append(output); // Append the CGI output
-				response.append("\r\n");
+				res = HttpResponse(200, output, request);
 			}
-			response.append("\0");
-			client.queueResponse(response);
-			this->postEvent(client.getSocket(), 2);
-
-			// Close the pipes after processing the output
-			close(client.getCGIOutputFd());
+			client.queueResponse(res.returnResponse());
+			postEvent(client.getSocket(), 2);
+			// client.popRequest();
 		}
 		else
 		{
@@ -711,7 +471,7 @@ void Server::sendCGIOutput(Client &client)
 	}
 	else
 	{
+		client.isExecuting() = false;
 		throw std::runtime_error("Failed Waitpid");
 	}
 }
-

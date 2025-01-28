@@ -1,5 +1,7 @@
 #include "../include/Client.hpp"
 
+bool isHttpRequest(const std::string &request);
+
 Client::Client() : clientSock(-3)
 {
 
@@ -9,6 +11,14 @@ Client::Client(int clientSock, const ServerBlock *block)
 	: clientSock(clientSock),_block(block)
 {
 
+}
+
+bool	Client::isIdle()
+{
+	if (!is_executing && !is_receiving && ! is_sending && requests.empty() &&
+		responses.empty() && _file_content.empty())
+		return true;
+	return false;
 }
 
 
@@ -47,6 +57,10 @@ bool	&Client::isReceiving()
 	return (this->is_receiving);
 }
 
+bool	&Client::isExecuting()
+{
+	return (this->is_executing);
+}
 
 void    Client::queueResponse(const std::string& response)
 {
@@ -83,7 +97,7 @@ int Client::processFile(int mode)
     }
 
 	string *req = &this->_file_content.front();
-    const string  success = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\nUpload successful.\r\n";
+    const string  success = "HTTP/1.1 201 Created\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload successful.\r\n";
     const string  failure = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\nUpload failed.\r\n";
 
 	if (!this->_outFile || !this->_outFile.is_open())
@@ -161,16 +175,17 @@ bool	Client::isLastComplete()
 		return true; // No requests to check
 	}
 	string& req = requests.back();
-	if (req.find("HTTP") != std::string::npos)
+	if (isHttpRequest(req))
 	{
 		size_t headerEnd = req.find("\r\n\r\n");
 		if (headerEnd == std::string::npos)
 		{
 			return false;
 		}
-		if (req.find("POST") != std::string::npos && req.find("cgi") == string::npos)
+		if (req.find("POST") != std::string::npos && req.find("X-request-type") == string::npos)
 		{
 			this->_boundary = extractBoundary(req);
+			// debug("Boundary FOUND :" + this->_boundary);
 			return true;
 		}
 		std::regex contentLengthRegex("Content-Length: (\\d+)", std::regex::icase);
@@ -199,8 +214,8 @@ bool	Client::isLastComplete()
 		{
 			if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
 				this->queueRequest(boundaryPrefix);
-			else
-				debug("LAST CHUNK RECEIVED");
+			// else
+				// debug("LAST CHUNK RECEIVED");
 			return true;
 		}
 		else
@@ -221,6 +236,11 @@ std::ofstream	&Client::get_outFile()
 string	&Client::get_boundary()
 {
 	return this->_boundary;
+}
+
+HttpRequest	&Client::getStoredRequest()
+{
+	return this->_stored_request;
 }
 
 bool	Client::hasRequest()

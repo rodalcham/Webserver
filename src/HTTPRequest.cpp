@@ -2,16 +2,11 @@
 #include "../include/HTTPRequest.hpp"
 #include "../include/ServerBlock.hpp"
 
-// Constructors
-
-// Default Constructor
-HttpRequest::HttpRequest() 
-	: _stat_code_no(200), _filename(""), _request_block(NULL)
+HttpRequest::HttpRequest()
 {
-	// Default initialized request
+	
 }
 
-// Parameterized Constructor with Pre-Matched ServerBlock
 HttpRequest::HttpRequest(Client &client)
 	: _stat_code_no(200), _filename(""), _request_block(client.getServerBlock()), _continue_response("")
 {
@@ -19,12 +14,12 @@ HttpRequest::HttpRequest(Client &client)
 
 	size_t headerEnd = request.find("\r\n\r\n");
 	if (headerEnd == std::string::npos) {
-		_stat_code_no = 400; // Bad Request
+		_stat_code_no = 400;
 		throw std::runtime_error("Invalid HTTP request: Missing headers or body");
 	}
 
 	std::string headerPart = request.substr(0, headerEnd);
-	_body = request.substr(headerEnd + 4); // The remainder is considered the body
+	_body = request.substr(headerEnd + 4);
 
 	std::istringstream requestStream(headerPart);
 	std::string requestLine;
@@ -48,16 +43,20 @@ HttpRequest::HttpRequest(Client &client)
 	}
 	_uri = requestLine.substr(methodEnd + 1, uriEnd - methodEnd - 1);
 	_http_version = requestLine.substr(uriEnd + 1);
-
-	// Parse headers
 	_headers = parseHeaders(requestStream);
 	headersGood(); 
-	if (_stat_code_no == 100)
-	{
-		return;
-	}
+    const std::map<std::string, std::map<std::string, std::string>> &locations = _request_block->getAllLocationBlocks();
+    _matched_location = "/";
+    size_t longestMatch = 0;
 
-	// If _stat_code_no != 200 and method != POST, just return (likely error or non-body method)
+    for (const auto &location : locations)
+	{
+        if (_uri.find(location.first) == 0 && location.first.size() > longestMatch)
+		{
+            _matched_location = location.first;
+            longestMatch = location.first.size();
+        }
+    }
 	if (_stat_code_no != 200 && _method != "POST")
 	{
 		return;
@@ -65,13 +64,11 @@ HttpRequest::HttpRequest(Client &client)
 }
 
 
-// Destructor
 HttpRequest::~HttpRequest()
 {
 	// Cleanup if needed
 }
 
-// Parse HTTP Method
 std::string HttpRequest::parseHttpMethod(const std::string& methodStr)
 {
 	if (methodStr == "GET") return methodStr;
@@ -82,7 +79,7 @@ std::string HttpRequest::parseHttpMethod(const std::string& methodStr)
 	throw std::runtime_error("Unsupported HTTP method: " + methodStr);
 }
 
-// Parse Headers
+
 std::map<std::string, std::string> HttpRequest::parseHeaders(std::istringstream& requestStream)
 {
 	std::map<std::string, std::string> headers;
@@ -110,7 +107,6 @@ std::map<std::string, std::string> HttpRequest::parseHeaders(std::istringstream&
 	return headers;
 }
 
-// Validate Headers and Method
 void HttpRequest::headersGood()
 {
 	if (_method == "GET")
@@ -143,14 +139,15 @@ void HttpRequest::headersGood()
 			{
 				size_t length = std::stoul(content_length_str);
 				const size_t MAX_UPLOAD_SIZE = 50 * 1024 * 1024; // 50 MB max
-				if (length > MAX_UPLOAD_SIZE) {
-					_stat_code_no = 413; // Payload Too Large
+				if (length > MAX_UPLOAD_SIZE)
+				{
+					_stat_code_no = 413;
 					return;
 				}
 			}
 			catch (...)
 			{
-				_stat_code_no = 400; // Bad Request
+				_stat_code_no = 400;
 				return;
 			}
 		}
@@ -163,7 +160,6 @@ void HttpRequest::headersGood()
 	}
 }
 
-// Get Header by Key (Case-Insensitive)
 std::string HttpRequest::getHeader(const std::string& key) const
 {
 	std::string normalizedKey = key;
@@ -175,7 +171,6 @@ std::string HttpRequest::getHeader(const std::string& key) const
 	return "";
 }
 
-// Getters
 std::string HttpRequest::getMethod() const
 {
 	return _method;
@@ -238,6 +233,17 @@ int HttpRequest::getPort() const
 	return _port;
 }
 
+std::string HttpRequest::getAllowedMethods() const
+{
+	return _allowed_methods;
+}
+
+std::string HttpRequest::getRedirLocation() const
+{
+	return _redir_location;
+}
+
+
 // Setters
 void HttpRequest::setStatusCode(int statusCode)
 {
@@ -257,4 +263,53 @@ void HttpRequest::setFileContent(const std::string& content)
 void HttpRequest::setPort(int port)
 {
 	_port = port;
+}
+
+void HttpRequest::setAllowedMethods(std::string& allowed_method)
+{
+	_allowed_methods = allowed_method;
+}
+
+void HttpRequest::setRedirLocation(std::string& redir_location)
+{
+	_redir_location = redir_location;
+}
+
+std::string	HttpRequest::getMatched_location() const
+{
+	return (_matched_location);
+}
+
+HttpRequest	HttpRequest::operator=(const HttpRequest &other)
+{
+	if (this == &other)
+	{
+		return *this; // Handle self-assignment
+	}
+
+	// Copy non-const member variables
+	_stat_code_no = other._stat_code_no;
+	_port = other._port;
+	_method = other._method;
+	_uri = other._uri;
+	_http_version = other._http_version;
+	_headers = other._headers;
+	_body = other._body;
+	_filename = other._filename;
+	_continue_response = other._continue_response;
+	_file_content = other._file_content;
+	_matched_location = other._matched_location;
+	_allowed_methods = other._allowed_methods;
+	_redir_location = other._redir_location;
+
+	// For `_request_block` (const member), ensure it matches the original pointer
+	if (other._request_block)
+	{
+		_request_block = other._request_block;
+	} else
+	{
+		_request_block = nullptr;
+	}
+
+	return *this;
 }

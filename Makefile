@@ -12,7 +12,7 @@ SRC_DIR		= src
 OBJ_DIR		= obj
 
 # Debug Flags
-DEBUG=-DDEBUG=1 -g -fsanitize=address
+DEBUG=-DDEBUG=1 -g -fsanitize=address 
 
 # Source files
 SRCS		=	$(SRC_DIR)/Config.cpp \
@@ -24,7 +24,9 @@ SRCS		=	$(SRC_DIR)/Config.cpp \
 				$(SRC_DIR)/log.cpp \
 				$(SRC_DIR)/ServerMsg.cpp \
 				$(SRC_DIR)/Client.cpp \
-				$(SRC_DIR)/Utils.cpp
+				$(SRC_DIR)/Utils.cpp \
+				$(SRC_DIR)/ProcessRequest.cpp \
+
 
 # Objects
 OBJS		= $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)

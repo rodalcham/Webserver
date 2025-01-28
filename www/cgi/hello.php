@@ -25,6 +25,6 @@ header("Content-Type: text/html");
 echo "\r\n";  // End of headers
 
 // 5) Display the body in a "Hello ...!" message
-echo "<html><head><title>Hello CGI</title></head><body>";
-echo "<h1>Hello " . htmlspecialchars($rawBody) . "!</h1>";
-echo "</body></html>";
+// echo "<html><head><title>Hello CGI</title></head><body>";
+echo "Hello " . htmlspecialchars($rawBody) . "!\r\n";
+// echo "</body></html>";

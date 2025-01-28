@@ -35,6 +35,7 @@ void	Server::processRequest(Client &client)
 	if (isHttpRequest(req))
 	{
 		HttpRequest	request(client);
+		debug("METHOD IS : " + request.getMethod());
 		if (!isMethodAllowedInUploads(request, client))
 			res = HttpResponse(405, "Method " + request.getMethod() + " not allowed.", request);
 		else if (checkRequestSize(request, client))
@@ -250,7 +251,16 @@ HttpResponse	Server::handleGet(HttpRequest &request, Client &client)
 		return res;
 	}
 	else
-		return retrieveFile(request);
+	{
+		try
+		{
+			return retrieveFile(request);
+		}
+		catch (std::exception)
+		{
+			return HttpResponse(500, "Failed to read from file", request);
+		}
+	}
 }
 
 int	Server::handleFileContent(Client &client, string &req)

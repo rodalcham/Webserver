@@ -13,7 +13,7 @@ void	Server::enable_write_listen(int	clientSock)
 	{
 		close(clientSock);
 		this->clients.erase(clientSock);
-		/*UNCAUGHT*/ throw std::runtime_error("Failed to listen for write readiness");
+		throw std::runtime_error("Failed to listen for write readiness");
 	}
 }
 
@@ -28,7 +28,7 @@ void	Server::disable_write_listen(int	clientSock)
 	{
 		close(clientSock);
 		this->clients.erase(clientSock);
-		/*UNCAUGHT*/ throw std::runtime_error("Failed disable listen for write readiness");
+		throw std::runtime_error("Failed disable listen for write readiness");
 	}
 }
 
@@ -47,7 +47,7 @@ void	Server::postEvent(int clientSock, int mode)
 	ident = (clientSock * 10) + mode;
 	EV_SET(&event, ident, EVFILT_USER, EV_ADD | EV_ENABLE, NOTE_TRIGGER, 0, nullptr);
 	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0) {
-		/*UNCAUGHT*/ throw std::runtime_error("Failed to post custom event to kqueue");
+		throw std::runtime_error("Failed to post custom event to kqueue");
 	}
 
 }
@@ -58,7 +58,7 @@ void	Server::removeEvent(int eventID)
 
 	EV_SET(&event, eventID, EVFILT_USER, EV_DELETE, 0, 0, nullptr);
 	if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		/*UNCAUGHT*/ throw std::runtime_error("Failed to remove custom event from kqueue: " + std::string(strerror(errno)));
+		throw std::runtime_error("Failed to remove custom event from kqueue: " + std::string(strerror(errno)));
 }
 
 

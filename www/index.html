@@ -194,7 +194,7 @@
         return;
       }
       try {
-        const response = await fetch('http://localhost:8080/cgi-bin/calculator.py', {
+        const response = await fetch('/cgi-bin/calculator.py', {
           method: 'POST',
           headers: {
             'Content-Type': 'text/plain', // Sending raw text as the body
@@ -203,7 +203,7 @@
           body: input // e.g., "2+2"
         });
         if (!response.ok) {
-          /*UNCAUGHT*/ throw new Error(`Server returned status ${response.status}`);
+          throw new Error(`Server returned status ${response.status}`);
         }
         const result = await response.text();
         alert(`Result: ${result}`);
@@ -219,7 +219,7 @@
         return;
       }
       try {
-        const response = await fetch('http://localhost:8080/cgi/hello.php',{
+        const response = await fetch('/cgi/hello.php',{
           method: 'POST',
           headers: {
             'Content-Type': 'text/plain',
@@ -228,7 +228,7 @@
           body: name
         });
         if (!response.ok) {
-          /*UNCAUGHT*/ throw new Error(`Server returned status ${response.status}`);
+          throw new Error(`Server returned status ${response.status}`);
         }
         const text = await response.text();
         alert(text);
@@ -250,7 +250,7 @@
           }
         });
         if (!response.ok) {
-          /*UNCAUGHT*/ throw new Error(`Server error: ${response.status}`);
+          throw new Error(`Server error: ${response.status}`);
         }
         // Expect a JSON array of filenames
         const fileList = await response.json();
@@ -286,7 +286,7 @@
           method: 'DELETE'
         });
         if (!response.ok) {
-          /*UNCAUGHT*/ throw new Error(`Server responded with status ${response.status}`);
+          throw new Error(`Server responded with status ${response.status}`);
         }
         // const text = await response.text();
         // alert("Delete result: " + text);

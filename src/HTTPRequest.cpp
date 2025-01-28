@@ -15,7 +15,6 @@ HttpRequest::HttpRequest(Client &client)
 	size_t headerEnd = request.find("\r\n\r\n");
 	if (headerEnd == std::string::npos) {
 		_stat_code_no = 400;
-		/*UNCAUGHT*/ throw std::runtime_error("Invalid HTTP request: Missing headers or body");
 	}
 
 	std::string headerPart = request.substr(0, headerEnd);
@@ -31,7 +30,6 @@ HttpRequest::HttpRequest(Client &client)
 	size_t methodEnd = requestLine.find(' ');
 	if (methodEnd == std::string::npos) {
 		_stat_code_no = 400;
-		/*UNCAUGHT*/ throw std::runtime_error("Invalid HTTP request line: Missing method");
 	}
 	_method = requestLine.substr(0, methodEnd);
 
@@ -39,7 +37,6 @@ HttpRequest::HttpRequest(Client &client)
 	if (uriEnd == std::string::npos) {
 		_stat_code_no = 400;
 		std::cerr << "[DEBUG] Missing URI in the request line\n";
-		/*UNCAUGHT*/ throw std::runtime_error("Invalid HTTP request line: Missing URI");
 	}
 	_uri = requestLine.substr(methodEnd + 1, uriEnd - methodEnd - 1);
 	_http_version = requestLine.substr(uriEnd + 1);
@@ -67,16 +64,6 @@ HttpRequest::HttpRequest(Client &client)
 HttpRequest::~HttpRequest()
 {
 	// Cleanup if needed
-}
-
-std::string HttpRequest::parseHttpMethod(const std::string& methodStr)
-{
-	if (methodStr == "GET") return methodStr;
-	if (methodStr == "POST") return methodStr;
-	if (methodStr == "DELETE") return methodStr;
-
-	std::cerr << "Unsupported HTTP method: " << methodStr << std::endl;
-	/*UNCAUGHT*/ throw std::runtime_error("Unsupported HTTP method: " + methodStr);
 }
 
 
@@ -217,9 +204,6 @@ std::string HttpRequest::getFileContent() const
 
 const ServerBlock& HttpRequest::getRequestBlock() const
 {
-	if (!_request_block) {
-		/*UNCAUGHT*/ throw std::runtime_error("Request block not set");
-	}
 	return *(_request_block);
 }
 

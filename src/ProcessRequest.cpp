@@ -67,14 +67,12 @@ void	Server::processRequest(Client &client)
 		client.queueResponse(res.returnResponse());
 		postEvent(client.getSocket(), 2);
 	}
-	debug("I STILL COME HERE");
 	client.popRequest();
 }
 
 int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 {
 	string path = resolveCGIPath(request.getUri());
-	debug("PATH + "  + path);
 	int	cgiOutput[2];
 	if (pipe(cgiOutput) < 0)
 		return -1;
@@ -124,6 +122,7 @@ int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
 			close(cgiOutput[0]);
 			return -1;
 		}
+		client->isExecuting() = true;
 	}
 	return 0;
 }
@@ -185,7 +184,6 @@ HttpResponse	Server::retrieveFile(HttpRequest &request) // FIX
 	if (std::filesystem::is_directory(fullPath))
 	{
 		std::string indexFilePath = root+ "/" + indexFile;
-		debug("INDEX FILE = " + indexFilePath);
 		if (!indexFile.empty() && std::filesystem::exists(indexFilePath) && std::filesystem::is_regular_file(indexFilePath))
 		{
 			std::string fileContent = Server::readFile(indexFilePath);
@@ -220,7 +218,6 @@ HttpResponse	Server::retrieveFile(HttpRequest &request) // FIX
 
 	if (std::filesystem::exists(fullPath) && std::filesystem::is_regular_file(fullPath))
 	{
-		debug("fullpath" + fullPath);
 		std::string fileContent = readFile(fullPath);
 		std::string mimeType = getMimeType(fullPath);
 
@@ -253,7 +250,7 @@ HttpResponse	Server::handleGet(HttpRequest &request, Client &client)
 
 int	Server::handleFileContent(Client &client, string &req)
 {
-	debug("FILE CONTENT");
+	// debug("FILE CONTENT");
 	string boundaryPrefix = "--" + client.get_boundary() + "\r\n";
 	string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
 	string *endBoundary;

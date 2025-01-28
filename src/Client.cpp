@@ -13,6 +13,14 @@ Client::Client(int clientSock, const ServerBlock *block)
 
 }
 
+bool	Client::isIdle()
+{
+	if (!is_executing && !is_receiving && ! is_sending && requests.empty() &&
+		responses.empty() && _file_content.empty())
+		return true;
+	return false;
+}
+
 
 int		&Client::getSocket()
 {
@@ -49,6 +57,10 @@ bool	&Client::isReceiving()
 	return (this->is_receiving);
 }
 
+bool	&Client::isExecuting()
+{
+	return (this->is_executing);
+}
 
 void    Client::queueResponse(const std::string& response)
 {
@@ -173,7 +185,7 @@ bool	Client::isLastComplete()
 		if (req.find("POST") != std::string::npos && req.find("X-request-type") == string::npos)
 		{
 			this->_boundary = extractBoundary(req);
-			debug("Boundary FOUND :" + this->_boundary);
+			// debug("Boundary FOUND :" + this->_boundary);
 			return true;
 		}
 		std::regex contentLengthRegex("Content-Length: (\\d+)", std::regex::icase);
@@ -202,8 +214,8 @@ bool	Client::isLastComplete()
 		{
 			if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
 				this->queueRequest(boundaryPrefix);
-			else
-				debug("LAST CHUNK RECEIVED");
+			// else
+				// debug("LAST CHUNK RECEIVED");
 			return true;
 		}
 		else

@@ -76,8 +76,7 @@ void		Server::msg_send(Client &client, int mode)
 	}
 
 	string	*msg =&client.getResponse();
-	debug("Sending message to client : " + *msg);
-	// debug("Size : " + std::to_string(msg->size()));
+	// debug("Sending message to client : " + *msg);
 	while (!msg->empty())
 	{
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);
@@ -94,6 +93,8 @@ void		Server::msg_send(Client &client, int mode)
 					disable_write_listen(client.getSocket());
 					client.isReceiving() = false;
 				}
+				if (client.isIdle())
+					removeClient(client);
 				return;
 			}
 		}
@@ -128,7 +129,7 @@ void Server::msg_receive(Client& client)
 	char	buffer[40960];
 	memset(buffer, 0, sizeof(buffer));
 	ssize_t	bytes_read = recv(client.getSocket(), buffer, sizeof(buffer), 0);
-	debug("Bytes read: " + std::to_string(bytes_read));
+	// debug("Bytes read: " + std::to_string(bytes_read));
 	ssize_t	pos;
 	string	temp;
 	
@@ -150,7 +151,7 @@ void Server::msg_receive(Client& client)
 	while (pos < bytes_read)
 	{
 		temp = extractLine(buffer + pos, bytes_read - pos);
-		debug("Received : " + temp);
+		// debug("Received : " + temp);
 		pos += temp.length();
 		if (!client.hasRequest())
 		{

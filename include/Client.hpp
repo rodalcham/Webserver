@@ -30,6 +30,7 @@ class Client
 	std::deque<std::string>	_file_content;
 	bool					is_sending = false;
 	bool					is_receiving = false;
+	bool					is_executing = false;
 	const ServerBlock		*_block;
 
 	string					_boundary;
@@ -47,6 +48,7 @@ class Client
 	std::string			&getRequest();
 	bool				hasRequest();
 	bool				hasResponse();
+	bool				isIdle();
 	bool				hasFileContent();
 	std::string			&getResponse();
 	const ServerBlock	*getServerBlock();
@@ -54,6 +56,7 @@ class Client
 	void				popRequest();
 	bool				&isSending();
 	bool				&isReceiving();
+	bool				&isExecuting();
 
 	void setCGIOutput(int outputFd);
 

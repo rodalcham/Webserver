@@ -179,7 +179,7 @@ void	HttpResponse::setHeaders(const HttpRequest& request)
 
 	if (_stat_code_no == 200 && request.getMethod() == "GET")
 	{
-		this->_headers["Last-Modified"] = this->setLastModifiedHeader(request);
+		// this->_headers["Last-Modified"] = this->setLastModifiedHeader(request);
 		this->_headers["Content-Type"] = this->setMimeTypeHeader();
 	}
 	else if (_stat_code_no == 201 && request.getMethod() == "POST")

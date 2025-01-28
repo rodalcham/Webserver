@@ -343,76 +343,76 @@ void	Server::setTimeout(Client &client)
 	}
 }
 
-void Server::executeCGI(Client &client, const std::string &cgiPath, std::string &request)
-{
-	int cgiOutput[2];
-	int cgiInput[2];
-	if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
-	{
-		throw std::runtime_error("Failed to create pipes for CGI");
-	}
+// void Server::executeCGI(Client &client, const std::string &cgiPath, std::string &request)
+// {
+// 	int cgiOutput[2];
+// 	int cgiInput[2];
+// 	if (pipe(cgiOutput) < 0 || pipe(cgiInput) < 0)
+// 	{
+// 		throw std::runtime_error("Failed to create pipes for CGI");
+// 	}
 
-	client.setPid(fork());
-	if (client.getPid() < 0)
-	{
-		throw std::runtime_error("Failed to fork CGI process");
-	}
+// 	client.setPid(fork());
+// 	if (client.getPid() < 0)
+// 	{
+// 		throw std::runtime_error("Failed to fork CGI process");
+// 	}
 
-	if (client.getPid() == 0)
-	{
-		close(cgiOutput[0]);
-		dup2(cgiOutput[1], STDOUT_FILENO);
-		close(cgiOutput[1]);
-		close(cgiInput[1]);
+// 	if (client.getPid() == 0)
+// 	{
+// 		close(cgiOutput[0]);
+// 		dup2(cgiOutput[1], STDOUT_FILENO);
+// 		close(cgiOutput[1]);
+// 		close(cgiInput[1]);
 
-		std::string::size_type dotPos = cgiPath.find_last_of('.');
-		std::string extension;
-		if (dotPos != std::string::npos)
-			extension = cgiPath.substr(dotPos + 1); // "py", "php", etc.
+// 		std::string::size_type dotPos = cgiPath.find_last_of('.');
+// 		std::string extension;
+// 		if (dotPos != std::string::npos)
+// 			extension = cgiPath.substr(dotPos + 1); // "py", "php", etc.
 
-		const char* interpreter = "/usr/bin/python3";
-		if (extension == "php")
-			interpreter = "/usr/bin/php";
-		else if (extension == "py")
-			interpreter = "/usr/bin/python3";
+// 		const char* interpreter = "/usr/bin/python3";
+// 		if (extension == "php")
+// 			interpreter = "/usr/bin/php";
+// 		else if (extension == "py")
+// 			interpreter = "/usr/bin/python3";
 
-		char* const args[] = {
-			const_cast<char*>(interpreter),
-			const_cast<char*>(cgiPath.c_str()),
-			const_cast<char*>(request.c_str()),  // optional if your script reads from argv
-			nullptr
-		};
+// 		char* const args[] = {
+// 			const_cast<char*>(interpreter),
+// 			const_cast<char*>(cgiPath.c_str()),
+// 			const_cast<char*>(request.c_str()),  // optional if your script reads from argv
+// 			nullptr
+// 		};
 
-		if (execve(interpreter, args, nullptr) == -1)
-		{
-			_exit(1);
-		}
-	}
-	else
-	{
-		// ---------------- PARENT PROCESS ----------------
+// 		if (execve(interpreter, args, nullptr) == -1)
+// 		{
+// 			_exit(1);
+// 		}
+// 	}
+// 	else
+// 	{
+// 		// ---------------- PARENT PROCESS ----------------
 
-		// We don’t write to cgiOutput[1], so close it
-		close(cgiOutput[1]);
+// 		// We don’t write to cgiOutput[1], so close it
+// 		close(cgiOutput[1]);
 
-		// If you aren’t writing the raw request to STDIN, close the input pipe
-		close(cgiInput[0]);
-		close(cgiInput[1]);
+// 		// If you aren’t writing the raw request to STDIN, close the input pipe
+// 		close(cgiInput[0]);
+// 		close(cgiInput[1]);
 
-		// Save the child’s STDOUT fd so we can read it in `sendCGIOutput`
-		client.setCGIOutput(cgiOutput[0]);
-		debug("executing child with parameter:\n" + request);
+// 		// Save the child’s STDOUT fd so we can read it in `sendCGIOutput`
+// 		client.setCGIOutput(cgiOutput[0]);
+// 		debug("executing child with parameter:\n" + request);
 
-		// Add the child’s STDOUT pipe to the kqueue for reading
-		struct kevent event;
-		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
-		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
-		{
-			close(cgiOutput[0]);
-			throw std::runtime_error("Failed to add CGI output to kqueue");
-		}
-	}
-}
+// 		// Add the child’s STDOUT pipe to the kqueue for reading
+// 		struct kevent event;
+// 		EV_SET(&event, cgiOutput[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, &client);
+// 		if (kevent(kq, &event, 1, nullptr, 0, nullptr) < 0)
+// 		{
+// 			close(cgiOutput[0]);
+// 			throw std::runtime_error("Failed to add CGI output to kqueue");
+// 		}
+// 	}
+// }
 
 void Server::sendCGIOutput(Client &client)
 {
@@ -422,7 +422,6 @@ void Server::sendCGIOutput(Client &client)
 	HttpResponse	res;
 
 	ret = waitpid(client.getPid(), &status, WNOHANG);
-	debug("CGI");
 	if (ret == 0)
 	{
 		debug("CGI still running");
@@ -432,6 +431,7 @@ void Server::sendCGIOutput(Client &client)
 	{
 		struct kevent event;
 		
+		client.isExecuting() = false;
 		EV_SET(&event, client.getCGIOutputFd(), EVFILT_READ, EV_DELETE, 0, 0, nullptr);
 		if (kevent(this->kq, &event, 1, nullptr, 0, nullptr) < 0)
 		{
@@ -451,20 +451,13 @@ void Server::sendCGIOutput(Client &client)
 			if (bytesRead > 0)
 			{
 				output.append(buffer, bytesRead); // Append the output from the pipe
-				debug("Response : " + output);
 			}
 			if (output.empty())
 			{
-				// response = "HTTP/1.1 500 Internal Server Error\r\n";
 				res = HttpResponse(500, "Internal Server Error", request);
 			}
 			else
 			{
-				// response = "HTTP/1.1 200 OK\r\n";
-				// response += "Content-Length: " + std::to_string(output.size()) + "\r\n";
-				// response += "\r\n"; // End of headers
-				// response.append(output); // Append the CGI output
-				// response.append("\r\n");
 				res = HttpResponse(200, output, request);
 			}
 			client.queueResponse(res.returnResponse());
@@ -478,6 +471,7 @@ void Server::sendCGIOutput(Client &client)
 	}
 	else
 	{
+		client.isExecuting() = false;
 		throw std::runtime_error("Failed Waitpid");
 	}
 }

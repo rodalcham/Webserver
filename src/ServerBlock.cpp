@@ -44,17 +44,23 @@ void ServerBlock::parseBlock(std::istream& stream)
 			_port = std::stoi(value);
 		else if (key == "server_name")
 			_host_name = value;
-		else if (key == "root" || key == "index" || key == "client_max_body_size" || key == "allow_methods" || key == "autoindex" || key == "cgi_pass" || key == "return")
+		else if (key == "root" || key == "index" || key == "client_max_body_size" || key == "allow_methods" || key == "autoindex" || key == "cgi_pass")
 			_directive_pairs.insert({key, value});
 		else if (key == "error_page")
-			setErrorPage(value, line);			
+			setErrorPage(value, line);	
+		else if (key == "return")
+		{
+			value.erase(0, value.find_first_of(" \t"));
+			value.erase(0, value.find_first_not_of(" \t"));
+			_directive_pairs.insert({key, value});
+		}
 		else
 			throw std::runtime_error("Config file error: Unknown directive: " + key);
-		for (const auto& [location, config] : _location_blocks)
-		{
-			for (const auto& [key, value] : config)
-				std::cerr << "  Key: " << key << " | Value: " << value << "\n";
-		}
+		// for (const auto& [location, config] : _location_blocks)
+		// {
+		// 	for (const auto& [key, value] : config)
+		// 		std::cerr << "  Key: " << key << " | Value: " << value << "\n";
+		// }
 	}
 }
 
@@ -68,6 +74,18 @@ std::string	ServerBlock::createDirectiveStr(std::string& line)
 	directive.erase(0, directive.find_first_not_of(" \t"));
 	directive.erase(directive.find_last_not_of(" \t") + 1);
 	return (directive);
+}
+
+void	ServerBlock::setRedirect(std::string& error_directive, std::string& line)
+{
+	size_t space_pos = error_directive.find(" ");
+	if (space_pos == std::string::npos)
+		throw std::runtime_error("Config file error: Missing value for directive in line: " + line);
+
+	std::string key = error_directive.substr(0, space_pos);
+	std::string value = error_directive.substr(space_pos + 1);
+
+	_error_pages.insert({key, value});
 }
 
 void	ServerBlock::setErrorPage(std::string& error_directive, std::string& line)
@@ -113,8 +131,14 @@ void ServerBlock::setLocationBlock(std::istream& stream, std::string line)
 		std::string key = directive.substr(0, space_pos);
 		std::string value = directive.erase(0, directive.find_first_not_of(" \t", space_pos));
 
-		if (key == "allow_methods" || key == "index" || key == "root" || key == "autoindex" || key == "cgi_pass" || key == "return" || key == "client_max_body_size")
+		if (key == "allow_methods" || key == "index" || key == "root" || key == "autoindex" || key == "cgi_pass" || key == "client_max_body_size")
 			_location_blocks[location].insert({key, value});
+		else if (key == "return")
+		{
+			value.erase(0, value.find_first_of(" \t"));
+			value.erase(0, value.find_first_not_of(" \t"));
+			_location_blocks[location].insert({key, value});
+		}
 		else if (key == "error_page")
 		{
 			std::istringstream iss(value);

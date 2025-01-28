@@ -17,7 +17,7 @@ HttpResponse::HttpResponse(const int& stat_code_no, const std::string &body, con
 	setBody();
 	setHeaders(request);
 	_ready = true;
-	respDebug();
+	// respDebug();
 }
 
 bool	HttpResponse::isReady()

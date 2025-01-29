@@ -39,7 +39,7 @@ private:
 	const std::map<int, std::string>	_error_status_codes = {
 	{100, "100 Continue"}, {200, "200 OK"}, {201, "201 Created"}, {204, "204 No Content"}, 
 	{301, "301 Moved Permanently"}, {400, "400 Bad Request"}, {401, "401 Unauthorized"}, {403, "403 Forbidden"}, 
-	{404, "404 Not Found"}, {405, "405 Method Not Allowed"}, {411, "411 Length Required"}, 
+	{404, "404 Not Found"}, {405, "405 Method Not Allowed"}, {408, "408 Request Timeout"}, {411, "411 Length Required"}, 
 	{413, "413 Payload Too Large"}, {415, "415 Unsupported Media Type"}, {417, "417 Expectation failed"}, {500, "500 Internal Server Error"}, 
 	{501, "501 Not Implemented"}, {502, "502 Bad Gateway"}, 
 	{503, "503 Service Unavailable"}, {504, "504 Gateway Timeout"}};

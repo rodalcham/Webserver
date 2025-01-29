@@ -231,7 +231,7 @@ void	Server::closeClient(int &fd)
 	EV_SET(&event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
 	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
 		debug("Failed disable timeout event");
-	if (this->clients[fd].isSending())
+	if (this->clients[fd].isReceiving())
 		disable_write_listen(fd);
 	close(fd);
 	this->clients.erase(fd);

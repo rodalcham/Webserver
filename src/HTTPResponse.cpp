@@ -1,6 +1,9 @@
 #include "../include/Webserv.hpp"
 #include "../include/HTTPResponse.hpp"
 #include "../include/ServerBlock.hpp"
+#include <iostream>
+#include <chrono>
+#include <ctime>
 
 HttpResponse::HttpResponse()
 {
@@ -255,7 +258,8 @@ std::string	HttpResponse::setLastModifiedHeader(HttpRequest request)
 	std::filesystem::file_time_type lw_time = std::filesystem::last_write_time(this->_file_path);
 	if (request.getHeader("X-uploadEndpoint") != "")
 		lw_time = std::filesystem::last_write_time(request.getHeader("root") + request.getHeader("X-uploadEndpoint"));
-	std::time_t sctp = decltype(lw_time)::clock::to_time_t(lw_time);
+	// std::time_t sctp = decltype(lw_time)::clock::to_time_t(lw_time);
+	std::time_t sctp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::from_time_t(std::chrono::duration_cast<std::chrono::seconds>(lw_time.time_since_epoch()).count()));
 	std::tm* last_modified_obj = std::localtime(&sctp);
 
 	std::string last_modified_str = makeTimestampStr(last_modified_obj);

@@ -145,6 +145,9 @@ void	Server::run()
 		for (int i = 0; i < eventCount; ++i) 
 		{
 			int event = eventList[i].ident;
+			if ( (eventList[i].filter == EVFILT_USER && _to_remove.find(event / 10) != _to_remove.end()) ||
+				_to_remove.find(event) != _to_remove.end())
+				continue;
 			if (eventList[i].filter == EVFILT_READ)
 			{
 				debug("Read Event");
@@ -207,10 +210,34 @@ void	Server::run()
 				removeClient(this->clients[event]);
 			}
 		}
+		for (int fd : _to_remove)
+		{
+			closeClient(fd);
+		}
+		_to_remove.clear();
 	}
 }
 
-bool isCGIRequest(const HttpRequest &request)
+void	Server::closeClient(int &fd)
+{
+	struct kevent event;
+
+	if (this->clients.find(fd) == this->clients.end())
+		return;
+	debug("Removing Client " + std::to_string(fd));
+	EV_SET(&event, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	if (kevent(this->kq, &event, 1, NULL, 0, NULL))
+		debug("Failed disable read event");
+	EV_SET(&event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
+		debug("Failed disable timeout event");
+	if (this->clients[fd].isSending())
+		disable_write_listen(fd);
+	close(fd);
+	this->clients.erase(fd);
+}
+
+bool	isCGIRequest(const HttpRequest &request)
 {
 	if (request.getHeader("X-Request-Type") == "cgi")
 	{
@@ -324,19 +351,20 @@ std::string Server::getMimeType(const std::string& filePath)
 
 void Server::removeClient(Client &client)
 {
-	struct kevent event;
+	this->_to_remove.insert(client.getSocket());
+	// struct kevent event;
 
-	debug("Removing Client " + std::to_string(client.getSocket()));
-	EV_SET(&event, client.getSocket(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	if (kevent(this->kq, &event, 1, NULL, 0, NULL))
-		debug("Failed disable read event");
-	EV_SET(&event, client.getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-	if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
-		debug("Failed disable timeout event");
-	if (client.isSending())
-		disable_write_listen(client.getSocket());
-	close(client.getSocket());
-	this->clients.erase(client.getSocket());
+	// debug("Removing Client " + std::to_string(client.getSocket()));
+	// EV_SET(&event, client.getSocket(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	// if (kevent(this->kq, &event, 1, NULL, 0, NULL))
+	// 	debug("Failed disable read event");
+	// EV_SET(&event, client.getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+	// if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
+	// 	debug("Failed disable timeout event");
+	// if (client.isSending())
+	// 	disable_write_listen(client.getSocket());
+	// close(client.getSocket());
+	// this->clients.erase(client.getSocket());
 }
 
 void	Server::setTimeout(Client &client)

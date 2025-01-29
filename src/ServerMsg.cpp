@@ -76,7 +76,7 @@ void		Server::msg_send(Client &client, int mode)
 	}
 
 	string	*msg =&client.getResponse();
-	// debug("Sending message to client : " + *msg);
+	debug("Sending message to client : " + *msg);
 	while (!msg->empty())
 	{
 		bytes = send(client.getSocket(), msg->data(), msg->size(), 0);

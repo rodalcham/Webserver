@@ -38,9 +38,8 @@ class Client
 
 	string					_boundary;
 	std::ofstream			_outFile;
-	pid_t				pid;
-    int cgiOutputFd;  // For reading from CGI process
-
+	pid_t					pid;
+    int 					cgiOutputFd;  // For reading from CGI process
 
 	public : 
 

@@ -77,68 +77,6 @@ void	HttpResponse::setStatusCode(HttpRequest request)
 		setErrorFilePath(request);
 }
 
-// void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
-// {
-// 	setErrorFilePath(request);
-// 	if (_file_path.empty())
-// 		return;
-// 	if (getReturnPage())//maybe can remove this??????????????????????????????????
-// 	{
-// 		std::stringstream	buffer;
-// 		std::ifstream		file(this->_file_path, std::ios::binary);
-
-// 		if (file.is_open())
-// 		{
-// 			buffer << file.rdbuf();
-// 			std::string file_contents = buffer.str();
-// 			file.close();
-// 			this->_body = file_contents;
-// 		}
-// 		else if (is_first_try)
-// 		{
-// 			if (_stat_code_no == 200)
-// 				_stat_code_no = 404;
-// 			setStatusCode(request);
-// 			setBody(false, request);
-// 		}
-// 		else
-// 			this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
-// 	}
-// 	else
-// 		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
-// }
-
-// void	HttpResponse::setBody(bool is_first_try, HttpRequest request)
-// {
-	
-// 	if (!_body.empty())
-// 		return;
-// 	if (getReturnPage())
-// 	{
-// 		std::stringstream	buffer;
-// 		std::ifstream		file(this->_file_path, std::ios::binary);
-
-// 		if (file.is_open())
-// 		{
-// 			buffer << file.rdbuf();
-// 			std::string file_contents = buffer.str();
-// 			file.close();
-// 			this->_body = file_contents;
-// 		}
-// 		else if (is_first_try)
-// 		{
-// 			if (_stat_code_no == 200)
-// 				_stat_code_no = 404;
-// 			setStatusCode(request);
-// 			setBody(false, request);
-// 		}
-// 		else
-// 			this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
-// 	}
-// 	else
-// 		this->_body = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + _status_code + "</title></head><body><h1>" + _status_code + "</h1></body></html>"; // TODO: need to complete this with a basic html page
-// }
-
 void	HttpResponse::setBody()
 {
 	

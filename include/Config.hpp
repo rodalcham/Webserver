@@ -16,13 +16,13 @@ private:
     const std::string           _config_path;
     std::vector<ServerBlock>    _server_blocks;
 
-    void parseConfig(); // Private method to parse the config file
+    void parseConfig();
 
 public:
     Config(const std::string& conf_path);
     ~Config();
 
     std::vector<ServerBlock>&	getServerBlocks();
-    void						configDebug() const; // Debug all server blocks
+    void						configDebug() const;
 	void						isValid() const;
 };

@@ -4,7 +4,7 @@
 
 Config::Config(const std::string& conf_path) : _config_path(conf_path)
 {
-	parseConfig(); // Call parseConfig during construction
+	parseConfig();
 	if (_server_blocks.empty()) {
 		throw std::runtime_error("No server blocks found in configuration.");
 	}
@@ -22,7 +22,6 @@ void Config::parseConfig() {
 
 	std::string line;
 	while (std::getline(config_file, line)) {
-		// Check if the line marks the start of a server block
 		if (line.find("server") != std::string::npos && line.find("{") != std::string::npos)
 		{
 			ServerBlock one_block(config_file);

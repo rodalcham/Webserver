@@ -132,7 +132,6 @@ int Client::processFile(int mode)
         return 1;
     }
 
-	// Check if the file was successfully written
 	if (!this->_outFile)
     {
 		HttpResponse	failure(201, "Upload failed", this->_stored_request);
@@ -150,26 +149,25 @@ std::string extractBoundary(const std::string& postRequest)
 	const std::string contentTypeHeader = "Content-Type: ";
 	const std::string boundaryKey = "boundary=";
 
-	// Find the Content-Type header
+
 	size_t contentTypePos = postRequest.find(contentTypeHeader);
 	if (contentTypePos == std::string::npos)
 	{
-		return ""; // Content-Type header not found
+		return "";
 	}
 
 	// Find the boundary key within the Content-Type header
 	size_t boundaryPos = postRequest.find(boundaryKey, contentTypePos);
 	if (boundaryPos == std::string::npos)
 	{
-		return ""; // Boundary key not found
+		return "";
 	}
 
-	// Extract the boundary value
 	size_t boundaryStart = boundaryPos + boundaryKey.length();
 	size_t boundaryEnd = postRequest.find("\r\n", boundaryStart);
 	if (boundaryEnd == std::string::npos)
 	{
-		boundaryEnd = postRequest.length(); // End of string if no newline
+		boundaryEnd = postRequest.length();
 	}
 
 	return postRequest.substr(boundaryStart, boundaryEnd - boundaryStart);
@@ -179,7 +177,7 @@ bool	Client::isLastComplete()
 {
 	if (requests.empty())
 	{
-		return true; // No requests to check
+		return true;
 	}
 	string& req = requests.back();
 	if (isHttpRequest(req))
@@ -192,7 +190,6 @@ bool	Client::isLastComplete()
 		if (req.find("POST") != std::string::npos && req.find("X-request-type") == string::npos)
 		{
 			this->_boundary = extractBoundary(req);
-			// debug("Boundary FOUND :" + this->_boundary);
 			return true;
 		}
 		std::regex contentLengthRegex("Content-Length: (\\d+)", std::regex::icase);
@@ -221,8 +218,6 @@ bool	Client::isLastComplete()
 		{
 			if (req.substr(req.length() - boundaryPrefix.length()) == boundaryPrefix)
 				this->queueRequest(boundaryPrefix);
-			// else
-				// debug("LAST CHUNK RECEIVED");
 			return true;
 		}
 		else

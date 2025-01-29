@@ -47,7 +47,6 @@ void	Server::processRequest(Client &client)
 			{
 				if (handleCGI(request, &client, req))
 					res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
-				// return;
 			}
 			else if (handlePost(request, client))
 				res = HttpResponse(500, "Upload Failed", HttpRequest(client));
@@ -70,7 +69,7 @@ void	Server::processRequest(Client &client)
 	client.popRequest();
 }
 
-int	Server::handleCGI(HttpRequest &request, Client *client, string &req)
+int	Server:: handleCGI(HttpRequest &request, Client *client, string &req)
 {
 	string path = resolveCGIPath(request.getUri());
 	debug("PATH : " + path);
@@ -165,19 +164,7 @@ HttpResponse	Server::handleDelete(HttpRequest &request, Client &client)
 }
 
 
-/*
-TODO 
-
-Fix cgi responses
-Give gray request of last post
-
-TES TEST TEST
-
-Fix this V
-
-*/
-
-HttpResponse	Server::retrieveFile(HttpRequest &request) // FIX 
+HttpResponse	Server::retrieveFile(HttpRequest &request)
 {
 	string uri = request.getUri();
 	const ServerBlock serverBlock = request.getRequestBlock();
@@ -264,7 +251,6 @@ HttpResponse	Server::handleGet(HttpRequest &request, Client &client)
 
 int	Server::handleFileContent(Client &client, string &req)
 {
-	// debug("FILE CONTENT");
 	string boundaryPrefix = "--" + client.get_boundary() + "\r\n";
 	string boundarySuffix = "--" + client.get_boundary() + "--\r\n";
 	string *endBoundary;

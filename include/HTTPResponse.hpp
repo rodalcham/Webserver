@@ -52,12 +52,10 @@ public:
 	HttpResponse	&operator=(const HttpResponse &other);
 
 	void 			setFilePath(const HttpRequest& request);
-	std::string		resolvePath(const std::string& uri, const ServerBlock& block, const std::map<std::string, std::string>& locationConfig);
 	void			setStatusCode(HttpRequest request);
 	void			setBody();
 	void			setHeaders(const HttpRequest& request);
 	void			setErrorFilePath(const HttpRequest& request);
-	void 			setReturnPage(const HttpRequest& request);
 	void			setHeader(const std::string& key, const std::string& value);
 
 	std::string		makeTimestampStr(std::tm* time);

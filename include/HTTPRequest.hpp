@@ -55,7 +55,6 @@ public:
 	void 								setRedirLocation(std::string& redir_location);
 
 	// OTHER
-	std::string							parseHttpMethod(const std::string& methodStr);
 	std::map<std::string, std::string>	parseHeaders(std::istringstream& requestStream);
 	void 								headersGood();
 

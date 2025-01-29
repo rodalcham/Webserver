@@ -18,8 +18,6 @@ GetResponse::~GetResponse()
 
 void GetResponse::makeHeaderList(HttpRequest& request)
 {
-	// this->headers["server"] = "localhost";
-	// this->headers["content-Type"] = request.get_header("accept");
 	this->_headers["content-Type"] = "text/html; charset=UTF-8";
 	this->_headers["connection"] = request.getHeaders("connection");
 }

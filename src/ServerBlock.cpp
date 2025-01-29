@@ -58,11 +58,6 @@ void ServerBlock::parseBlock(std::istream& stream)
 			setMaxBodySize(value);
 		else
 			throw std::runtime_error("Config file error: Unknown directive: " + key);
-		// for (const auto& [location, config] : _location_blocks)
-		// {
-		// 	for (const auto& [key, value] : config)
-		// 		std::cerr << "  Key: " << key << " | Value: " << value << "\n";
-		// }
 	}
 	_host_name = _host_name + ":" + std::to_string(_port);
 }
@@ -239,7 +234,6 @@ std::string	ServerBlock::getDirectiveValue(std::string key) const {
 		if (pair.first == key)
 			return (pair.second);
 	}
-	// debug("[DEBUG] no value found for Directive key: " + key);
 	return ("");
 }
 
@@ -248,7 +242,6 @@ std::string	ServerBlock::getErrorPageValue(std::string key) const {
 		if (pair.first == key)
 			return (pair.second);
 	}
-	// debug("[DEBUG] no value found for Error Page key: " + key);
 	return ("");
 }
 
@@ -269,7 +262,6 @@ std::string	ServerBlock::getLocationValue(std::string location, std::string key)
 				return (pair.second);
 			}
 		}
-	// debug("[DEBUG] no value found in location: " + location + " for key: " + key);
 	}
 	if (key == "index")
         return ("");

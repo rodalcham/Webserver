@@ -6,13 +6,6 @@
 
 class HttpRequest;
 
-/**
- * A class to store the config block for each server
- * 
- * @param _directive_pairs ?
- * @param _error_pages ?
- * @param _location_blocks ?
- */
 
 class ServerBlock
 {
@@ -34,7 +27,6 @@ public:
 	void			setRedirect(std::string& value, std::string& line);
 	void			setMaxBodySize(std::string value);
 	std::string		createDirectiveStr(std::string& line);
-	// bool			isRequestAllowed(const HttpRequest& request) const;
 	void			serverBlockDebug() const;
 	bool			duplicateServers() const;
 

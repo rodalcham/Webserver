@@ -1,0 +1,1240 @@
+[20250129_140157] Server running in DEBUG mode.
+[20250129_140157] Server started
+[20250129_140203] Read Event
+[20250129_140203] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250129_140203] Read Event
+[20250129_140203] From client
+[20250129_140203] METHOD IS : GET
+[20250129_140203] Read Event
+[20250129_140203] Client accepted : 8
+Connected through port : 8080
+Through host : localhost:8080
+[20250129_140203] Send Event
+[20250129_140203] Sending message to client : HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: application/octet-stream
+Content-type: text/html
+Date: Wed, 29 Jan 2025 14:02:03 CET
+Last-Modified: Wed, 29 Jan 2025 13:06:34 CET
+Server: webserv/42.0
+Content-Length: 9292
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Main Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    .comment-section {
+      margin-top: 20px;
+    }
+    .comment {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    .comment button {
+      margin-top: 10px;
+      padding: 5px 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to the Main Page</h1>
+
+  <!-- COMMENT AREA (local only, no server calls) -->
+  <div>
+    <label for="name">Name:</label>
+    <input type="text" id="name" placeholder="Enter your name" />
+  </div>
+  <div>
+    <label for="comment">Comment:</label>
+    <textarea id="comment" placeholder="Leave a comment"></textarea>
+  </div>
+  <button onclick="addComment()">Submit Comment</button>
+
+  <h2>Upload File (Chunked)</h2>
+  <p>
+    We keep a "form-like" structure for user convenience, but we will NOT use the default submit.
+    Instead, we'll handle the chunked upload via JavaScript.
+  </p>
+  <div>
+    <input type="file" id="fileInput" name="file" />
+    <button onclick="uploadFileChunked()">Upload in Chunks</button>
+  </div>
+  <div id="uploadStatus"></div>
+
+  <h2>CGI Interactions</h2>
+  <div class="button-section">
+    <label for="calcInput">Calculator Input:</label>
+    <input type="text" id="calcInput" placeholder="e.g., 2+2" />
+    <button onclick="callCalculatorCGI()">Calculate</button>
+    <br /><br />
+    <label for="helloInput">Hello Input:</label>
+    <input type="text" id="helloInput" placeholder="Enter your name" />
+    <button onclick="callHelloCGI()">Say Hello</button>
+  </div>
+
+  <h2>Comments</h2>
+  <div id="commentsContainer" class="comment-section"></div>
+  <button onclick="goToLogPage()">Go to Log Page</button>
+
+  <!-- ============================= -->
+  <!--  NEW: Listing & Deleting Files -->
+  <!-- ============================= -->
+  <h2>File Management</h2>
+  <button onclick="fetchUploads()">List Uploaded Images</button>
+  <div id="uploadList"></div>
+
+  <hr />
+  <div>
+    <label for="deleteFileName">Delete Filename:</label>
+    <input type="text" id="deleteFileName" placeholder="Enter file name" />
+    <button onclick="deleteFile()">Delete File</button>
+  </div>
+
+  <script>
+    // ------------------------------
+    //   COMMENT FUNCTIONS (LOCAL ONLY)
+    // ------------------------------
+    const comments = [];
+    function addComment() {
+      const name = document.getElementById('name').value.trim();
+      const comment = document.getElementById('comment').value.trim();
+      if (!name || !comment) {
+        alert("Please provide both name and comment.");
+        return;
+      }
+      const commentObject = { name, comment };
+      comments.push(commentObject);
+      displayComments();
+      clearInputFields();
+    }
+    function displayComments() {
+      const commentsContainer = document.getElementById('commentsContainer');
+      commentsContainer.innerHTML = '';
+      comments.forEach((comment, index) => {
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment';
+        commentDiv.innerHTML = `
+          <strong>${comment.name}</strong>
+          <p>${comment.comment}</p>
+          <button onclick="deleteComment(${index})">Delete</button>
+        `;
+        commentsContainer.appendChild(commentDiv);
+      });
+    }
+    function deleteComment(index) {
+      comments.splice(index, 1);
+      displayComments();
+    }
+    function clearInputFields() {
+      document.getElementById('name').value = '';
+      document.getElementById('comment').value = '';
+    }
+    function goToLogPage() {
+      sessionStorage.setItem('comments', JSON.stringify(comments));
+      window.location.href = 'log.html';
+    }
+
+    // ------------------------------
+    //   CHUNKED UPLOAD FUNCTION
+    // ------------------------------
+    const uploadEndpoint = "/uploads/"; // Adjust to your actual server endpoint
+    const CHUNK_SIZE = 1024 * 1024; // 1 MB for example
+    let offset = 0;
+    let file;
+    let totalSize;
+    let fileName;
+
+    function uploadFileChunked() {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) {
+        alert("Please select a file before uploading.");
+        return;
+      }
+      file = fileInput.files[0];
+      totalSize = file.size;
+      fileName = file.name;
+      const statusDiv = document.getElementById("uploadStatus");
+      statusDiv.innerHTML = `Preparing to upload "${file.name}"...`;
+      offset = 0;
+      sendChunks();
+    }
+
+    async function sendChunks() {
+      const statusDiv = document.getElementById("uploadStatus");
+      const formData = new FormData();
+      const headers = new Headers();
+      headers.append("fileName", fileName);
+      headers.append("totalSize", totalSize);
+
+      while (offset < totalSize) {
+        const start = offset;
+        const end = Math.min(start + CHUNK_SIZE, totalSize);
+        const chunk = file.slice(start, end);
+        if (chunk.size > 0) {
+          formData.append("fileChunk", chunk, file.name);
+        }
+        offset += CHUNK_SIZE;
+      }
+      try {
+        const response = await fetch(uploadEndpoint,
+        {
+          method: "POST",
+          headers: headers,
+          body: formData,
+        });
+        if (response.ok)
+        {
+          statusDiv.innerHTML = `Upload complete for "${file.name}"!`;
+        } else {
+          statusDiv.innerHTML = `Failed to upload: ${response.statusText}`;
+        }
+      }
+      catch (error)
+      {
+        statusDiv.innerHTML = `Error uploading file: ${error.message}`;
+      }
+    }
+
+    // ------------------------------
+    //   CGI FUNCTIONS
+    // ------------------------------
+    async function callCalculatorCGI() {
+      const input = document.getElementById('calcInput').value.trim();
+      if (!input) {
+        alert('Please provide input for the calculator.');
+        return;
+      }
+      try {
+        const response = await fetch('/cgi-bin/calculator.py', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain', // Sending raw text as the body
+            'X-request-type' : 'cgi'
+          },
+          body: input // e.g., "2+2"
+        });
+        if (!response.ok) {
+          throw new Error(`Server returned status ${response.status}`);
+        }
+        const result = await response.text();
+        alert(`Result: ${result}`);
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
+
+    async function callHelloCGI() {
+      const name = document.getElementById('helloInput').value.trim();
+      if (!name) {
+        alert('Please provide a name for the Hello CGI.');
+        return;
+      }
+      try {
+        const response = await fetch('/cgi/hello.php',{
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'X-request-type' : 'cgi'
+          },
+          body: name
+        });
+        if (!response.ok) {
+          throw new Error(`Server returned status ${response.status}`);
+        }
+        const text = await response.text();
+        alert(text);
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
+
+    // ------------------------------
+    //   NEW: LIST & DELETE FILES
+    // ------------------------------
+    async function fetchUploads() {
+      try {
+        // We'll do a GET request to "/list-uploads" (adjust if needed)
+        const response = await fetch('/list-uploads',{
+          method: 'GET',
+          headers: {
+            'X-uploadEndpoint' : uploadEndpoint,
+          }
+        });
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        // Expect a JSON array of filenames
+        const fileList = await response.json();
+
+        const listDiv = document.getElementById('uploadList');
+        listDiv.innerHTML = ''; // Clear previous
+        if (fileList.length === 0) {
+          listDiv.innerHTML = '<p>No uploaded files found.</p>';
+        } else {
+          // Show them in a list
+          const ul = document.createElement('ul');
+          fileList.forEach(file => {
+            const li = document.createElement('li');
+            li.textContent = file;
+            ul.appendChild(li);
+          });
+          listDiv.appendChild(ul);
+        }
+      } catch (err) {
+        alert('Failed to list uploads: ' + err.message);
+      }
+    }
+
+    async function deleteFile() {
+      const filename = document.getElementById('deleteFileName').value.trim();
+      if (!filename) {
+        alert("Please enter a file name to delete.");
+        return;
+      }
+      try {
+        // We'll do DELETE /uploads/<filename>
+        const response = await fetch('/uploads/' + encodeURIComponent(filename), {
+          method: 'DELETE'
+        });
+        if (!response.ok) {
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+        // const text = await response.text();
+        // alert("Delete result: " + text);
+      } catch (err) {
+        alert("Error deleting file: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
+
+
+
+[20250129_140203] Send Event
+[20250129_140203] Read Event
+[20250129_140203] From client
+[20250129_140203] Client Closed Connection
+[20250129_140203] Removing Client 7
+[20250129_140203] Read Event
+[20250129_140203] From client
+[20250129_140203] METHOD IS : GET
+[20250129_140203] Send Event
+[20250129_140203] Sending message to client : HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: application/octet-stream
+Content-type: application/octet-stream
+Date: Wed, 29 Jan 2025 14:02:03 CET
+Last-Modified: Tue, 28 Jan 2025 15:40:35 CET
+Server: webserv/42.0
+Content-Length: 15406
+
+         h  6          (    00     h&  Æ  (                                     £°ºÿ ª²ÿKXdÿ™¤¬ÿ›©±ÿ‡”ÿwˆ”ÿ‹š¤ÿ¡¯¸ÿ¡­µÿ¦²ºÿ“¡¬ÿp€ÿYlzÿ{Š–ÿµÀÆÿ°¿Ëÿ–£­ÿYiuÿƒ’›ÿl~‹ÿnÿ~ÿw‰•ÿo‚‘ÿs†•ÿj|Šÿ~‘ÿ—§°ÿ¿ËĞÿİäçÿ×İâÿ·ÅÎÿuƒÿp€Œÿgv‚ÿex†ÿª·Áÿ½ÈÑÿœ«µÿ•¥±ÿ¹ÄÌÿÔÜáÿçíïÿÜãæÿÇÑÖÿµ¿Æÿ¬·¿ÿ²¾Æÿw…‘ÿ[m{ÿcr~ÿ«¸Áÿ©µ¾ÿ¤°ºÿÅÏÔÿíóõÿøúûÿ¼ÇÌÿ•¥¯ÿ¨¶¿ÿ¥±¸ÿ¸ÃÊÿ«¶¾ÿ¬¸Àÿ…”ÿu‡“ÿ‘¦ÿàéîÿîô÷ÿğöøÿßçëÿÑÙŞÿŸ©ÿav„ÿ}›ÿ„”ÿš£ÿ´¿Çÿ¯ºÂÿµÁÈÿ|Š“ÿªµ½ÿ}Œ—ÿÜåéÿöûûÿïõöÿ²¿Æÿ§µ¾ÿ‡˜¥ÿ©¶¾ÿŸ¬µÿ½ÊÏÿÕŞãÿ¹ÄÌÿ­¸Àÿ¹ÄËÿœ¤ÿ™¥¬ÿÕŞãÿˆ˜£ÿœª³ÿ«ºÁÿĞÛáÿ¬ºÂÿ¡±»ÿ¦¶¿ÿÅÒØÿ¯»Æÿ®»Äÿª¶¿ÿ¥°¹ÿ³¾Æÿ˜¥®ÿ»ÆËÿŞçêÿ°»Âÿ™§°ÿ¤°·ÿ¨ÿ¹ÅËÿËÖÛÿÄĞÖÿÁÍÕÿ©µÀÿ¨´¾ÿ¨´¾ÿ£®¸ÿª¶¾ÿ¶ÁÈÿ®»Ãÿ¬¹ÀÿÉÓ×ÿ®»ÂÿÈÒ×ÿÍÖÙÿ–¦¯ÿ–£ÿ˜¨³ÿ©¶¿ÿ­ºÃÿ¨µ¾ÿ©´½ÿ£¯·ÿª¶¾ÿ°»Ãÿ³¾Æÿ¸ÃËÿ¼ÇĞÿÄÏ×ÿÁÍÕÿŠ™£ÿ~‘ÿ“ ÿˆ›¦ÿRcnÿ±½Åÿ®ºÄÿ©µ¾ÿ£¯¸ÿ§³»ÿ©µ½ÿ«¶¾ÿ¯»Ãÿ±½ÆÿµÁËÿt‹ÿ«´ÿ¯¹ÿ°½Æÿª¹Áÿgw‚ÿªµ¼ÿ®¹Âÿ§³¼ÿ¢®·ÿ¬¶¾ÿ©³»ÿ²¼ÄÿÃËÑÿ¿ÇÏÿ¾ÈĞÿr€Šÿ¯ºÁÿ’¢«ÿÈÓØÿ›ª³ÿ^lxÿ‰”œÿ±»Ãÿ¤°¹ÿ©³ÿ¢«´ÿ¡«´ÿ­¶½ÿ´ºÁÿ¸ÀÇÿ´¾Æÿhwƒÿˆ—¡ÿµÀÆÿ¬¹Àÿ¿ÉÎÿgwƒÿ¦ÿ¥±»ÿ ¬µÿŸ«³ÿ¦¯·ÿ¦°¸ÿ¯¶½ÿ±·¾ÿ´¼Âÿ«µ½ÿƒ™ÿ¶ÀÅÿÊÕÙÿÇĞÔÿw†ÿvƒ‹ÿš¦¯ÿª·¾ÿ¤¯·ÿ ¬´ÿ¡«²ÿ¨±¸ÿ´¼Âÿµ»Áÿ·¾Åÿ©³»ÿ©³ºÿz„‹ÿ…’šÿ•ÿ›¤ÿ¢­µÿ©¶¿ÿ§³»ÿ¢­µÿ¨¯ÿ¤«ÿ¤¬³ÿ°·¾ÿ³¸¿ÿ³ºÁÿ¤®·ÿ¦±¹ÿ˜¢«ÿ®¸¿ÿ¯¹Àÿ¨³»ÿ¤°¸ÿ£®¶ÿ¡¬³ÿŸ¨¯ÿ—Ÿ¥ÿ                                                                (       @                              ¥³½ÿª²ÿ¡«²ÿ§®ÿq~‰ÿ".9ÿ‘›¢ÿ“§ÿ“¡©ÿ¨µ½ÿ” §ÿŒ˜Ÿÿƒ’œÿƒ“ÿƒ“ÿ’ ¨ÿ²ÀÈÿ½ÇÍÿ‡“ÿ›¦ÿ¬¶½ÿĞØÛÿÓÜàÿ½ÇÌÿœ©±ÿzˆ“ÿVgtÿJ[iÿ[lzÿ„“œÿ©¶¼ÿÀÊÏÿ«¹ÅÿŸ¬µÿ£¯·ÿŸ©±ÿ]lyÿ>JUÿŸ©¯ÿ¢°¸ÿ­µÿ’ ¨ÿ€™ÿ{Œ™ÿgz‰ÿn€ÿ‡•¡ÿ¡ªÿ¨ÿˆ˜¤ÿ«¸¿ÿÄÍÓÿ§³½ÿw‡•ÿdwˆÿXl|ÿQdtÿXk{ÿ^s‚ÿg{‰ÿpÿœª³ÿ´¾Åÿ¹ÃÈÿ¯½ÉÿªºÇÿ£°¹ÿ—¡©ÿK\hÿSalÿ™¡ÿ‘¡ªÿ‘›ÿqƒÿcvƒÿ_sÿj~Œÿ“ ÿƒ” ÿvˆ“ÿpÿi{Šÿnÿrƒ‘ÿm~Œÿduÿf{‰ÿcy‡ÿn‚ÿ€’ÿ­´ÿ½ÈÎÿÒÛàÿÓÚŞÿÏÖÜÿßäèÿºÉÒÿ­½Êÿ¥´½ÿz‰”ÿHZgÿ}˜ÿzŠ“ÿsƒÿ_qÿ`s„ÿr…“ÿ„–¢ÿ…–£ÿ‡˜¤ÿx‰—ÿl~Œÿq…”ÿtˆ˜ÿyœÿtˆ—ÿh{‹ÿp‚ÿ «ÿ¡°¹ÿ±½Äÿ¿ÊĞÿÏÚİÿÓİàÿâêìÿìñóÿêïñÿÄÌÒÿ²¿Éÿ¹ÉÕÿ«¶ÿN^jÿ_o|ÿœ©²ÿ›¤ÿ›ÿpƒ‘ÿVjyÿ’¡®ÿ“£¯ÿ™©¶ÿ“£°ÿ‹œ©ÿ…˜¥ÿ‰œ«ÿ„–£ÿ“¢­ÿ«¶ÿ¨´¾ÿÄÏ×ÿÓÜáÿåíğÿò÷øÿùıüÿöùúÿäëíÿÊÓ×ÿÊÓØÿ°ºÂÿ¬·¿ÿ´ÀÈÿ¾ËÓÿ§ÿXhwÿYjwÿm~‹ÿbr~ÿ.=JÿOaoÿ€“ ÿ®»ÄÿÕŞâÿæìğÿâéíÿ¿ÊĞÿ¢¯¶ÿŸ¬·ÿª·ÁÿÍ×Üÿçîñÿïõ÷ÿôùùÿúüüÿêïïÿĞØİÿ´ÀÈÿ¬ºÁÿ˜¦¯ÿ›¦ÿ²½Äÿ¬·¿ÿ©´¼ÿ¸ÄËÿ­ºÂÿ‡”ÿk{ˆÿUhuÿP`nÿ3COÿao|ÿªÿ¡¯¹ÿ‘Ÿ«ÿš©´ÿ³ÀÊÿ®¹ÂÿŸ«³ÿ±¼ÃÿÓŞäÿíóõÿúııÿüşşÿúşşÿéïğÿ¨µ½ÿ˜©²ÿ’£­ÿ©¸Áÿ¹ÅÊÿ‰™¡ÿ©´¼ÿ´¿Çÿ¬·¿ÿ©´¼ÿÀÊÑÿ¥±¹ÿ‚šÿhv„ÿhyˆÿar€ÿbsÿ–¥®ÿ¯»ÃÿÎØŞÿÑÛàÿ§³»ÿ†•¡ÿ¨´½ÿÙãèÿêòôÿøışÿûşşÿüşşÿíñòÿ©·¿ÿew„ÿ‰š§ÿŠ›§ÿœ­µÿÈÒØÿ–¤­ÿ¼ÄÊÿËÔÙÿºÄÌÿ°»Ãÿ©´¼ÿ¼ÆÍÿ ­·ÿ›¥ÿo€ÿoÿey‡ÿq‰ÿ¯»ÁÿÔßåÿÚäëÿàêïÿêòõÿåìğÿæïóÿëòöÿòøúÿúııÿïóõÿÔİáÿ…˜£ÿj€ÿrˆ•ÿ‚” ÿ™¨²ÿËÖÛÿiy…ÿ\mzÿ„’œÿºÅÍÿ¶ÁÊÿ±¼Äÿ­¹Àÿ±»Ãÿ¥²»ÿŠ™¡ÿœ¥ÿŸ¬µÿcu‚ÿes~ÿ¿ËÒÿáêïÿóùûÿõúüÿøüıÿüÿÿÿúşşÿğöøÿ±¾Åÿ±¾Äÿª·Áÿ–¦°ÿQcqÿGZiÿau…ÿp„’ÿk|‰ÿdu‚ÿy‹—ÿ˜¥®ÿ¼ÆÊÿ¬·¿ÿ³¿Èÿ°¼Äÿ®¹Áÿ·ÃÉÿ±¼Ãÿm{†ÿz‰‘ÿÌÕÛÿt…‘ÿYkxÿŸ¬µÿäíòÿõúüÿùııÿûşşÿúşşÿ÷ûıÿ¸ÂÇÿ¿ÌÒÿ®»Âÿª¸Áÿk}‰ÿ‚”¢ÿœ§ÿ¨ÿœ¦ÿ¯ºÁÿ¶ÄÊÿ§´ºÿ×àãÿò÷÷ÿËÕÚÿ·ÂËÿ¯»Ãÿ¯ºÂÿµÂÉÿ¹ÄËÿq€‹ÿ˜£ªÿÒÛßÿ•¡«ÿ˜¦®ÿct€ÿ¯»Ãÿèñóÿğ÷øÿöûûÿøıüÿÕİáÿ™ÿÔßåÿÀÍÔÿ…” ÿ‚”¢ÿ¯½ÇÿÑÛàÿµÃËÿ¢°¹ÿœ«´ÿÁÍÓÿØâåÿÌÖİÿÁÌÔÿ²¿Èÿ°»Äÿ­¸Àÿ¨´»ÿ¸ÃËÿ¸ÃÊÿ–ÿ‡•ÿuƒŒÿËÔÚÿÖàæÿ¶ÃËÿcu‚ÿ€›ÿ²¿ÅÿÉÕÚÿ¥³ºÿ}™ÿ¶ÂÊÿİèíÿ³ÀÇÿ’¢«ÿ­»Ãÿ³ÀÉÿ¢²»ÿ²ÀÈÿ¶ÅÌÿÌØÜÿ³¿Èÿ¸ÄÎÿµÁÊÿ³ÀÉÿ²¿Çÿ¬¸Áÿ­¸Áÿ§²»ÿ»ÆÍÿ¹ÄÌÿ—¤¬ÿŸ«²ÿx…ÿ¬·½ÿÙâæÿîôöÿÄÏÕÿzŒ™ÿwˆ•ÿ}™ÿ­¼ÅÿßêîÿéòõÿÃÑ×ÿ­»Ãÿ¾ÍÔÿ¦¶Àÿ’ ÿŠªÿ¼ÉĞÿÚæéÿºÇÏÿ§´Áÿ©µÁÿ©µÀÿ©µ¿ÿ¦²¼ÿ¥°ºÿ¢­·ÿ©³ÿ³¾Æÿ¶ÁÉÿ™¦¯ÿˆ•ÿÏÙİÿ¾ÉÏÿâêìÿïöøÿ×àãÿ•¡©ÿœ¤ÿm~Œÿ“¡ªÿÍ×Ûÿˆ˜ ÿt…’ÿ€’ÿ–¦°ÿµÂÉÿÜäèÿêóôÿÒÜâÿÇÒÚÿ½ÉÓÿª·Ãÿ«·Âÿ©µ¿ÿ¦²¼ÿ¨´¾ÿ¦³¼ÿ¥±»ÿ¡«µÿ°»Ãÿ³½Åÿ³¿Çÿ‹œ¥ÿ—¥¬ÿÈÑÕÿÔŞãÿÕŞãÿ´¿Æÿ¡®¸ÿ«¹Áÿ½ÈĞÿ¿ÉÎÿr€‰ÿ†–¢ÿ¶ÃËÿÚãçÿôùùÿãëíÿ¸ÈÏÿ¥µ¾ÿ®½ÅÿÈÔÜÿ¸ÄÌÿ©µÀÿ¥±¼ÿ¨´¾ÿª¶Àÿª¶Àÿ§´¾ÿ¥±»ÿ¡­·ÿ§²ºÿ±¼Äÿ·ÂÊÿÀÊÑÿµÂÈÿ™¦®ÿ” §ÿ¿ÊÎÿáéëÿÀÉÍÿœ©²ÿ­ºÀÿ´¾ÄÿÍÖÛÿèïñÿäëíÿÌÖÚÿ›¬¶ÿ€•¡ÿ‡š¦ÿ­ºÿ£²¼ÿÌ×ßÿµÁÊÿ¨µ¾ÿ¤±»ÿ£¯¹ÿ©µ¿ÿª¶Àÿ§³¼ÿ§²ºÿª³ÿ£¯·ÿ¯ºÂÿ¯ºÂÿ²½Åÿ¸ÃËÿ´ÁÊÿ¥²¼ÿºÇÎÿ¿ÊÏÿÆÑÖÿ´ÁÉÿºÈÍÿÏÚßÿÑÛàÿÅÏÔÿ¢®³ÿ{‹•ÿvŒ™ÿtŒ›ÿ‰«ÿ—¨´ÿˆ™¤ÿp€‹ÿµÁÊÿ½ÈÏÿ¬ºÃÿ¬¸Âÿª·Àÿ©µ¾ÿ©´¼ÿ¨³»ÿ ¬µÿ§³»ÿ¯ºÂÿ°»Ãÿ°»Ãÿ¶ÁÉÿ¶ÂÊÿ·ÂÊÿ½ÉĞÿ¾ÉÒÿÂÌÖÿÉÔÜÿÎØßÿÆÑÙÿÉÔÜÿ©³ÿ…–ÿt†“ÿx‹™ÿv‹˜ÿ~“Ÿÿˆ›§ÿŸ¨ÿ5EPÿo‹ÿ¾ÈĞÿ¬¹Âÿ°¼Æÿ®ºÃÿ¨µ½ÿ©¶¾ÿ¦²ºÿ¢®·ÿ©´¼ÿ«¶¾ÿ°»Ãÿ¯ºÂÿ¯ºÂÿ°¼ÄÿµÀÈÿ¸ÃËÿ¶ÂÊÿ¹ÅÎÿ½ÈÑÿ½ÉÑÿÁÍÕÿ¶ÃÌÿ|Œ—ÿ‰›¦ÿ„˜¤ÿˆ›¨ÿŠ«ÿ}’Ÿÿ„˜¥ÿ‰š¤ÿ]p}ÿHXbÿ¨³»ÿ³¿Çÿ¯»Åÿ­¹Ãÿ«·Áÿ¨´¾ÿ¥±ºÿ¡­¶ÿ¥±¹ÿ©´¼ÿªµ½ÿ©µ½ÿ¬·¿ÿ°»Ãÿ³¾ÆÿµÀÈÿ³¿Çÿ³¿Èÿ·ÃÌÿ»ÇĞÿ»ÇĞÿXgrÿ›¤ÿ«¸Áÿ®¸ÿ¥µ¿ÿÂÎÖÿ¥³½ÿª¸Âÿ–§±ÿfx„ÿJZgÿ ­µÿÊÒÖÿ±¼Åÿ¬·Àÿª¶¿ÿ¤°ºÿ¡­·ÿ¡®·ÿ§³»ÿ©´¼ÿ©µ½ÿ©µ½ÿ§³»ÿ©´¼ÿªµ½ÿ¬¹Áÿ°¼Äÿ°¼Æÿ®ºÄÿµÁËÿp|ˆÿMZdÿš©²ÿ£°¸ÿŠ¨ÿ­½Äÿ¶ÂÉÿ¤³¾ÿ²¿Æÿ·ÅÌÿ“¡«ÿXhsÿu‡’ÿÈÎÓÿ·ÁÇÿ¦²»ÿ§³¼ÿ¦²»ÿ¢®¸ÿ£¯·ÿ£¯·ÿ©´¼ÿ£¯·ÿ£®·ÿ¤¯·ÿ®ºÁÿ»ÅÌÿÀÊÑÿÃÌÓÿÁËÓÿ¹ÅÎÿÂÍÖÿ†“ÿ_mxÿ¬¸Àÿ­¸Àÿ…–¡ÿÃĞÖÿÀËÒÿÀËÑÿ˜§¯ÿ›ª²ÿq€‹ÿ\lwÿl{…ÿÃÊĞÿÉÏÖÿ³½Äÿ®¹Áÿ«¶¿ÿ¥±ºÿª³ÿ±»Âÿ³¼Äÿ¯¸Àÿ®¸Àÿ¶ÀÇÿÂÉĞÿÌÑÖÿÅËĞÿÀÇÎÿ·ÀÇÿ½ÅÌÿÁËÑÿ~‹–ÿfu~ÿ¸ÃÉÿ«¶½ÿdw„ÿ«³ÿÚãæÿÇÓ×ÿ™©²ÿ¡¯¸ÿhvÿBP\ÿQ^gÿ£®¶ÿ§³»ÿ¢®¸ÿ«´ÿ›§±ÿ™¦°ÿ˜¤®ÿ¤®·ÿ¤­¶ÿ ©²ÿ¤­¶ÿ«µ»ÿ°¹¿ÿ½ÃÉÿ³¸Àÿ¸ÀÇÿ·¿ÆÿÀÇÏÿ²¼Åÿ^n{ÿtƒÿ‘œÿ¦ÿÏØİÿÏÙÜÿ×ßâÿâêìÿëñóÿÉÓ×ÿZjuÿy‰”ÿ‚—ÿ£¯¸ÿ¥±»ÿ¢®¸ÿŸ«µÿ¨²ÿ¨±ÿª²ÿ¢­¶ÿ¦¯ÿ¡ª³ÿ¡¬´ÿ®¶½ÿ­µ¼ÿ·¼Ãÿ«³ºÿ¶¾ÅÿºÂÉÿ¶ÀÆÿªµ½ÿ]kvÿr‚ÿ˜§¯ÿxˆ’ÿÎÖÛÿi{†ÿ’ÿvˆ”ÿ°»Áÿ˜¥¬ÿ_nyÿj}‰ÿv…ÿ¦³»ÿ¨´¾ÿ¦³¼ÿ¤±¹ÿ ¬µÿ¢­¶ÿ ¬´ÿ¥®¶ÿ¦¯·ÿ£­µÿ£­µÿ¬´¼ÿ­´»ÿ¶¼Áÿ¬³ºÿ±¹Àÿ¶¾Åÿ°ºÁÿ¥°¸ÿ‡“›ÿ^n{ÿª´¹ÿâéêÿÙâäÿ²¿Åÿ±¾ÄÿÕİàÿ¦°¶ÿ[mxÿ>MTÿlzƒÿš¢ÿª¶¿ÿ«¸Àÿ¨µ½ÿ¥±¹ÿ ¬´ÿ¢®¶ÿ¡­µÿ¤®¶ÿ©³ºÿ«µ¼ÿ©³ºÿ±¹¿ÿ±·¾ÿ¸¾Äÿ«±¹ÿ¶½Ãÿµ¼Âÿ©²ºÿ®¸Àÿ–¡¨ÿ‘Ÿ¨ÿ…“œÿÉÒÖÿÆĞÕÿÙâåÿãéìÿ²¼Áÿp€Šÿm}Šÿ…’›ÿ¨³¹ÿ‚˜ÿ¯»Ãÿ®ºÁÿ§´»ÿ¥±¹ÿ¥°¸ÿ¡­µÿ¨°ÿ¨¯ÿ¤®µÿ¥¯¶ÿ©³ºÿ´¼Ãÿ´¼ÃÿºÀÆÿª±¹ÿ¼ÁÈÿ³»Áÿ§°¸ÿ­·¾ÿ®¸Àÿ¢­²ÿŠ–ÿ{…‹ÿ ª±ÿ±½ÂÿÂËÎÿy‡ÿ~Œ—ÿ¢­µÿœ§­ÿ£¯¸ÿ«¶Àÿ®»Ãÿ¬¹Áÿ¥²ºÿ£¯·ÿ «³ÿ «³ÿ›¦­ÿ ª±ÿ£®µÿ©±¹ÿ©±¹ÿ´»Áÿµ½Ãÿ½ÃÇÿ³¹Àÿ¼ÁÉÿ³»Âÿ¨±ºÿ©³¼ÿªµ½ÿ©³ºÿ‹–ÿWagÿ`lvÿdtÿZgqÿp}…ÿ‹—¡ÿ’œ£ÿ¡¬²ÿ§´½ÿ§´½ÿ¦´¼ÿ¥²ºÿ¥±¹ÿ¥°¸ÿ¡«´ÿ¨¯ÿœ¦­ÿ¦­ÿŸ§®ÿ¥­´ÿª²¹ÿµ»Âÿµ½Âÿ¿ÃÈÿ´¹Áÿ·½Äÿ¶½Äÿ¥®·ÿ¤¯¸ÿ¥±¹ÿ«µ¾ÿ–Ÿ§ÿƒ–ÿ«µÿÂÊĞÿª´ºÿ·ÁÈÿ¯¹Àÿ®¹Àÿ¨´¼ÿ¤±¹ÿ¨´¼ÿ¥±¹ÿ¤¯·ÿ£­µÿ¤®µÿ£­´ÿ¦®ÿ˜ ¦ÿš ¦ÿ ¥­ÿ §®ÿ¡©°ÿ©±¸ÿ­µ»ÿ²¸½ÿ©®¶ÿ¯´»ÿ²¹Àÿ£­¶ÿ¥®·ÿ¤¯·ÿ£®·ÿ¥°ºÿ¢¬´ÿ¢¬³ÿ·ÁÆÿ¸ÁÇÿ¢®¶ÿ£¯·ÿ¡­µÿ£¯·ÿ¡­µÿ «³ÿ ©²ÿ¡«³ÿ¨¯ÿ›¤«ÿ›£ªÿ—Ÿ¥ÿ˜œÿ                                                                                                                                                                                                                                                                (   0   `                              ª¸Áÿ«´ÿ¨°ÿ¡«²ÿ ¨®ÿ¡©°ÿŠ•ÿ6CPÿ".8ÿƒ”ÿ¨¯ÿ˜¡ÿ”¢ªÿŸ«³ÿ­¼ÄÿŸ¬³ÿ“¤ÿˆ”šÿŠ— ÿ‹˜¡ÿŠ˜¡ÿ}˜ÿ†–Ÿÿ“ ¨ÿ©·¿ÿÁÍÔÿ¸ÃÉÿ}‹–ÿpÿ‚‘ÿ’Ÿ§ÿ­¹¾ÿÆĞÓÿßçêÿåìíÿŞäçÿÅÎÓÿª¶»ÿ‘¦ÿoŠÿVfsÿETbÿP`nÿyŠ•ÿ‘Ÿ§ÿ¢¯·ÿ»ÇÍÿ¿ÊĞÿ«¹Ãÿ¡°ºÿŸ«³ÿŸ«³ÿ¢¬´ÿ¨¯ÿ‹–ÿ3ANÿ;ISÿ— §ÿ¢­µÿš¢ÿ’¡©ÿŸ­µÿ›¨°ÿ‰–Ÿÿ‡“œÿƒ’ÿq„‘ÿs†“ÿu‡”ÿ›ÿ’ ¨ÿ­´ÿ¢±»ÿ¨¶¾ÿ¡¯¸ÿ°ºÁÿ¹ÂÈÿËÓÙÿÔÜàÿÇÏÕÿ´¾Æÿ™§²ÿ}œÿl~‹ÿ\n|ÿTfuÿPapÿGYiÿQdsÿYm|ÿ]o~ÿl~Šÿ‰˜¡ÿ¨³»ÿ¼ÆËÿ¶ÀÅÿª¸Âÿ¥´¾ÿ ­¶ÿ£¯¸ÿ£­µÿ¨°ÿoŠÿ*7Dÿ[isÿœ¥¬ÿ«¹Àÿ­µÿ®¶ÿœ«³ÿˆ˜ ÿ€™ÿ{‹—ÿwŠ—ÿi}‹ÿcu…ÿn€ÿ›ÿ¨ÿ‹œ¦ÿ‰™¦ÿ†˜£ÿ’ ÿœ§ÿ¶ÂÈÿ¥±»ÿŒš¦ÿwˆ–ÿev†ÿdv†ÿ`s‚ÿWkzÿViyÿWizÿ\pÿby‡ÿe{Šÿl€Œÿs…‘ÿ‹œ¦ÿ¯¼Ãÿ´¾Æÿ·ÁÇÿ¼ÆÊÿª¸Âÿ­¼Êÿ«ºÆÿ¤²¼ÿ¡«²ÿ˜¢ªÿfx„ÿ)7Cÿo|‡ÿ“¤ÿ¡¯·ÿ•¦¯ÿ‹œ¥ÿ…”ÿm€ÿfyˆÿi}Šÿauƒÿez‰ÿj}‹ÿ‚”¡ÿˆ™¥ÿ{˜ÿzŒ—ÿx‰•ÿpÿfz‰ÿf{‰ÿn‚ÿpÿr‚’ÿct€ÿgx†ÿh|Šÿaw†ÿaw…ÿe{‰ÿg|Šÿuˆ–ÿ„•Ÿÿ“£¬ÿ¥³»ÿ¹ÅÌÿÈÑÖÿÊÑÕÿËÒØÿÏ×Üÿİãæÿ´ÂÌÿµÅÒÿ¬¼Éÿ¦µÀÿš¥¬ÿ‰– ÿ[n{ÿ<KWÿi{†ÿv„ÿyˆ‘ÿn‹ÿ^o}ÿhzˆÿi|Œÿdv„ÿbtÿq„’ÿzšÿ‚”¡ÿŠš¦ÿ‘ÿo€Œÿiz‡ÿk~‹ÿl}ÿj}Œÿvˆ–ÿy‹˜ÿr„“ÿj}Œÿatÿex„ÿr…’ÿv‰•ÿ{›ÿŒœ§ÿ¬µÿª¸ÀÿÀÌÑÿØáãÿãëíÿæìïÿéïñÿßæéÿâçëÿãèìÿÚàäÿ³ÁËÿ»ÊÖÿ©¹Æÿ©ºÄÿ›¤ÿiz‡ÿ]p~ÿ`nyÿ’›ÿ€™ÿ€™ÿ€™ÿo€‹ÿ^qÿ]o€ÿwŠ˜ÿ”¡ÿˆ˜¤ÿ‡—£ÿˆ™¥ÿ…–£ÿ|›ÿs…”ÿt‡•ÿs†•ÿu‹šÿzÿzÿwŒ›ÿt‡–ÿm€ÿpÿœÿ˜§³ÿ§´½ÿ±¾Æÿ¸ÂÉÿ¼ÇÍÿÅÑÖÿÑÛßÿÍØÛÿÏØÜÿãëíÿîõöÿïôõÿîòôÿÑÖÛÿ±¼Ãÿ¯¾Æÿ·ÆÒÿºÉÖÿ¦¶Âÿ}Š”ÿCSaÿSftÿ‚œÿš§±ÿ—¤¬ÿƒ’œÿ†•Ÿÿ…”¡ÿbw…ÿM_oÿ{‹™ÿ•¥²ÿ‰™¥ÿ ­ÿ¡¯ÿ‰›¨ÿ†—¤ÿ„—¥ÿ•¢ÿƒ—¦ÿ„—¦ÿ‚”¡ÿŠ›¦ÿ‘ ¬ÿ“ ¬ÿ—¤¯ÿª·Àÿ¼ÇÏÿÉÓÚÿÓÜâÿŞèëÿéïòÿòøøÿ÷üüÿ÷úûÿóøùÿîôõÿæíîÿäëíÿÑÙŞÿ¶ÀÇÿ­·Àÿ¬·¿ÿ°¼Åÿ½ËÔÿ¸ÈÒÿ›¨´ÿ|Š–ÿ:JWÿO`mÿ‚‘œÿ‰˜£ÿŠ˜¡ÿfu‚ÿUgtÿG[jÿ[o~ÿpƒÿœ©´ÿºÅÎÿºÅÍÿÃÎÕÿÂÌÔÿ¶ÁËÿ§´¾ÿ™¨²ÿ•¥¯ÿ”£²ÿ‘ ®ÿªÿ¢¯·ÿ¹ÅÍÿÈÒÚÿÍ×ŞÿÛäéÿáéîÿêïóÿñöøÿøıüÿüşşÿòö÷ÿäéêÿÓÚŞÿÍÕÚÿ¬¸¿ÿ†”Ÿÿ²½Äÿ´¿Çÿ®¹Áÿ¬·¿ÿªµ½ÿ°¼ÄÿÁÍÕÿ³ÁÊÿ“ ªÿ}‹—ÿPapÿPboÿXjwÿv†’ÿn~‰ÿ0@Mÿ%4?ÿSerÿzŒ™ÿˆš§ÿ ¯ºÿÉÓÙÿÛãçÿæíñÿğöøÿêïòÿĞÙŞÿ²¾Äÿ¡­µÿ£±ºÿ¬¹ÃÿºÅÎÿÕßãÿêğóÿóøúÿöûüÿ÷üüÿûııÿüşşÿô÷÷ÿÕİŞÿ¶ÂÉÿ­»Äÿ›«µÿ¥µ¼ÿ´ÁÇÿ€‘›ÿ˜ÿ¬·Àÿ±¼Äÿ¬·¿ÿªµ½ÿ§³»ÿ°»Ãÿ¾ÊÑÿ©¶¿ÿ‹—¡ÿuƒÿk|‰ÿ\p|ÿPanÿN_nÿ2BPÿ/=Hÿcr~ÿƒ•¡ÿ”¤°ÿŸ­¹ÿ–¤°ÿœ§ÿ¨·ÁÿÀÌÔÿÎ×ßÿ¶ÀÉÿ¢­µÿ£®µÿ²¾ÅÿÅÑØÿÚäéÿèïòÿøûüÿışşÿışşÿüşşÿùııÿñööÿÒÚßÿ›¨±ÿ–§°ÿœ¬¶ÿ’£­ÿ§·ÀÿÌÖÚÿš¨®ÿ‚“œÿ˜¤®ÿ±¼Äÿ±¼Äÿ¬·¿ÿªµ½ÿ§²ºÿ¶ÁÉÿ½ÉĞÿŸ«´ÿ‹˜¢ÿiv‚ÿuƒÿew…ÿWhvÿVftÿK[hÿdtÿ‰™¤ÿ›©´ÿ§´¾ÿ¾ÉĞÿ±½Åÿ›©³ÿ”¢®ÿ‰›¨ÿˆ—£ÿŸ«´ÿ²¾Åÿ¿ÈÏÿÒÛàÿèğôÿôúûÿûşşÿûşşÿûşşÿûşÿÿïõöÿÊÕÙÿ–¤­ÿ}œÿ’¤¯ÿœ¬·ÿ…™¢ÿ °¸ÿÍØİÿ±¼Ãÿ—¤¬ÿ±¼ÂÿÃËÑÿ½ÇÏÿ·ÂÊÿ±¼Äÿ¬·¿ÿ©´¼ÿ»ÅËÿ¼ÇÎÿ«³ÿš£ÿgwƒÿvƒ‘ÿl}Œÿ_p~ÿdu…ÿYjwÿ…–Ÿÿ ®·ÿ´¿ÇÿÁÌÔÿÙâèÿŞçëÿÌÖÛÿ§³»ÿ•¡­ÿ–£­ÿ»ÇÎÿŞéîÿëóõÿğ÷ùÿ÷üşÿùışÿıÿÿÿıÿÿÿùüüÿÖİáÿ•¥¯ÿn‚ÿZlxÿˆš§ÿ ¬ÿ}›ÿš©³ÿÌ×Üÿ·ÄÊÿ›¤ÿ¥°¹ÿÃËĞÿÒÚßÿ¼ÆÍÿ¹ÃËÿ²½Äÿ­¸Àÿ§³»ÿÁÊÑÿ¬¶ÀÿŸ­·ÿ‘Ÿ§ÿnÿ}‹˜ÿl~‹ÿm€ÿ`rÿ^lwÿ˜¥­ÿ±½ÃÿÌ×İÿØâéÿÒÜâÿÚãéÿêòöÿãìğÿÚãèÿÚäêÿİçíÿáêïÿæïóÿñøûÿúşşÿúııÿøûûÿíñóÿ¾ÊÏÿ~’ÿk‘ÿav…ÿy›ÿ~ÿ‚”Ÿÿ–§°ÿÓİáÿ¼ÇÎÿjz‡ÿarÿkz†ÿ™¤­ÿÀÌÓÿ¸ÃËÿµÀÈÿ±¼Äÿ®ºÁÿ«¶¾ÿÁÊĞÿ¤¯¸ÿ£²»ÿŒš¡ÿwˆ”ÿ™§°ÿ‰˜£ÿu‡”ÿYlzÿUcnÿ ­µÿ¿ËÒÿÙãéÿåîóÿëóøÿéñõÿíô÷ÿôúüÿùışÿùııÿøııÿ÷ûüÿîôõÿÕİàÿÔÜßÿËÔÙÿÄĞÖÿ¹ÈÏÿŒ©ÿbw…ÿ^rÿezŠÿx›ÿ‚•¢ÿ…–¢ÿ¡¯¹ÿ˜¥­ÿjz†ÿ^o|ÿfw„ÿs„ÿœ¤ÿ¥°ºÿµÁÊÿ´ÀÈÿ³¾Æÿ±¼Äÿ®¹Áÿ´¾Åÿ¤°¹ÿ©·Àÿˆ–ÿq€Œÿ®¹ÀÿÁËÒÿƒ• ÿPboÿP^jÿ™§°ÿÊÕÜÿÜæëÿîõøÿöúüÿ÷üıÿùışÿûşşÿıÿÿÿüÿÿÿùışÿïõ÷ÿÈÓÚÿ§¶¾ÿ·ÄÉÿ¬¹Âÿ©¶¿ÿ«µÿew„ÿ@Q`ÿ<N]ÿGYiÿgzŠÿl€ÿWixÿ]p~ÿj|‰ÿs†“ÿ‘›ÿš§¯ÿÉÒÖÿİäåÿ¸ÂÈÿ°½Æÿ²¾Çÿ°¼Åÿ¯ºÂÿ«¶¾ÿ¸ÄÉÿ¹ÃÉÿ¦²ºÿ|‰‘ÿYivÿ«±ÿİäéÿ“¢¬ÿ_o|ÿXiuÿq‚ÿÀÌÓÿåğôÿïõùÿ÷üıÿùşşÿúÿşÿüÿÿÿûÿÿÿùşşÿôùûÿâéíÿ¢¯·ÿÊ×ÛÿÁÏÔÿµÂÊÿª¶Àÿw‡“ÿfx†ÿ„•¢ÿ›ÿw‡“ÿfw„ÿ`o}ÿkxƒÿ’Ÿ©ÿšª²ÿ‹›¥ÿ—¤«ÿÔİáÿêñóÿøüûÿ×àãÿ·ÃËÿ´ÀÉÿ¯»Äÿ®ºÂÿ®¹ÁÿµÂÈÿÅÎÔÿ©µ¾ÿjy„ÿapzÿ©°ÿâêîÿ­ºÂÿy‰”ÿs„ÿct€ÿ…”ÿÎÙŞÿèïóÿôùûÿõúûÿøüıÿúışÿùşıÿùşıÿó÷ùÿ©µ¼ÿ¥ÿÔáæÿ£²ºÿ—¦¯ÿ‡—£ÿl~ÿ€“¢ÿ›«·ÿ¸ÄÌÿÒÚàÿÍÙßÿÉÖÜÿÇÓØÿÈÓØÿÇÒØÿ×âåÿÊÔØÿÕŞáÿÛäçÿŞçêÿÅÑ×ÿ»ÆÎÿµÀÈÿ°»Ãÿ°»Ãÿ­¸¿ÿ´ÁÈÿ¾ÉÏÿ®ºÁÿuƒÿ‡’›ÿ ª±ÿÊÓ×ÿÂËÑÿ›£ÿ£¯·ÿ”¢«ÿZkxÿ‡•ŸÿÎÙßÿçğòÿíôõÿğö÷ÿöûüÿùııÿëñóÿ¯ºÁÿ}™ÿ§´¼ÿãìòÿÚäéÿµÁÉÿ‘œÿ‡™¦ÿ›ª¶ÿÆÒÛÿÏÙŞÿ²ÀÈÿ™«µÿ“£®ÿ©ÿšª³ÿÁÌÓÿÜåèÿÕàãÿÄÎ×ÿ½ÈÑÿ¸ÃÍÿ®»Äÿ®»Äÿ¬·Áÿª´¾ÿ¨´»ÿ¥±¸ÿ´ÀÈÿ¹ÄÌÿ´ÀÇÿn~ˆÿˆ”œÿ†•ÿ•ÿ­¸¿ÿÔÜáÿÖàåÿÇÓÙÿš©´ÿZmzÿoŠÿ¬ºÂÿĞÜáÿŞéíÿàêíÿÓİáÿŸ­µÿo€Œÿ™¨²ÿÇÒÙÿãîòÿ¾ÊĞÿ“¢ªÿ ªÿ¢°»ÿ³¿Çÿ²¿Çÿ­·ÿª¸ÁÿºÇÎÿªºÂÿµÂÉÿÍÙİÿ½ÈĞÿ¾ÊÑÿ¿ÌÔÿ¼ÈÑÿ»ÈÏÿ¹ÆÎÿ¹ÇÎÿµÃÊÿ²¾Æÿ²½Åÿ¯ºÂÿ¬·¿ÿ¼ÅÌÿ¾ÈÏÿ·ÃÊÿ”£«ÿŒ˜ ÿ›¥ÿScmÿ€•ÿÅÏÔÿÛäèÿàéìÿÒİâÿ™¨±ÿgzˆÿgzˆÿh{†ÿƒ“ÿ ¯¹ÿ˜¨²ÿšª´ÿ»ÈĞÿßèìÿâìïÿÎÛàÿ³ÁÉÿ¤³»ÿ¸ÇÎÿÅÓÚÿ®¼Åÿ”¥±ÿŠ©ÿ‘£®ÿ¨¶¿ÿÌÙİÿÖáåÿ¼ÉĞÿ«·Âÿª¶Âÿ¨´Àÿ©µÀÿª¶Àÿª¶Àÿ¦²¼ÿ¤°ºÿ¢®¸ÿ¤¯¹ÿ¡¬¶ÿ©³ÿºÅÌÿºÅÌÿ¹ÄÌÿ«´ÿ”¢©ÿ«·½ÿ¡­´ÿƒ—ÿÁÌĞÿÕßäÿäêîÿõúûÿæîğÿ§µ¾ÿ~šÿœ¨ÿn~‹ÿ›ÿœ¬·ÿÁÏÕÿèñõÿçòõÿÔàåÿ°¾Æÿ¨¶¾ÿ¿ÍÔÿ¸ÇÏÿ“¥°ÿ„•¢ÿzÿ‘¤¯ÿÀÎÕÿ×âæÿßëîÿÑŞâÿ¯½Çÿ¥´Àÿ§³¿ÿ©¶Áÿª¶Àÿ©µ¿ÿ¨´¾ÿ§³½ÿ§³½ÿ¦±»ÿ£®¸ÿ «µÿ¨²ÿ±¼Äÿ·ÂÊÿ·ÂÊÿ­¹Âÿu…ÿ®¹ÀÿÓÜßÿÀËÒÿÄÏÔÿáéëÿìóõÿñ÷úÿèğóÿÖßãÿ®ºÁÿ²¾Äÿ›¨²ÿj~‹ÿˆ™¤ÿÌ×ÛÿÔßãÿª·¾ÿ…”ÿ~›ÿz‹—ÿ‘œÿ‰›§ÿ—¨²ÿ®»ÃÿÕŞâÿğøùÿäğñÿİèìÿÉÓÚÿÉÕÜÿ±¿Êÿ©·Ãÿ§´Àÿª¶Àÿ©µ¿ÿ¥±»ÿ¨´¾ÿ¨´¾ÿ§³½ÿ¨³½ÿ¨²¼ÿ£®¸ÿŸ©³ÿ±¼Äÿ³¾ÆÿµÀÈÿ±¼Åÿ{Œ–ÿzŠ”ÿ¢¯¶ÿÍ×ÛÿÆĞÔÿÖßãÿìóöÿíô÷ÿÉÒØÿ˜ÿ^nzÿqŒÿw†’ÿ~Œ™ÿ¨±¹ÿ²½Ãÿ‚—ÿoŠÿk}Šÿ‚” ÿ›«¶ÿ»ÇÎÿÖßãÿèîğÿñöøÿàéìÿÑÛßÿµÁÈÿÃÎ×ÿÇÓÛÿÉÔÜÿ³ÀÊÿ«¸Ãÿ¬¸Ãÿ¬¹Ãÿª¶Àÿ¨´¾ÿ©µ¿ÿ©¶¿ÿ¨´¾ÿ¦³½ÿ¤±»ÿ¢®¸ÿ¡­·ÿ¯ºÁÿ°»Ãÿ³¾Æÿ·ÁÉÿ­»Ãÿ–¦­ÿ’¡©ÿ²¼Áÿ¼ÇËÿÅÑÖÿÖàåÿ¾ÉĞÿ¶ÀÈÿÎ×ÜÿÁÌÓÿÂÎÕÿÒÜâÿĞÚŞÿÍ×Ûÿ{ˆÿyˆ“ÿ‹œ¨ÿ´ÁÉÿÖáäÿéğòÿôùúÿõüûÿßéêÿ¹ÉĞÿ°»ÿ¯ºÿš«µÿ»ÈÑÿÆÓÛÿÇÒÙÿ¯¼Åÿ©¶Àÿ¤°¼ÿ¢­¸ÿ¦²¼ÿ©µ¿ÿ«·Áÿ«·Áÿ©µ¿ÿ¥²¼ÿ¦²¼ÿ£¯ºÿ¢®¸ÿ¨³»ÿ«·¾ÿ²½Åÿ·ÂÊÿ»ÅÍÿÇÒ×ÿ·ÃÈÿ«³ÿ ¬´ÿ‚—ÿ–£ªÿÈÒÕÿèğğÿëñòÿ¾ÈÍÿ˜¥¯ÿŒ›¤ÿºÆÍÿ¡­³ÿ ­´ÿÁÍÓÿäëïÿŞåèÿëòóÿìñòÿĞÛßÿ¡²ºÿ|ÿƒ—¢ÿ‡š¦ÿšª·ÿ˜¨´ÿ±ÀÈÿÉÕİÿÅÑØÿ¯»Æÿ©µ¿ÿ¦²½ÿ¥±¼ÿ¢®¸ÿ¦²¼ÿ«·Áÿ«·Áÿ©µ¿ÿ§²»ÿ¨³»ÿ¢­¶ÿ©³ÿ£¯·ÿªµ½ÿ²½Åÿ³¾Åÿ´¿Çÿ¸ÃËÿ¿ÊÑÿ´ÁÉÿ—¥¯ÿ—¥¯ÿ¯»Ãÿª·¾ÿ·ÃÈÿ½ÈÌÿ¨µ¼ÿ­·ÿ—¦®ÿ·ÃÉÿÖßãÿÚâåÿèîğÿáèêÿ×ßáÿ¾ÈÌÿš¨°ÿ…—¢ÿ|’Ÿÿ}“¢ÿ†›©ÿ¢°ÿ¯»ÿšª¶ÿ’£®ÿ®¼ÅÿÁÌÕÿ³ÀÉÿ²½Æÿ«¸Àÿ§´¾ÿ©µ¿ÿ¦²¼ÿ©¶¿ÿ©µ¿ÿ©µ¾ÿ¨´¼ÿ¨´¼ÿ£®·ÿ«´ÿ£¯·ÿ©µ½ÿ±¼Ãÿ¯»Âÿ¯ºÂÿ³¾Æÿ¸ÃËÿ¹ÅÍÿ¶ÂÊÿµÁÉÿÄĞ×ÿÍÙŞÿĞÚßÿĞÛßÿÓİâÿÓİâÿÊÖÚÿÊ×ÜÿÊ×ÜÿÉÕÚÿÍØßÿÉÓÚÿ¯º¿ÿ•¢¨ÿ{Š“ÿs†’ÿo†•ÿk„“ÿw›ÿ‹Ÿ­ÿ•¦²ÿ–¦²ÿ~™ÿ?Q\ÿ‰—¢ÿ¹ÄÍÿÀÊÒÿ¶ÃËÿ®»Åÿ¯»Åÿ«·Áÿ«·Àÿ©µ¾ÿ©´½ÿ¨³»ÿ§²ºÿ¤°¸ÿ ¬µÿ¥±¹ÿ«¶¾ÿ°»Ãÿ±¼Äÿ°»Ãÿ±¼Äÿ¶ÀÉÿ¹ÄÌÿ¸ÃËÿ¸ÃËÿ¼ÇÏÿ¾ÉÑÿÀËÕÿÁÌÖÿÅÏØÿÎØßÿÙâçÿÔİãÿËÕÜÿÆÑÚÿËÖŞÿ³¿ÈÿŒ™¢ÿ~—ÿj|ˆÿ|œÿj~ÿg}Šÿzœÿ’Ÿÿ‡š¦ÿªÿ¡ªÿ,;EÿM^jÿ¨ÿ¾ÈĞÿ¶ÃÊÿ¬ºÃÿ°¼Æÿ®ºÄÿ®ºÃÿ©µ½ÿª¸¿ÿ©¶¾ÿ¦²ºÿ¥±¹ÿ£®·ÿ©´¼ÿ¬·¿ÿ®¹Áÿ°»Ãÿ¯ºÂÿ¯ºÂÿ²½Äÿ±½Åÿ²¿Çÿ´ÀÈÿ¸ÃËÿºÅÍÿ¸ÄÌÿ¹ÆÎÿ½ÉÓÿ½ÉÓÿ½ÈÑÿÂÎÖÿÃÏØÿÄĞØÿÅÑÙÿŸ¬¶ÿšÿ‘œÿ~‘ÿ…™¥ÿ‚•¢ÿ…™¦ÿ…›§ÿzœÿƒ™¥ÿ‡™¤ÿ‘¡ªÿbt‚ÿ3COÿYiuÿ¢­¶ÿ·ÂÊÿª¶Àÿ¯»Åÿ°½Æÿ­¹Âÿ¨µ¾ÿ©¶¿ÿ©µ¾ÿ¨³»ÿ£°¸ÿŸ¬´ÿ¨³»ÿªµ½ÿªµ½ÿ°»Ãÿ°»Ãÿ®¹Áÿ°»Âÿ¯ºÂÿ±¼Äÿ´¿Çÿ¸ÂÊÿ·ÂÊÿ·ÂÊÿ¹ÄÌÿ¸ÄÌÿ¼ÇĞÿ¾ÉÑÿ½ÈĞÿÀÌÔÿÃÏ×ÿ­¹ÿ`p{ÿ•¦±ÿŠ¨ÿƒ—¤ÿ–¢ÿŒŸ¬ÿ¡®ÿ—¥ÿ{‘ÿ„˜¤ÿ…–£ÿ‰š¤ÿm€ÿAR]ÿZjsÿ ¬µÿÂËÓÿ´ÀÇÿ¯»Äÿ­¹Ãÿ­¹Ãÿ¬¸Âÿª¶Àÿ¦²¼ÿ¤°¹ÿ£¯¹ÿ¡­·ÿ¦±ºÿ§³»ÿªµ½ÿ¬·¿ÿª¶¾ÿ­¸Àÿ­¸Àÿ¯ºÂÿ±¼Äÿµ¿ÇÿµÀÈÿ¶ÁÉÿ´ÀÈÿµÁÉÿ³¿Çÿ¸ÄÍÿºÆÎÿ»ÆÎÿ¾ÉÒÿ¨¶¿ÿO_kÿr€ˆÿ§µ½ÿ­ºÂÿ¢­ÿ†š¥ÿ”¦²ÿ©¸Ãÿ¦µ¿ÿŸ«ÿ“¤°ÿ”¥±ÿŸªÿqƒÿO`kÿSdqÿ’¡ªÿÏÖÚÿÂÌÒÿ²¾Æÿ­¹Âÿ­¸Áÿ«·Àÿ§³½ÿ£¯¹ÿ¢®¸ÿ¡­·ÿ ®¶ÿ¥±¹ÿ¨´¼ÿªµ½ÿ©µ½ÿ§²ºÿ©µ½ÿ©µ½ÿªµ½ÿ¬·¿ÿ¯ºÂÿ¯ºÂÿ±¼Äÿ±½Æÿ²¾Çÿ±½Çÿ²¾ÇÿµÁËÿ¸ÄÎÿ”¡«ÿz†‘ÿ8FOÿŸ¨ÿ­ºÂÿ¢°¹ÿ °ºÿ¨·¿ÿÉÕÚÿĞÙßÿ¼ÉÑÿ¨¶¿ÿ¾ÉĞÿºÇÏÿ¬ºÃÿ‚‘ÿK[fÿQboÿz‹—ÿ³½ÃÿÇÏÓÿµ¿Çÿ«·¾ÿ©´¼ÿª¶¾ÿ§³¼ÿ¤°ºÿ¡­¸ÿ¢®·ÿ£°¸ÿ¥±¹ÿ¨´¼ÿ¦²ºÿªµ½ÿªµ½ÿ©µ½ÿ¦²ºÿ©´¼ÿ¨´¼ÿ©´¼ÿ©µ½ÿ¬¹Áÿ¯»Ãÿ°¼Äÿ¯»Åÿ­¹Ãÿ¯¼Åÿ¸ÄÎÿ}Š•ÿWdoÿCOYÿ’¢«ÿ©¶¾ÿ—¥®ÿ“¦±ÿ£®ÿ¬¼ÄÿÃÍÓÿ©·Áÿ«ºÂÿ³¿Æÿª·Àÿ½ËÑÿ¬¶ÿ˜ÿaq|ÿk}ˆÿ¢¯·ÿÊĞÔÿ½ÅËÿ¯ºÀÿ¦²»ÿ¦²¼ÿ¦³¼ÿ¦²»ÿ¢¯¸ÿ¡­¶ÿ£¯·ÿ¡­µÿ¦±¹ÿ©´¼ÿ§²ºÿ¡­µÿ¥°¹ÿ¢®¶ÿ¦²ºÿ¬¹Àÿ¶ÀÈÿ¹ÃËÿ¼ÆÍÿ¾ÇÏÿ¾ÇÏÿ»ÆÎÿ¶ÁÊÿ¹ÄÎÿ¿ËÔÿƒ‘œÿL[hÿdr}ÿª´ÿ¯¼Äÿ±¼Äÿˆ™¤ÿ ±»ÿ¹ÇÍÿ©¶¿ÿÇÒØÿ¿ÊÏÿª·¾ÿ’¢«ÿ¨·¿ÿœ¥ÿIWcÿq‹ÿv†ÿ›§¯ÿÙŞáÿĞÖÜÿ¸ÁÈÿ¯»Ãÿ¬¸Áÿ¨´½ÿª¶¿ÿ§³¼ÿ¤°¹ÿ£¯·ÿ¥±¹ÿ¨³»ÿªµ½ÿ¦±ºÿ¥°¸ÿ¥°¸ÿ«¶¾ÿµ¿ÇÿÂËÒÿÉÑ×ÿÊÒ×ÿÌÓÙÿÉÑ×ÿÇÏÕÿÁÊÒÿ½ÈĞÿÂÍÔÿÈÒØÿ³¼Åÿlz…ÿŒ“ÿºÅËÿÈÒ×ÿ• ©ÿk}Šÿ›ÿÈÒÖÿÇÑ×ÿÉÔÚÿ¾ÊÏÿ ©ÿŒœ¥ÿ–¤­ÿƒ’œÿK[hÿWgrÿ@MVÿkw€ÿ¾ÆËÿ¾ÆÍÿ±»Ãÿ«µ½ÿ©µ¼ÿ§³»ÿ¥°¹ÿ ¬µÿ˜¦¯ÿ“¡«ÿ¶ÀÆÿ¹ÂÉÿ¹ÂÉÿ³¼Âÿµ¾Åÿ±ºÁÿ·ÁÈÿ¸ÁÈÿ¾ÅÌÿÂÆÌÿÈÌÑÿ¾ÄÉÿ¼ÃÉÿ¹ÁÈÿ±»Áÿ¹ÁÇÿÂÊÒÿ¼ÇÎÿŠ˜¤ÿ>MXÿv„ÿ§³ºÿÃÌÑÿ–£­ÿt‡”ÿw‡‘ÿ·ÁÈÿèïñÿçïñÿ¹ÆÌÿ¥´¼ÿ¤³»ÿ«¸Áÿuƒÿ3?KÿSakÿgt}ÿ†’šÿ¬·¿ÿ¥±ºÿ£¯¹ÿ¢®¸ÿŸ«µÿœ¨²ÿ™¥¯ÿ˜¤®ÿœ¨²ÿ›¦°ÿ¦°¸ÿ¡ª´ÿ¥®·ÿŸ¨°ÿ¦¯¸ÿ¤­¶ÿª´»ÿ®·¾ÿ°¸¿ÿ¹¿Åÿ½ÃÉÿ¶»ÃÿºÁÉÿ¶¾Åÿ¶¾Äÿ¿ÆÎÿÀÇĞÿ±¼Äÿrƒ’ÿFT`ÿ›ÿ~˜ÿ’ ©ÿª·¾ÿÉÔÚÿÈÒØÿàèéÿìóóÿìòóÿèïòÿçïñÿãêíÿ¾ÊÎÿ`p{ÿ`pyÿ™ÿy†ÿ’¥ÿ§³¼ÿ¦²¼ÿ¥±»ÿ¡®¸ÿŸ«µÿ©³ÿ¨²ÿ¨²ÿŸ«´ÿŸª²ÿ¤¯·ÿ¡«´ÿ¢«´ÿ¦¯ÿ¢«´ÿŸ©±ÿª´»ÿ¯¸¿ÿ°¸¿ÿ³¹¿ÿ¹¿Æÿ°¶½ÿ¸ÀÇÿ·¿Æÿ»ÃÊÿ»ÃÊÿ¶¿Çÿ©µ¾ÿk|ˆÿSbnÿŒ›¦ÿ„” ÿgxƒÿuƒÿâçìÿ¹ÄÉÿ›¢ÿ›ª²ÿ¨µ½ÿ©µ»ÿÃÌĞÿŞåèÿ™¦¬ÿM]hÿi{‡ÿr„ÿkz„ÿ«³ÿ£°¹ÿ¦²¼ÿ¥±»ÿ¤°ºÿ¢¯¸ÿŸ«µÿª´ÿ©²ÿ¡¬µÿ©±ÿ£­µÿŸ©²ÿ¦¯ÿ ©²ÿ£­¶ÿ£®¶ÿ®·¾ÿ®¶½ÿ«³ºÿ°¶½ÿ³ºÀÿ¬´ºÿ³»Áÿ¹ÁÈÿ·¿Æÿ¶¿Åÿ¯ºÀÿ©µ½ÿn|†ÿTcoÿ}Œ˜ÿ³¿Æÿ“¢¬ÿ…•ÿËÕÙÿ”£¬ÿgz‡ÿvˆ”ÿxŠ˜ÿy‹–ÿ¥±¸ÿ²½Ãÿ‰—Ÿÿfuÿj{†ÿk~Šÿn~‡ÿ•¢ªÿ§´½ÿ¨´¾ÿ§´½ÿ¦³»ÿ¥³»ÿ¢®·ÿ ¬µÿ¡­¶ÿ¢®¶ÿŸª³ÿ¦°·ÿ¥¯·ÿ¢«´ÿ¢«´ÿ£¬µÿ£¬µÿª²¹ÿ±¹Àÿ©±¸ÿ²·½ÿ²¸¾ÿ®µ¼ÿ°¸¿ÿµ¾Äÿµ½Ãÿµ¾Åÿ®¸¿ÿ¥°¸ÿ†‘šÿn}‡ÿdu‚ÿ¥¯µÿÚáäÿãêìÿİåéÿ¯½Âÿ”¥¯ÿ§ÿ¯»ÂÿĞØÜÿËÓ×ÿ—ÿas~ÿGW^ÿ:FNÿn}ˆÿ†”ÿ›§¯ÿ¨´½ÿ¨´¾ÿ¨µ½ÿ¦´¼ÿ¥²ºÿ£¯·ÿ©±ÿŸ«³ÿ¢­µÿ «³ÿ£­µÿ¦°¸ÿªµ¼ÿ¨²¹ÿ¨²¹ÿ¤®µÿ¨²¹ÿµ»Âÿ¬±¹ÿµ»Áÿ±·½ÿ¯´¼ÿ°·¾ÿ·¿Æÿ³»Âÿ¬µ¼ÿ«µ¼ÿ¤¯·ÿŒ˜Ÿÿ}‹”ÿhx„ÿ}Š”ÿÅÎÑÿßæéÿ×áäÿ×ßãÿÜäçÿŞæéÿéğñÿÚâäÿ‹˜Ÿÿbs~ÿSeqÿ]luÿq‡ÿš¦­ÿ“Ÿ§ÿ›¨¯ÿ­¹Âÿ°¼Ãÿ¯»Âÿ¦²ºÿ¥±¹ÿ¦±¹ÿ¢®¶ÿ¡­µÿ¦±¹ÿŸ«³ÿ¥¯·ÿ¥¯·ÿª´»ÿ¬¶½ÿª´»ÿ«µ¼ÿ²ºÀÿ´»Âÿ¬´»ÿ¸¿Äÿ±¶½ÿ­³ºÿ¶¼ÁÿºÀÆÿ³»Àÿ¨±¹ÿ«µ¼ÿ±»Âÿ¦±¹ÿ§²¹ÿˆ—Ÿÿt‚Œÿ£®µÿÇĞÔÿÂÌÑÿÌÖÚÿÚãæÿâéìÿËÒÖÿ€–ÿwˆ‘ÿn~Šÿy‡“ÿš¢ÿ˜¤«ÿ¯¹¿ÿy†ÿ™¦®ÿ²½Åÿ®¹Áÿ¨µ½ÿ¦³»ÿ¥±ºÿ¥±¹ÿ£®¶ÿ ¬´ÿŸ«²ÿš¥¬ÿŸ©°ÿ ª±ÿ¦°·ÿ§±¹ÿ¦°·ÿª´»ÿ´¼Ãÿµ½Äÿ²¹Àÿ¼ÂÈÿ®´¼ÿ®³»ÿ¸½Ãÿ¾ÄÉÿ±¹¿ÿ§°¸ÿ«µ½ÿ°ºÁÿ¯¹Áÿ¦°·ÿ¹ÂÆÿ˜¤ªÿ~‰’ÿ”Ÿ¥ÿ¡«²ÿ£¯µÿÀÊÎÿÔÛŞÿ³»¿ÿyˆ‘ÿp‰ÿŒ™¤ÿ›§®ÿ¢¬²ÿœ£ÿ©´½ÿªµ¾ÿ­¹Áÿ¯¼Äÿ¯»Ãÿ©¶¾ÿ¤±¹ÿ£°¸ÿ ¬´ÿŸ«²ÿ¡­´ÿª±ÿœ§®ÿŸ¨°ÿ¡¬³ÿ£­´ÿ£¬´ÿ¥®¶ÿ«µ¼ÿ²ºÀÿ¶¾Åÿ·¿Åÿ¾ÄÉÿ¯¶½ÿ°¶½ÿ»ÀÇÿºÁÈÿ®¸¾ÿ¦¯¸ÿ¨±ºÿ©´¼ÿ«¶¾ÿ¤°¸ÿ›¢ÿš¢ÿdlsÿahmÿŠÿŒ’ÿ}‹“ÿt€ˆÿ‹ÿcq}ÿx†’ÿŸª´ÿ—¡¨ÿš¥«ÿ¨´»ÿª¶Àÿ©µ¿ÿ«¸Àÿ¬¹Áÿ¨µ½ÿ¥²ºÿ¤°¸ÿ¤°¸ÿ¡­µÿ ¬´ÿŸª±ÿ§®ÿ›¥¬ÿ ª±ÿ «²ÿ¦±¸ÿ¬µ¼ÿ«³ºÿ©²¹ÿ²¹¾ÿ³ºÀÿ·¿ÅÿÀÆÉÿ¸½Ãÿ·½Äÿ»ÀÈÿºÀÇÿ²¹Àÿ©±»ÿ¨±ºÿ©´¼ÿ©´¼ÿ«¶¾ÿ»ÂÈÿ‰”œÿƒ”ÿQ]eÿdr~ÿcrÿp€ÿdr}ÿbowÿ{ˆÿ‘œ¥ÿ–¡©ÿ–Ÿ¥ÿ¡«°ÿ£°¸ÿ¦³½ÿ§³½ÿ¥²ºÿ£±¹ÿ¤²ºÿ¦²ºÿ¦±¹ÿ¦±¹ÿ¥¯¸ÿŸ©±ÿ§®ÿ§®ÿ›¤«ÿ¦­ÿ¦­ÿ ©°ÿ§¯¶ÿ©±¸ÿ¬´»ÿµ»Áÿ³º¿ÿ·¾ÃÿÁÇÉÿ»¿Åÿ·¼Äÿ·½ÄÿºÀÆÿ´¼Ãÿ¥®¸ÿ£­µÿ¥±¹ÿ¦²ºÿ§³»ÿ³¼Ãÿ²¸¾ÿz…ÿ{‡ÿˆ˜¢ÿŸ«´ÿ½ÅËÿ¶ÀÅÿ©°ÿ·ÁÇÿ¹ÁÇÿ®¸¾ÿ¶ÀÅÿ«·¾ÿ¥±¹ÿ¥²»ÿ§´¼ÿ©¶¾ÿ¤°¸ÿ£®·ÿ¤®·ÿ¤¯·ÿ¨²¹ÿ¥®¶ÿ£¬´ÿ¦­ÿ›£«ÿ— ¦ÿœ£©ÿ¥«ÿ¡¨¯ÿ¡©°ÿ£«²ÿ§¯¶ÿ¯¶½ÿ°¸¿ÿµ¼Áÿº¿Ãÿ±µ½ÿ°µ¼ÿ³¹Àÿ·½Äÿ²¹Áÿ¦¯¹ÿ£¬¶ÿ¤®·ÿ¤¯·ÿ¦±ºÿ¥¯¹ÿ¥®¸ÿ“§ÿ– §ÿª´¼ÿÁÊĞÿÄÎÓÿºÄÈÿµ¿Åÿ²¼Ãÿ§³»ÿ¥±¹ÿ£¯·ÿ¥±¹ÿ¦±ºÿ£¯·ÿ¤¯·ÿ¤®·ÿ¢¬´ÿ£®¶ÿ¢¬´ÿ ª±ÿŸ¨°ÿ ©°ÿ ª±ÿ§®ÿ™¡§ÿ“œ ÿ˜£ÿ¢©ÿŸ¤¬ÿŸ¦­ÿŸ§®ÿ¢ª±ÿ¦®µÿ¨°¸ÿ²¸¾ÿµ»¿ÿª¯·ÿ¨®´ÿ¬±¸ÿ±·¾ÿ®µ½ÿ¥®¸ÿ¤­¶ÿ¦¯¸ÿ¤®·ÿ£®·ÿ£®¸ÿ¤¯¹ÿ¤¯¹ÿ¡«´ÿŸ¨²ÿ£¬´ÿÀÉÎÿ±»Âÿ¦±ºÿ¡­µÿ¢®¶ÿ¢®¶ÿ ¬´ÿ¢®¶ÿ¡­µÿŸª²ÿª²ÿ ©²ÿ ©²ÿ ª²ÿ ª±ÿ›¥¬ÿ™£ªÿ›£ªÿ˜ ¦ÿ•£ÿ‘šÿ‹”˜ÿ                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+
+
+[20250129_140203] Send Event
+[20250129_140203] Read Event
+[20250129_140203] From client
+[20250129_140203] Client Closed Connection
+[20250129_140203] Removing Client 8
+[20250129_140216] Read Event
+[20250129_140216] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] METHOD IS : POST
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] File event
+[20250129_140216] Writing into file...
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] File event
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] File event
+[20250129_140216] Writing into file...
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] File event
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] File event
+[20250129_140216] Writing into file...
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] File event
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140216] Read Event
+[20250129_140216] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] File event
+[20250129_140217] Writing into file...
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] File event
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] File event
+[20250129_140217] Writing into file...
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] File event
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] File event
+[20250129_140217] Writing into file...
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] File event
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] File event
+[20250129_140217] Writing into file...
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] File event
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140217] Read Event
+[20250129_140217] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] File event
+[20250129_140218] Writing into file...
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] File event
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] File event
+[20250129_140218] Writing into file...
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] File event
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] File event
+[20250129_140218] Writing into file...
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] File event
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] Read Event
+[20250129_140218] From client
+[20250129_140218] File event
+[20250129_140218] Writing into file...
+[20250129_140219] File event
+[20250129_140219] Send Event
+[20250129_140219] Sending message to client : HTTP/1.1 201 Created
+Connection: keep-alive
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary6kLniUnrIArtvkqR
+Date: Wed, 29 Jan 2025 14:02:19 CET
+Location: /uploads/
+Server: webserv/42.0
+Content-Length: 17
+
+Upload successful
+
+
+[20250129_140219] Send Event
+[20250129_140219] Read Event
+[20250129_140219] From client
+[20250129_140219] Client Closed Connection
+[20250129_140219] Removing Client 7
+[20250129_140230] Read Event
+[20250129_140230] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250129_140230] Read Event
+[20250129_140230] From client
+[20250129_140230] METHOD IS : POST
+[20250129_140230] PATH : www/cgi-bin/calculator.py
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] CGI still running
+[20250129_140231] Read Event
+[20250129_140231] From cgi
+[20250129_140231] Send Event
+[20250129_140231] Sending message to client : HTTP/1.1 200 OK
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Wed, 29 Jan 2025 14:02:31 CET
+Server: webserv/42.0
+Content-Length: 32
+
+Content-Type: text/plain
+
+4.0
+
+
+
+[20250129_140231] Send Event
+[20250129_140231] Read Event
+[20250129_140231] From client
+[20250129_140231] Client Closed Connection
+[20250129_140231] Removing Client 7
+[20250129_140235] Read Event
+[20250129_140235] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250129_140235] Read Event
+[20250129_140235] From client
+[20250129_140235] METHOD IS : POST
+[20250129_140235] PATH : www/cgi/hello.php
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] CGI still running
+[20250129_140235] Read Event
+[20250129_140235] From cgi
+[20250129_140235] Send Event
+[20250129_140235] Sending message to client : HTTP/1.1 200 OK
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Wed, 29 Jan 2025 14:02:35 CET
+Server: webserv/42.0
+Content-Length: 14
+
+
+Hello asd!
+
+
+
+[20250129_140235] Send Event
+[20250129_140235] Read Event
+[20250129_140235] From client
+[20250129_140235] Client Closed Connection
+[20250129_140235] Removing Client 7
+[20250129_140238] Read Event
+[20250129_140238] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250129_140238] Read Event
+[20250129_140238] From client
+[20250129_140238] METHOD IS : GET
+[20250129_140238] Send Event
+[20250129_140238] Sending message to client : HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: application/json
+Date: Wed, 29 Jan 2025 14:02:38 CET
+Server: webserv/42.0
+Content-Length: 34
+
+["monica.jpg","swedishforest.jpg"]
+
+
+[20250129_140238] Send Event
+[20250129_140238] Read Event
+[20250129_140238] From client
+[20250129_140238] Client Closed Connection
+[20250129_140238] Removing Client 7
+[20250129_140247] Read Event
+[20250129_140247] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250129_140247] Read Event
+[20250129_140247] From client
+[20250129_140247] METHOD IS : DELETE
+[20250129_140247] Send Event
+[20250129_140247] Sending message to client : HTTP/1.1 200 OK
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Date: Wed, 29 Jan 2025 14:02:47 CET
+Server: webserv/42.0
+Content-Length: 25
+
+File deleted Successfully
+
+
+[20250129_140247] Send Event
+[20250129_140247] Read Event
+[20250129_140247] From client
+[20250129_140247] Client Closed Connection
+[20250129_140247] Removing Client 7
+[20250129_140252] Read Event
+[20250129_140252] Client accepted : 7
+Connected through port : 8080
+Through host : localhost:8080
+[20250129_140252] Read Event
+[20250129_140252] From client
+[20250129_140252] METHOD IS : GET
+[20250129_140252] Send Event
+[20250129_140252] Sending message to client : HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: application/json
+Date: Wed, 29 Jan 2025 14:02:52 CET
+Server: webserv/42.0
+Content-Length: 21
+
+["swedishforest.jpg"]
+
+
+[20250129_140252] Send Event
+[20250129_140252] Read Event
+[20250129_140252] From client
+[20250129_140252] Client Closed Connection
+[20250129_140252] Removing Client 7

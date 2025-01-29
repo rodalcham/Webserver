@@ -18,7 +18,6 @@ extern std::atomic<bool> keepRunning;
 uint16_t	ft_htons(uint16_t port);
 
 
-
 bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 {
 	std::string method = request.getMethod();
@@ -45,7 +44,6 @@ bool Server::isMethodAllowedInUploads(HttpRequest request, Client &client)
 
 	return false;
 }
-
 
 
 std::string listUploadsJSON(const std::string &dirPath, string endpoint)
@@ -177,7 +175,7 @@ void	Server::run()
 			}
 			else if (eventList[i].filter == EVFILT_USER)
 			{
-				if (event % 1)
+				if (event %10 == 1)
 				{
 					if (this->clients[event/10].hasResponse())
 						msg_send(this->clients[event/10], 2);
@@ -229,7 +227,7 @@ void	Server::handleTimeout(int event)
 	debug("Timeout event");
 	if (!this->clients[event].hasTimeout())
 	{
-		this->clients[event].queueResponse(HttpResponse(408, "Timeout event", HttpRequest()).returnResponse());
+		this->clients[event].queueResponse("HTTP/1.1 408 Request Timeout\r\nContent-Type: text/plain\r\nContent-Length: 19\r\nConnection: close\r\n\r\n408 Request Timeout\r\n");
 		postEvent(event, 1);
 		this->clients[event].hasTimeout() = true;
 	}
@@ -371,19 +369,6 @@ std::string Server::getMimeType(const std::string& filePath)
 void Server::removeClient(Client &client)
 {
 	this->_to_remove.insert(client.getSocket());
-	// struct kevent event;
-
-	// debug("Removing Client " + std::to_string(client.getSocket()));
-	// EV_SET(&event, client.getSocket(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	// if (kevent(this->kq, &event, 1, NULL, 0, NULL))
-	// 	debug("Failed disable read event");
-	// EV_SET(&event, client.getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-	// if (kevent(kq, &event, 1, nullptr, 0, nullptr) == -1)
-	// 	debug("Failed disable timeout event");
-	// if (client.isSending())
-	// 	disable_write_listen(client.getSocket());
-	// close(client.getSocket());
-	// this->clients.erase(client.getSocket());
 }
 
 void	Server::setTimeout(Client &client)

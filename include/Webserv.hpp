@@ -23,8 +23,8 @@
 #include <deque>
 #include <filesystem>
 
-#define SOCKET_BACKLOG_MAX 1000
-#define TIMEOUT 20000
+#define SOCKET_BACKLOG_MAX 200
+#define TIMEOUT 2000
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"

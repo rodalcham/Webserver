@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <unordered_set>
 
 class HttpRequest; // Forward declaration
 class HttpResponse; // Forward declaration
@@ -40,10 +41,12 @@ class Server {
 	int			 				serverSock;
 	std::map<int, const ServerBlock*>			_server_sockets;
 	int 						kq;
+	std::unordered_set<int>		_to_remove;
 	std::map<int, Client>		clients;
 
 	void			acceptClient(int server_sock);
 	void			removeClient(Client &client);
+	void			closeClient(int &fd);
 	void			setTimeout(Client &client);
 	void			executeCGI(Client &client, const std::string &cgiPath, std::string &request);
 	void			sendCGIOutput(Client &client);

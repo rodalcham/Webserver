@@ -39,16 +39,16 @@ void	Server::processRequest(Client &client)
 			res = HttpResponse(405, "Method " + request.getMethod() + " not allowed.", request);
 		else if (checkRequestSize(request, client))
 			res = HttpResponse(413, "Payload is too large.", request);
+		else if (isCGIRequest(request))
+		{
+				if (handleCGI(request, &client, req))
+					res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
+		}
 		else if (request.getMethod() == "GET")
 			res = handleGet(request, client);
 		else if (request.getMethod() == "POST")
 		{
-			if (isCGIRequest(request))
-			{
-				if (handleCGI(request, &client, req))
-					res = HttpResponse(500, "Failed to launch child process", HttpRequest(client));
-			}
-			else if (handlePost(request, client))
+			if (handlePost(request, client))
 				res = HttpResponse(500, "Upload Failed", HttpRequest(client));
 		}
 		else if (request.getMethod() == "DELETE")

@@ -256,7 +256,10 @@ void	Server::closeClient(int &fd)
 
 bool	isCGIRequest(const HttpRequest &request)
 {
-	if (request.getHeader("X-Request-Type") == "cgi")
+	if (request.getUri().find(".py") != string::npos
+		|| request.getUri().find(".php") != string::npos
+		|| request.getUri().find(".bla") != string::npos
+		|| request.getUri().find("cgi") != string::npos)
 	{
 		return true;
 	}

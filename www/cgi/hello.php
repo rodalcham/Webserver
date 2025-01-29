@@ -2,8 +2,8 @@
 <?php
 // 1) Ensure we have argv[1]:
 if ($argc < 2 || empty($argv[1])) {
-    echo "Error: No input data provided.\n";
-    exit(1);
+    echo "Its rude not to introduce yourself! Please tell me your name.\n";
+    exit(0);
 }
 
 // 2) The full raw HTTP request is in argv[1].
@@ -23,8 +23,14 @@ if (count($parts) === 2) {
 // 4) Output minimal CGI headers
 header("Content-Type: text/html");
 echo "\r\n";  // End of headers
+if (empty($rawBody)){
+
+    echo "Its rude not to introduce yourself! Please tell me your name.\n";
+}
+else {
+    echo "Hello " . htmlspecialchars($rawBody) . "!\r\n";
+}
 
 // 5) Display the body in a "Hello ...!" message
 // echo "<html><head><title>Hello CGI</title></head><body>";
-echo "Hello " . htmlspecialchars($rawBody) . "!\r\n";
 // echo "</body></html>";

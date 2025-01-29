@@ -32,6 +32,7 @@ public:
 	void			parseBlock(std::istream& stream);
 	void			setErrorPage(std::string& value, std::string& line);
 	void			setRedirect(std::string& value, std::string& line);
+	void			setMaxBodySize(std::string value);
 	std::string		createDirectiveStr(std::string& line);
 	// bool			isRequestAllowed(const HttpRequest& request) const;
 	void			serverBlockDebug() const;

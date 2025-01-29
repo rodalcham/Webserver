@@ -32,6 +32,7 @@ class Client
 	bool					is_sending = false;
 	bool					is_receiving = false;
 	bool					is_executing = false;
+	bool					_timeout = false;
 	HttpRequest				_stored_request;
 	const ServerBlock		*_block;
 
@@ -57,6 +58,7 @@ class Client
 	const ServerBlock	*getServerBlock();
 	void				popResponse();
 	void				popRequest();
+	bool				&hasTimeout();
 	bool				&isSending();
 	bool				&isReceiving();
 	bool				&isExecuting();

@@ -75,6 +75,7 @@ class Server {
 	HttpResponse	handleDelete(HttpRequest &request, Client &client);
 	int				handlePost(HttpRequest &request, Client &client);
 	int				handleCGI(HttpRequest &request, Client *client, string &req);
+	void			handleTimeout(int event);
 	HttpResponse	retrieveFile(HttpRequest &request);
 
 };

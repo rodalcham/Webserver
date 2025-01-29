@@ -57,6 +57,11 @@ bool	&Client::isReceiving()
 	return (this->is_receiving);
 }
 
+bool	&Client::hasTimeout()
+{
+	return (this->_timeout);
+}
+
 bool	&Client::isExecuting()
 {
 	return (this->is_executing);

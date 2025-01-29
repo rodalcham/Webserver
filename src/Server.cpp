@@ -177,7 +177,14 @@ void	Server::run()
 			}
 			else if (eventList[i].filter == EVFILT_USER)
 			{
-				if (event % 10 == 2)
+				if (event % 1)
+				{
+					if (this->clients[event/10].hasResponse())
+						msg_send(this->clients[event/10], 2);
+					else
+						this->removeEvent(event);
+				}
+				else if (event % 10 == 2)
 				{
 					debug("Send Event");
 					if (this->clients[event/10].hasResponse())
@@ -206,8 +213,7 @@ void	Server::run()
 			}
 			else if (eventList[i].filter == EVFILT_TIMER)
 			{
-				debug("Timeout event");
-				removeClient(this->clients[event]);
+				handleTimeout(event);
 			}
 		}
 		for (int fd : _to_remove)
@@ -216,6 +222,19 @@ void	Server::run()
 		}
 		_to_remove.clear();
 	}
+}
+
+void	Server::handleTimeout(int event)
+{
+	debug("Timeout event");
+	if (!this->clients[event].hasTimeout())
+	{
+		this->clients[event].queueResponse(HttpResponse(408, "Timeout event", HttpRequest()).returnResponse());
+		postEvent(event, 1);
+		this->clients[event].hasTimeout() = true;
+	}
+	else
+		removeClient(this->clients[event]);
 }
 
 void	Server::closeClient(int &fd)

@@ -33,7 +33,7 @@ This command compiles the project and creates the executable `webserv`.
 ```
 Example:
 ```bash
-./webserv ./config/default.conf
+./webserv ./config/config_TEMPLATE.conf
 ```
 
 ### Stopping the Server

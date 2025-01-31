@@ -3,6 +3,8 @@
 ## Overview
 This project is a custom HTTP web server written in C++, inspired by the NGINX web server. It is designed to handle HTTP requests, serve static files, and support CGI execution. It provides basic web server functionalities including GET, POST, and DELETE methods, error handling, and configurable server blocks.
 
+Project done in collaboration with [Máté Bankhardt](https://github.com/mbankhar) and [Graham Stronge](https://github.com/gstronge)
+
 ## Features
 - Serve static files (HTML, CSS, JS, images, etc.)
 - Support for CGI scripts (Python, PHP)
